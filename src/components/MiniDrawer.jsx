@@ -20,7 +20,25 @@ import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import { Outlet, Link } from "react-router-dom";
 
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import PaymentIcon from "@mui/icons-material/Payment";
+import CategoryIcon from "@mui/icons-material/Category";
+import StoreIcon from "@mui/icons-material/Store";
+import InventoryIcon from "@mui/icons-material/Inventory";
+
 const drawerWidth = 240;
+
+const menuItems = [
+  { text: "Dashboard", icon: <DashboardIcon /> },
+  { text: "Orders", icon: <ShoppingCartIcon /> },
+  { text: "Accounts", icon: <AccountCircleIcon /> },
+  { text: "Payments", icon: <PaymentIcon /> },
+  { text: "Products", icon: <InventoryIcon /> },
+  { text: "Category", icon: <CategoryIcon /> },
+  { text: "Shops", icon: <StoreIcon /> },
+];
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -88,7 +106,7 @@ const Drawer = styled(MuiDrawer, {
 
 const Dashboard = () => {
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -129,19 +147,17 @@ const Dashboard = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          {["Home", "Reports", "Analytics"].map((text, index) => (
+          {menuItems.map(({ text, icon }) => (
             <ListItem key={text} disablePadding sx={{ display: "block" }}>
               <ListItemButton
                 component={Link}
                 to={
-                  text === "Home"
+                  text === "Dashboard"
                     ? "/dashboard"
-                    : `/dashboard/${text.toLowerCase()}`
+                    : `/dashboard/${text.replace(/\s+/g, "-").toLowerCase()}`
                 }
               >
-                <ListItemIcon>
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                </ListItemIcon>
+                <ListItemIcon>{icon}</ListItemIcon>
                 <ListItemText primary={text} />
               </ListItemButton>
             </ListItem>

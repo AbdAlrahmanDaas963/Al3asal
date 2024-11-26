@@ -6,8 +6,16 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import Dashboard from "./pages/Dashboard";
 import LoginPage from "./pages/LoginPage";
+import Dashboard from "./pages/Dashboard";
+
+import HomeDash from "./pages/HomeDash";
+import Accounts from "./pages/Accounts";
+import Orders from "./pages/Orders";
+import Payments from "./pages/Payments";
+import Products from "./pages/Products";
+import Shops from "./pages/Shops";
+import Category from "./pages/Category";
 
 function App() {
   return (
@@ -16,9 +24,13 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard/*" element={<Dashboard />}>
           {/* Nested routes for dashboard */}
-          <Route index element={<h2>Welcome to the Dashboard!</h2>} />
-          <Route path="reports" element={<h2>Reports Section</h2>} />
-          <Route path="analytics" element={<h2>Analytics Section</h2>} />
+          <Route index element={<HomeDash />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="accounts" element={<Accounts />} />
+          <Route path="payments" element={<Payments />} />
+          <Route path="products" element={<Products />} />
+          <Route path="shops" element={<Shops />} />
+          <Route path="category" element={<Category />} />
         </Route>
       </Routes>
     </Router>
