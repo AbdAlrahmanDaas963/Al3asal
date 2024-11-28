@@ -5,10 +5,13 @@ import App from "./App.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
 
+import DevDimmensions from "./development/DevDimensions.jsx";
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <Provider store={store}>
       <App />
+      <DevDimmensions />
     </Provider>
   </StrictMode>
 );
