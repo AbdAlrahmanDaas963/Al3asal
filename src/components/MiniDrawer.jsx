@@ -31,13 +31,13 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon /> },
-  { text: "Orders", icon: <ShoppingCartIcon /> },
-  { text: "Accounts", icon: <AccountCircleIcon /> },
-  { text: "Payments", icon: <PaymentIcon /> },
-  { text: "Products", icon: <InventoryIcon /> },
-  { text: "Category", icon: <CategoryIcon /> },
-  { text: "Shops", icon: <StoreIcon /> },
+  { text: "Dashboard", icon: <DashboardIcon htmlColor="white" /> },
+  { text: "Orders", icon: <ShoppingCartIcon htmlColor="white" /> },
+  { text: "Accounts", icon: <AccountCircleIcon htmlColor="white" /> },
+  { text: "Payments", icon: <PaymentIcon htmlColor="white" /> },
+  { text: "Products", icon: <InventoryIcon htmlColor="white" /> },
+  { text: "Category", icon: <CategoryIcon htmlColor="white" /> },
+  { text: "Shops", icon: <StoreIcon htmlColor="white" /> },
 ];
 
 const openedMixin = (theme) => ({
@@ -117,16 +117,19 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", backgroundColor: "#121212" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open}>
+      <AppBar position="fixed" open={open} sx={{ backgroundColor: "#292929" }}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
-            sx={{ marginRight: 5, ...(open && { display: "none" }) }}
+            sx={{
+              marginRight: 5,
+              ...(open && { display: "none" }),
+            }}
           >
             <MenuIcon />
           </IconButton>
@@ -135,18 +138,24 @@ const Dashboard = () => {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Drawer variant="permanent" open={open}>
-        <DrawerHeader>
+      <Drawer
+        variant="permanent"
+        open={open}
+        sx={{ backgroundColor: "#292929", color: "white" }}
+      >
+        <DrawerHeader sx={{ backgroundColor: "#292929", color: "white" }}>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
+              <ChevronRightIcon htmlColor="white" />
             ) : (
-              <ChevronLeftIcon />
+              <ChevronLeftIcon htmlColor="white" />
             )}
           </IconButton>
         </DrawerHeader>
         <Divider />
-        <List>
+        <List
+          sx={{ backgroundColor: "#292929", height: "100%", color: "white" }}
+        >
           {menuItems.map(({ text, icon }) => (
             <ListItem key={text} disablePadding sx={{ display: "block" }}>
               <ListItemButton
