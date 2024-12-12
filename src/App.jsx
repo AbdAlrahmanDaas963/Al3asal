@@ -17,23 +17,28 @@ import Products from "./pages/Products";
 import Shops from "./pages/Shops";
 import Category from "./pages/Category";
 
+import { ThemeProvider, CssBaseline, Button } from "@mui/material";
+import theme from "./theme";
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/dashboard/*" element={<Dashboard />}>
-          {/* Nested routes for dashboard */}
-          <Route index element={<HomeDash />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="accounts" element={<Accounts />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="products" element={<Products />} />
-          <Route path="shops" element={<Shops />} />
-          <Route path="category" element={<Category />} />
-        </Route>
-      </Routes>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/dashboard/*" element={<Dashboard />}>
+            {/* Nested routes for dashboard */}
+            <Route index element={<HomeDash />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="accounts" element={<Accounts />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="products" element={<Products />} />
+            <Route path="shops" element={<Shops />} />
+            <Route path="category" element={<Category />} />
+          </Route>
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

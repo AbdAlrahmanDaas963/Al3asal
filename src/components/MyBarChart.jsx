@@ -14,7 +14,7 @@ function MyBarChart() {
       series={[{ data: [4, 3, 5, 2, 3, 4] }]}
       width={350}
       height={200}
-      sx={{ backgroundColor: "#fff", borderRadius: "20px" }}
+      sx={{ borderRadius: "20px" }}
     />
   );
 }

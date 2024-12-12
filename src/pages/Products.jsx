@@ -14,7 +14,7 @@ import AddProductDialog from "../components/AddProductDialog";
 const dummy = [
   {
     id: 1,
-    pic: "https://via.placeholder.com/150?text=Product+1",
+    pic: `https://picsum.photos/150?random=${10}`,
     name: "Mechanical Keyboard",
     price: 173.14,
     profit_percentage: 23.38,
@@ -24,7 +24,7 @@ const dummy = [
   },
   {
     id: 2,
-    pic: "https://via.placeholder.com/150?text=Product+2",
+    pic: `https://picsum.photos/150?random=${32}`,
     name: "Smartwatch",
     price: 86.57,
     profit_percentage: 47.68,
@@ -34,7 +34,7 @@ const dummy = [
   },
   {
     id: 3,
-    pic: "https://via.placeholder.com/150?text=Product+3",
+    pic: `https://picsum.photos/150?random=${15}`,
     name: "Mechanical Keyboard",
     price: 164.63,
     profit_percentage: 17.35,
@@ -44,7 +44,7 @@ const dummy = [
   },
   {
     id: 4,
-    pic: "https://via.placeholder.com/150?text=Product+4",
+    pic: `https://picsum.photos/150?random=${121}`,
     name: "Wireless Headphones",
     price: 81.92,
     profit_percentage: 23.75,
@@ -54,7 +54,7 @@ const dummy = [
   },
   {
     id: 5,
-    pic: "https://via.placeholder.com/150?text=Product+5",
+    pic: `https://picsum.photos/150?random=${532}`,
     name: "Smartphone Stand",
     price: 49.97,
     profit_percentage: 15.6,
@@ -64,7 +64,7 @@ const dummy = [
   },
   {
     id: 6,
-    pic: "https://via.placeholder.com/150?text=Product+6",
+    pic: `https://picsum.photos/150?random=${412}`,
     name: "Noise Cancelling Earbuds",
     price: 58.17,
     profit_percentage: 46.97,
@@ -74,7 +74,7 @@ const dummy = [
   },
   {
     id: 7,
-    pic: "https://via.placeholder.com/150?text=Product+7",
+    pic: `https://picsum.photos/150?random=${132}`,
     name: "Smartphone Stand",
     price: 95.3,
     profit_percentage: 31.49,
@@ -84,7 +84,7 @@ const dummy = [
   },
   {
     id: 8,
-    pic: "https://via.placeholder.com/150?text=Product+8",
+    pic: `https://picsum.photos/150?random=${112}`,
     name: "Wireless Headphones",
     price: 112.07,
     profit_percentage: 45.6,
@@ -94,7 +94,7 @@ const dummy = [
   },
   {
     id: 9,
-    pic: "https://via.placeholder.com/150?text=Product+9",
+    pic: `https://picsum.photos/150?random=${152}`,
     name: "Bluetooth Speaker",
     price: 100.53,
     profit_percentage: 43.74,
@@ -110,7 +110,7 @@ function ProductCard({ item }) {
     <Stack
       sx={{
         width: "300px",
-        height: "300px",
+        // height: "300px",
         border: "1px dotted grey",
         padding: "6px",
         borderRadius: "20px",
@@ -120,7 +120,7 @@ function ProductCard({ item }) {
         src={pic}
         style={{
           width: "100%",
-          height: "100px",
+          height: "150px",
           objectFit: "cover",
           borderRadius: "16px",
           backgroundColor: "grey",

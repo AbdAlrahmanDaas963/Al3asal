@@ -25,7 +25,7 @@ export default function MyGridChart() {
       series={[{ dataKey: "y" }]}
       margin={{ left: 30, right: 30, top: 30, bottom: 30 }}
       grid={{ vertical: true, horizontal: true }}
-      sx={{ backgroundColor: "#fff", borderRadius: "20px" }}
+      sx={{ borderRadius: "20px" }}
     />
   );
 }

@@ -32,7 +32,7 @@ function AddProductDialog({
     >
       <Stack sx={{ padding: "20px" }} gap={"20px"}>
         <Stack direction={"row"} justifyContent={"space-between"}>
-          <Typography>Add Product</Typography>
+          <Typography>Add Item</Typography>
           <Button onClick={handleClose}>close</Button>
         </Stack>
         <Stack direction={"row"} gap={"20px"}>
