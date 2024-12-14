@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import MuiDrawer from "@mui/material/Drawer";
@@ -16,8 +16,6 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
 import { Outlet, Link } from "react-router-dom";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -31,13 +29,13 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon htmlColor="white" /> },
-  { text: "Orders", icon: <ShoppingCartIcon htmlColor="white" /> },
-  { text: "Accounts", icon: <AccountCircleIcon htmlColor="white" /> },
-  { text: "Payments", icon: <PaymentIcon htmlColor="white" /> },
-  { text: "Products", icon: <InventoryIcon htmlColor="white" /> },
-  { text: "Category", icon: <CategoryIcon htmlColor="white" /> },
-  { text: "Shops", icon: <StoreIcon htmlColor="white" /> },
+  { text: "Dashboard", icon: <DashboardIcon /> },
+  { text: "Orders", icon: <ShoppingCartIcon /> },
+  { text: "Accounts", icon: <AccountCircleIcon /> },
+  { text: "Payments", icon: <PaymentIcon /> },
+  { text: "Products", icon: <InventoryIcon /> },
+  { text: "Category", icon: <CategoryIcon /> },
+  { text: "Shops", icon: <StoreIcon /> },
 ];
 
 const openedMixin = (theme) => ({
@@ -94,14 +92,12 @@ const Drawer = styled(MuiDrawer, {
   flexShrink: 0,
   whiteSpace: "nowrap",
   boxSizing: "border-box",
-  ...(open && {
-    ...openedMixin(theme),
-    "& .MuiDrawer-paper": openedMixin(theme),
-  }),
-  ...(!open && {
-    ...closedMixin(theme),
-    "& .MuiDrawer-paper": closedMixin(theme),
-  }),
+  "& .MuiDrawer-paper": {
+    backgroundColor: "#292929",
+    color: "white",
+    ...(!open && closedMixin(theme)),
+    ...(open && openedMixin(theme)),
+  },
 }));
 
 const Dashboard = () => {
@@ -117,57 +113,92 @@ const Dashboard = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", backgroundColor: "#121212" }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open} sx={{ backgroundColor: "#292929" }}>
+      <AppBar
+        position="fixed"
+        open={open}
+        sx={{
+          backgroundColor: "#292929",
+          ...(theme.direction === "rtl"
+            ? { marginRight: open ? `${drawerWidth}px` : 0 }
+            : { marginLeft: open ? `${drawerWidth}px` : 0 }),
+          transition: theme.transitions.create(["margin", "width"], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
             sx={{
-              marginRight: 5,
+              ...(theme.direction === "rtl"
+                ? { marginLeft: 2 }
+                : { marginRight: 2 }),
               ...(open && { display: "none" }),
             }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap>
             Dashboard
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer
         variant="permanent"
+        sx={{
+          ...(theme.direction === "rtl"
+            ? { right: 0, left: "auto" }
+            : { left: 0, right: "auto" }),
+          "& .MuiDrawer-paper": {
+            ...(theme.direction === "rtl"
+              ? { right: 0, left: "auto" }
+              : { left: 0, right: "auto" }),
+          },
+        }}
         open={open}
-        sx={{ backgroundColor: "#292929", color: "white" }}
       >
-        <DrawerHeader sx={{ backgroundColor: "#292929", color: "white" }}>
+        <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === "rtl" ? (
-              <ChevronRightIcon htmlColor="white" />
+              <ChevronRightIcon />
             ) : (
-              <ChevronLeftIcon htmlColor="white" />
+              <ChevronLeftIcon />
             )}
           </IconButton>
         </DrawerHeader>
         <Divider />
-        <List
-          sx={{ backgroundColor: "#292929", height: "100%", color: "white" }}
-        >
+        <List>
           {menuItems.map(({ text, icon }) => (
-            <ListItem key={text} disablePadding sx={{ display: "block" }}>
+            <ListItem key={text} disablePadding>
               <ListItemButton
                 component={Link}
                 to={
                   text === "Dashboard"
                     ? "/dashboard"
-                    : `/dashboard/${text.replace(/\s+/g, "-").toLowerCase()}`
+                    : `/dashboard/${text.toLowerCase()}`
                 }
+                sx={{ textAlign: theme.direction === "rtl" ? "right" : "left" }}
               >
-                <ListItemIcon>{icon}</ListItemIcon>
-                <ListItemText primary={text} />
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: theme.direction === "rtl" ? 2 : 3,
+                    ml: theme.direction === "rtl" ? 3 : 0,
+                  }}
+                >
+                  {icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={text}
+                  sx={{
+                    textAlign: theme.direction === "rtl" ? "right" : "left",
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           ))}
@@ -175,7 +206,6 @@ const Dashboard = () => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-        {/* Outlet renders the nested route components */}
         <Outlet />
       </Box>
     </Box>
