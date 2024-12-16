@@ -30,17 +30,9 @@ import Stack from "@mui/material/Stack";
 // ? toggle
 import LanguageToggleButton from "./common/LanguageToggleButton";
 
-const drawerWidth = 240;
+import { useTranslation } from "react-i18next";
 
-const menuItems = [
-  { text: "Dashboard", icon: <DashboardIcon /> },
-  { text: "Orders", icon: <ShoppingCartIcon /> },
-  { text: "Accounts", icon: <AccountCircleIcon /> },
-  { text: "Payments", icon: <PaymentIcon /> },
-  { text: "Products", icon: <InventoryIcon /> },
-  { text: "Category", icon: <CategoryIcon /> },
-  { text: "Shops", icon: <StoreIcon /> },
-];
+const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -105,6 +97,8 @@ const Drawer = styled(MuiDrawer, {
 }));
 
 const Dashboard = () => {
+  const { t } = useTranslation("drawer");
+
   const theme = useTheme();
   const [open, setOpen] = useState(true);
 
@@ -115,6 +109,16 @@ const Dashboard = () => {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+
+  const menuItems = [
+    { text: t("dashboard"), icon: <DashboardIcon /> },
+    { text: t("orders"), icon: <ShoppingCartIcon /> },
+    { text: t("accounts"), icon: <AccountCircleIcon /> },
+    { text: t("payments"), icon: <PaymentIcon /> },
+    { text: t("products"), icon: <InventoryIcon /> },
+    { text: t("category"), icon: <CategoryIcon /> },
+    { text: t("shops"), icon: <StoreIcon /> },
+  ];
 
   return (
     <Box sx={{ display: "flex" }}>

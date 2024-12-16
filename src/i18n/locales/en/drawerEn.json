@@ -1,0 +1,9 @@
+{
+  "dashboard": "Dashboard",
+  "orders": "Orders",
+  "accounts": "Accounts",
+  "payments": "Payments",
+  "products": "Products",
+  "category": "Category",
+  "shops": "Shops"
+}

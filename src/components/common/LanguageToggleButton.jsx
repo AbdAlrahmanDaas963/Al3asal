@@ -34,7 +34,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../../contexts/LanguageContext";
 
 const LanguageToggleButton = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const { toggleLanguage } = useContext(LanguageContext);
 
   return (
@@ -44,7 +44,7 @@ const LanguageToggleButton = () => {
       size="small"
       onClick={toggleLanguage}
     >
-      {t("toggleLanguage")}
+      {t("buttons.languageToggle")}
     </Button>
   );
 };

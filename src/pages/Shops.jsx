@@ -9,8 +9,6 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-import AddProductDialog from "../components/AddProductDialog";
-
 const dummy = [
   {
     id: 1,
@@ -118,21 +116,6 @@ function Shops() {
   };
   return (
     <Stack>
-      <Stack>
-        <Button sx={{ border: "3px dotted blue" }} onClick={handleOpen}>
-          + Add Shop
-        </Button>
-        <AddProductDialog
-          open={open}
-          handleClose={handleClose}
-          title="Use Google's location service?"
-          content="Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running."
-          agreeLabel="Agree"
-          disagreeLabel="Disagree"
-          onAgree={handleAgree}
-          onDisagree={handleDisagree}
-        />
-      </Stack>
       <Stack
         direction={"row"}
         sx={{ width: "100%" }}

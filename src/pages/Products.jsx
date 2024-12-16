@@ -9,7 +9,9 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
-import AddProductDialog from "../components/AddProductDialog";
+import { useDialog } from "../components/common/Dialogs/reuse/DialogContext";
+import AddProductDialog from "../components/common/Dialogs/reuse/AddProductDialog";
+import ConfirmationDialog from "../components/common/Dialogs/ConfirmationDialog";
 
 const dummy = [
   {
@@ -106,6 +108,7 @@ const dummy = [
 
 function ProductCard({ item }) {
   const { name, price, profit_percentage, category, pic } = item;
+
   return (
     <Stack
       sx={{
@@ -149,32 +152,78 @@ function ProductCard({ item }) {
 }
 
 function Products() {
-  const [open, setOpen] = useState(false);
+  const { openDialog, closeDialog, dialog } = useDialog();
 
-  const handleOpen = () => {
-    setOpen(true);
+  const handleAddProduct = (data) => {
+    console.log("Product added:", data);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleConfirm = () => {
+    console.log("Confirmed action!");
+    closeDialog();
   };
+  // const [open, setOpen] = useState(false);
 
-  const handleAgree = () => {
-    // Custom logic for the "Agree" button
-    console.log("Agreed!");
-    handleClose();
-  };
+  // const handleOpen = () => {
+  //   setOpen(true);
+  // };
 
-  const handleDisagree = () => {
-    // Custom logic for the "Disagree" button
-    console.log("Disagreed!");
-    handleClose();
-  };
+  // const handleClose = () => {
+  //   setOpen(false);
+  // };
+
+  // const handleAgree = () => {
+  //   // Custom logic for the "Agree" button
+  //   console.log("Agreed!");
+  //   handleClose();
+  // };
+
+  // const handleDisagree = () => {
+  //   // Custom logic for the "Disagree" button
+  //   console.log("Disagreed!");
+  //   handleClose();
+  // };
 
   return (
     <Stack>
-      <Stack>
-        <Button sx={{ border: "3px dotted blue" }} onClick={handleOpen}>
+      <div>
+        <button
+          onClick={() =>
+            openDialog("addProduct", { onSubmit: handleAddProduct })
+          }
+        >
+          Add Product
+        </button>
+        <button
+          onClick={() =>
+            openDialog("confirmation", {
+              message: "Are you sure you want to delete this?",
+              onConfirm: handleConfirm,
+            })
+          }
+        >
+          Delete Item
+        </button>
+
+        {/* Render Dialogs */}
+        {dialog.type === "addProduct" && (
+          <AddProductDialog
+            open={dialog.open}
+            handleClose={closeDialog}
+            onSubmit={dialog.props.onSubmit}
+          />
+        )}
+        {dialog.type === "confirmation" && (
+          <ConfirmationDialog
+            open={dialog.open}
+            handleClose={closeDialog}
+            message={dialog.props.message}
+            onConfirm={dialog.props.onConfirm}
+          />
+        )}
+      </div>
+      {/* <Stack>
+        <Button sx={{ border: "3px dotted grey" }} onClick={handleOpen}>
           + Add Product
         </Button>
         <AddProductDialog
@@ -187,7 +236,7 @@ function Products() {
           onAgree={handleAgree}
           onDisagree={handleDisagree}
         />
-      </Stack>
+      </Stack> */}
       <Stack
         direction={"row"}
         sx={{ width: "100%" }}
