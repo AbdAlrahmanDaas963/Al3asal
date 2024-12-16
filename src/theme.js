@@ -5,9 +5,28 @@ const getTheme = (direction) =>
     direction,
     palette: {
       mode: "dark",
+      primary: {
+        main: "#E4272B",
+      },
+      secondary: {
+        main: "#121212",
+      },
+      grey: {
+        main: "#292929",
+      },
+      black: {
+        main: "#121212",
+      },
+      red: {
+        main: "#E4272B",
+      },
     },
     typography: {
-      fontFamily: "Roboto, Arial, sans-serif",
+      fontFamily: "Cairo, Roboto, Arial, sans-serif",
+      button: {
+        fontFamily: "Cairo, Roboto, Arial, sans-serif",
+        textTransform: "none", // Optional: to avoid uppercase transformation
+      },
     },
   });
 

@@ -30,6 +30,9 @@ import rtl from "jss-rtl";
 import LanguageToggleButton from "./components/common/LanguageToggleButton";
 import "./i18n";
 
+// ?
+import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
+
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
 
@@ -43,33 +46,68 @@ function App() {
   }, [direction]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ textAlign: "center", marginTop: 4 }}>
-        <Typography variant="h4" sx={{ marginBottom: 2 }}>
-          {direction === "ltr"
-            ? "Welcome to the Dashboard"
-            : "مرحبًا بك في لوحة التحكم"}
-        </Typography>
-        <LanguageToggleButton setDirection={setDirection} />
-      </Box>
-      <Router>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard/*" element={<Dashboard />}>
-            {/* Nested routes for dashboard */}
-            <Route index element={<HomeDash />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="accounts" element={<Accounts />} />
-            <Route path="payments" element={<Payments />} />
-            <Route path="products" element={<Products />} />
-            <Route path="shops" element={<Shops />} />
-            <Route path="category" element={<Category />} />
-          </Route>
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <LanguageProvider>
+      <LanguageContext.Consumer>
+        {({ direction }) => (
+          <ThemeProvider theme={getTheme(direction)}>
+            <CssBaseline />
+            <Router>
+              {/* <Box sx={{ textAlign: "center", marginTop: 4 }}>
+                <Typography variant="h4" sx={{ marginBottom: 2 }}>
+                  {direction === "ltr"
+                    ? "Welcome to the Dashboard"
+                    : "مرحبًا بك في لوحة التحكم"}
+                </Typography>
+                <LanguageToggleButton />
+              </Box> */}
+              <Routes>
+                <Route path="/" element={<LoginPage />} />
+                <Route path="/dashboard/*" element={<Dashboard />} />
+                <Route path="/dashboard/*" element={<Dashboard />}>
+                  <Route index element={<HomeDash />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="accounts" element={<Accounts />} />
+                  <Route path="payments" element={<Payments />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="shops" element={<Shops />} />
+                  <Route path="category" element={<Category />} />
+                </Route>
+              </Routes>
+            </Router>
+          </ThemeProvider>
+        )}
+      </LanguageContext.Consumer>
+    </LanguageProvider>
   );
 }
 
 export default App;
+
+{
+  /* <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Box sx={{ textAlign: "center", marginTop: 4 }}>
+            <Typography variant="h4" sx={{ marginBottom: 2 }}>
+              {direction === "ltr"
+                ? "Welcome to the Dashboard"
+                : "مرحبًا بك في لوحة التحكم"}
+            </Typography>
+            <LanguageToggleButton setDirection={setDirection} />
+          </Box>
+          <Router>
+            <Routes>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/dashboard/*" element={<Dashboard />}>
+                
+        <Route index element={<HomeDash />} />
+        <Route path="orders" element={<Orders />} />
+        <Route path="accounts" element={<Accounts />} />
+        <Route path="payments" element={<Payments />} />
+        <Route path="products" element={<Products />} />
+        <Route path="shops" element={<Shops />} />
+        <Route path="category" element={<Category />} />
+      </Route>
+    </Routes>
+  </Router>
+</ThemeProvider> */
+}

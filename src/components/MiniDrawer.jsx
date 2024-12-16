@@ -25,6 +25,10 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import CategoryIcon from "@mui/icons-material/Category";
 import StoreIcon from "@mui/icons-material/Store";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import Stack from "@mui/material/Stack";
+
+// ? toggle
+import LanguageToggleButton from "./common/LanguageToggleButton";
 
 const drawerWidth = 240;
 
@@ -143,9 +147,16 @@ const Dashboard = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap>
-            Dashboard
-          </Typography>
+          <Stack
+            direction={"row"}
+            justifyContent={"space-between"}
+            sx={{ width: "100%" }}
+          >
+            <Typography variant="h6" noWrap>
+              Dashboard
+            </Typography>
+            <LanguageToggleButton />
+          </Stack>
         </Toolbar>
       </AppBar>
       <Drawer
