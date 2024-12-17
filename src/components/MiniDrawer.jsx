@@ -111,13 +111,13 @@ const Dashboard = () => {
   };
 
   const menuItems = [
-    { text: t("dashboard"), icon: <DashboardIcon /> },
-    { text: t("orders"), icon: <ShoppingCartIcon /> },
-    { text: t("accounts"), icon: <AccountCircleIcon /> },
-    { text: t("payments"), icon: <PaymentIcon /> },
-    { text: t("products"), icon: <InventoryIcon /> },
-    { text: t("category"), icon: <CategoryIcon /> },
-    { text: t("shops"), icon: <StoreIcon /> },
+    { path: "Dashboard", text: t("dashboard"), icon: <DashboardIcon /> },
+    { path: "orders", text: t("orders"), icon: <ShoppingCartIcon /> },
+    { path: "accounts", text: t("accounts"), icon: <AccountCircleIcon /> },
+    { path: "Statistics", text: t("Statistics"), icon: <PaymentIcon /> },
+    { path: "products", text: t("products"), icon: <InventoryIcon /> },
+    { path: "category", text: t("category"), icon: <CategoryIcon /> },
+    { path: "shops", text: t("shops"), icon: <StoreIcon /> },
   ];
 
   return (
@@ -188,14 +188,14 @@ const Dashboard = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          {menuItems.map(({ text, icon }) => (
+          {menuItems.map(({ text, icon, path }) => (
             <ListItem key={text} disablePadding>
               <ListItemButton
                 component={Link}
                 to={
-                  text === "Dashboard"
+                  path === "Dashboard"
                     ? "/dashboard"
-                    : `/dashboard/${text.toLowerCase()}`
+                    : `/dashboard/${path.toLowerCase()}`
                 }
                 sx={{ textAlign: theme.direction === "rtl" ? "right" : "left" }}
               >
