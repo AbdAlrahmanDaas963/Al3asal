@@ -7,7 +7,6 @@ import homeEn from "./locales/en/homeEn.json";
 import homeAr from "./locales/ar/homeAr.json";
 import dashboardEn from "./locales/en/dashboardEn.json";
 import dashboardAr from "./locales/ar/dashboardAr.json";
-// ?
 import drawerAr from "./locales/ar/drawerAr.json";
 import drawerEn from "./locales/en/drawerEn.json";
 

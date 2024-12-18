@@ -9,6 +9,9 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
+import { useDialog } from "../components/common/Dialogs/reuse/DialogContext";
+import AddShopDialog from "../components/common/Dialogs/reuse/AddShopDialog";
+
 const dummy = [
   {
     id: 1,
@@ -93,27 +96,12 @@ function ProductCard({ item }) {
 }
 
 function Shops() {
-  const [open, setOpen] = useState(false);
+  const { openDialog, closeDialog, dialog } = useDialog();
 
-  const handleOpen = () => {
-    setOpen(true);
+  const handleAddShop = (data) => {
+    console.log("Shop added:", data);
   };
 
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleAgree = () => {
-    // Custom logic for the "Agree" button
-    console.log("Agreed!");
-    handleClose();
-  };
-
-  const handleDisagree = () => {
-    // Custom logic for the "Disagree" button
-    console.log("Disagreed!");
-    handleClose();
-  };
   return (
     <Stack>
       <Stack
@@ -122,6 +110,24 @@ function Shops() {
         justifyContent={"space-between"}
       >
         <Typography>Shops</Typography>
+        <Button
+          onClick={() => openDialog("addShop", { onSubmit: handleAddShop })}
+          sx={{
+            width: "100%",
+            height: "100px",
+            border: "4px dashed #fff",
+            fontSize: "20px",
+          }}
+        >
+          Add Shop +
+        </Button>
+        {dialog.type === "addShop" && (
+          <AddShopDialog
+            open={dialog.open}
+            handleClose={closeDialog}
+            onSubmit={dialog.props.onSubmit}
+          />
+        )}
         {/* <Typography>Search</Typography> */}
         <TextField
           variant="outlined"
