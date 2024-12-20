@@ -25,21 +25,31 @@ const sales = [
   { title: "Headphones" },
 ];
 
-const CardSale = ({ title }) => {
+const ProductCard = ({ title }) => {
   const theme = useTheme();
   return (
     <Stack
       sx={{
-        width: "250px",
-        height: "150px",
+        width: "350px",
+        height: "fit-content",
         backgroundColor: theme.palette.grey.main,
         borderRadius: "15px",
-        padding: "10px",
+        padding: "7px",
       }}
       alignItems={"center"}
       justifyContent={"space-between"}
+      gap={"7px"}
     >
-      <Box>img</Box>
+      <img
+        src={"https://picsum.photos/150?random=69"}
+        style={{
+          width: "100%",
+          height: "150px",
+          objectFit: "cover",
+          borderRadius: "16px",
+          backgroundColor: "grey",
+        }}
+      />
       <Stack
         direction={"row"}
         justifyContent={"space-between"}
@@ -52,17 +62,54 @@ const CardSale = ({ title }) => {
     </Stack>
   );
 };
+const ShopCard = ({ title }) => {
+  const theme = useTheme();
+  return (
+    <Stack
+      sx={{
+        width: "250px",
+        height: "fit-content",
+        backgroundColor: theme.palette.grey.main,
+        borderRadius: "15px",
+        padding: "7px",
+      }}
+      alignItems={"center"}
+      justifyContent={"space-between"}
+      gap={"7px"}
+    >
+      <img
+        src={"https://picsum.photos/150?random=68"}
+        style={{
+          width: "100%",
+          height: "250px",
+          objectFit: "cover",
+          borderRadius: "16px",
+          backgroundColor: "grey",
+        }}
+      />
+      <Stack
+        direction={"row"}
+        justifyContent={"space-between"}
+        alignItems={"center"}
+        width={"100%"}
+      >
+        <Typography>Shop Name :</Typography>
+        <Typography>{title}</Typography>
+      </Stack>
+    </Stack>
+  );
+};
 
 function Statistics() {
   const theme = useTheme();
   return (
     <Stack>
-      <Stack direction={"column"} alignItems={"flex-start"}>
-        <Stack direction={"row"}>
-          <Box sx={{ border: "1px solid grey" }}>
+      <Stack direction={"column"} alignItems={"flex-start"} gap={"30px"}>
+        <Stack direction={"row"} gap={"30px"}>
+          <Box sx={{ border: "0px solid grey" }}>
             <MyGridChart />
           </Box>
-          <Box sx={{ border: "1px solid grey" }}>
+          <Box sx={{ border: "0px solid grey" }}>
             <MyBarChart />
           </Box>
           <Stack
@@ -85,48 +132,31 @@ function Statistics() {
                     sx={{
                       color:
                         index === 0
-                          ? theme.palette.red.main // Red for the first item
+                          ? theme.palette.red.main
                           : index === 1 || index === 2
-                            ? "#81BCE0" // Blue for the second and third items
-                            : "inherit", // Default color for the rest
+                            ? "#81BCE0"
+                            : "inherit",
                     }}
                   >
                     #{index + 1}
                   </Typography>
                   <Typography>{item.title}</Typography>
                 </Stack>
-                {index < dumm.length - 1 && ( // Conditional rendering to skip the last divider
+                {index < dumm.length - 1 && (
                   <Divider variant="fullWidth" sx={{ width: "100%" }} />
                 )}
               </Stack>
             ))}
           </Stack>
-          {/* <Stack
-            direction={"column"}
-            sx={{
-              width: "200px",
-              height: "200px",
-              backgroundColor: theme.palette.grey.main,
-              borderRadius: "15px",
-              padding: "15px",
-            }}
-            alignItems={"center"}
-            gap={"5px"}
-          >
-            {dumm.map((item, index) => (
-              <Stack key={index} sx={{ width: "100%" }}>
-                <Stack direction={"row"} gap={"10px"}>
-                  <Typography>#{index + 1}</Typography>
-                  <Typography>{item.title}</Typography>
-                </Stack>
-                <Divider variant="fullWidth" sx={{ width: "100%" }} />
-              </Stack>
-            ))}
-          </Stack> */}
         </Stack>
         <Stack sx={{ overflowX: "auto" }} direction={"row"} gap={"20px"}>
           {sales.map((item, index) => (
-            <CardSale key={index} title={item.title}></CardSale>
+            <ProductCard key={index} title={item.title}></ProductCard>
+          ))}
+        </Stack>
+        <Stack sx={{ overflowX: "auto" }} direction={"row"} gap={"20px"}>
+          {sales.map((item, index) => (
+            <ShopCard key={index} title={item.title}></ShopCard>
           ))}
         </Stack>
       </Stack>

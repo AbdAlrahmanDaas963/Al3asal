@@ -167,7 +167,7 @@ function OffersTab() {
     console.log("Offer added:", data);
   };
   return (
-    <Stack>
+    <Stack gap={"30px"}>
       <div>
         <Button
           onClick={() => openDialog("addOffer", { onSubmit: handleAddOffer })}
@@ -196,7 +196,7 @@ function OffersTab() {
         sx={{ width: "100%" }}
         justifyContent={"space-between"}
       >
-        <Typography>Offers</Typography>
+        <Typography variant="h4">Offers</Typography>
         <TextField
           variant="outlined"
           placeholder="Search..."

@@ -124,26 +124,27 @@ function Category() {
   };
 
   return (
-    <Stack>
+    <Stack gap={"30px"}>
+      <Button
+        onClick={() =>
+          openDialog("addCategory", { onSubmit: handleAddCategory })
+        }
+        sx={{
+          width: "100%",
+          height: "100px",
+          border: "4px dashed #fff",
+          fontSize: "20px",
+        }}
+      >
+        Add Category +
+      </Button>
       <Stack
         direction={"row"}
         sx={{ width: "100%" }}
         justifyContent={"space-between"}
+        gap={"30px"}
       >
         <Typography>Shops</Typography>
-        <Button
-          onClick={() =>
-            openDialog("addCategory", { onSubmit: handleAddCategory })
-          }
-          sx={{
-            width: "100%",
-            height: "100px",
-            border: "4px dashed #fff",
-            fontSize: "20px",
-          }}
-        >
-          Add Category +
-        </Button>
         {dialog.type === "addCategory" && (
           <AddCategoryDialog
             open={dialog.open}

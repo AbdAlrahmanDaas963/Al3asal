@@ -49,12 +49,12 @@ function HomeDash() {
   const theme = useTheme();
 
   return (
-    <Stack direction={"column"} alignItems={"flex-start"}>
-      <Stack direction={"row"}>
-        <Box sx={{ border: "1px solid grey" }}>
+    <Stack direction={"column"} alignItems={"flex-start"} gap={"30px"}>
+      <Stack direction={"row"} gap={"30px"}>
+        <Box sx={{ border: "0px solid grey" }}>
           <MyBarChart />
         </Box>
-        <Box sx={{ border: "1px solid grey" }}>
+        <Box sx={{ border: "0px solid grey" }}>
           <MyGridChart />
         </Box>
         <Stack gap={"5px"}>

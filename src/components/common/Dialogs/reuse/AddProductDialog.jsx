@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { TextField, Stack, Typography } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -7,7 +7,11 @@ import Select from "@mui/material/Select";
 
 import DialogWrapper from "./DialogWrapper";
 
+import ImageInput from "../../ImageInput";
+
 const AddProductDialog = ({ open, handleClose, onSubmit }) => {
+  const [productImage, setProductImage] = useState(null);
+
   const [username, setUsername] = React.useState("");
 
   const [shop, setShop] = React.useState("");
@@ -90,12 +94,10 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
               </Select>
             </FormControl>
           </Stack>
-          <TextField
-            label="Image"
-            variant="outlined"
-            fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+          <ImageInput
+            value={productImage ? URL.createObjectURL(productImage) : null}
+            onChange={setProductImage}
+            onRemove={() => setProductImage(null)}
           />
           <TextField
             id="outlined-multiline-static5"

@@ -164,7 +164,7 @@ function ProductsTab() {
     console.log("Product added:", data);
   };
   return (
-    <Stack>
+    <Stack gap={"30px"}>
       <div>
         <Button
           onClick={() =>
@@ -195,7 +195,7 @@ function ProductsTab() {
         sx={{ width: "100%" }}
         justifyContent={"space-between"}
       >
-        <Typography>Products</Typography>
+        <Typography variant="h4">Products</Typography>
         <TextField
           variant="outlined"
           placeholder="Search..."

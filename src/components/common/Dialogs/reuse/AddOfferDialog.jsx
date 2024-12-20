@@ -16,8 +16,11 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import DialogWrapper from "./DialogWrapper";
 
 import { useTheme } from "@emotion/react";
+import ImageInput from "../../ImageInput";
 
 function AddOfferDialog({ open, handleClose, onSubmit }) {
+  const [productImage, setProductImage] = useState(null);
+
   const theme = useTheme();
   const [username, setUsername] = React.useState("");
 
@@ -98,7 +101,12 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-          <Stack direction="column" spacing={2} alignItems="center">
+          <ImageInput
+            value={productImage ? URL.createObjectURL(productImage) : null}
+            onChange={setProductImage}
+            onRemove={() => setProductImage(null)}
+          />
+          {/* <Stack direction="column" spacing={2} alignItems="center">
             <Stack
               direction="row"
               justifyContent={"space-between"}
@@ -152,7 +160,7 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
                 Remove Image
               </Button>
             )}
-          </Stack>
+          </Stack> */}
         </Stack>
         <Stack
           sx={{
