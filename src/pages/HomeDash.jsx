@@ -10,6 +10,26 @@ import PersonIcon from "@mui/icons-material/Person";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 
 import { useTheme } from "@mui/material/styles";
+import MyNewTable from "../components/common/MyNewTable";
+
+const rows = Array.from({ length: 50 }, (_, index) => ({
+  customerName: `Customer ${index + 1}`,
+  accountId: `ID${index + 1}`,
+  category: index % 2 === 0 ? "Gold" : "Silver",
+  cardNumber: `**** **** **** ${1000 + index}`,
+  deliverDate: `2024-12-${(index % 30) + 1}`,
+  payment: `$${(index + 1) * 10}`,
+  isPremium: index % 3 === 0 ? "Yes" : "No",
+}));
+const columns = [
+  { field: "customerName", headerName: "Customer Name", sortable: true },
+  { field: "accountId", headerName: "Account ID", sortable: true },
+  { field: "category", headerName: "Category", sortable: true },
+  { field: "cardNumber", headerName: "Card Number", sortable: true },
+  { field: "deliverDate", headerName: "Deliver Date", sortable: true },
+  { field: "payment", headerName: "Payment", sortable: true },
+  { field: "isPremium", headerName: "Premium Subscriber", sortable: true },
+];
 
 const TinyCard = ({ children, title, value }) => {
   const theme = useTheme();
@@ -47,7 +67,9 @@ const TinyCard = ({ children, title, value }) => {
 
 function HomeDash() {
   const theme = useTheme();
-
+  const handleDetails = (row) => {
+    alert(`Details of ${row.customerName}`);
+  };
   return (
     <Stack direction={"column"} alignItems={"flex-start"} gap={"30px"}>
       <Stack direction={"row"} gap={"30px"}>
@@ -66,7 +88,13 @@ function HomeDash() {
           </TinyCard>
         </Stack>
       </Stack>
-      <MyTable />
+      {/* <MyTable /> */}
+      <MyNewTable
+        title="Customer Details"
+        columns={columns}
+        data={rows}
+        actions={[{ label: "Details", onClick: handleDetails }]}
+      />
     </Stack>
   );
 }
