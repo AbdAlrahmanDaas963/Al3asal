@@ -51,6 +51,12 @@ function CustomTable({
     setOrderBy(property);
   };
 
+  const handleFilterChange = (event, newValue) => {
+    const filters = ["all", "pending", "preparing", "done", "failed"];
+    setFilter(filters[newValue]);
+    setPage(0);
+  };
+
   const sortedRows = [...data].sort((a, b) => {
     if (orderBy) {
       const valueA = a[orderBy];
@@ -72,6 +78,7 @@ function CustomTable({
     }
     return 0;
   });
+
   const filteredRows =
     filter === "all"
       ? sortedRows
@@ -93,6 +100,20 @@ function CustomTable({
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", marginBottom: 2 }}>
+        <Tabs
+          value={["all", "pending", "preparing", "done", "failed"].indexOf(
+            filter
+          )}
+          onChange={handleFilterChange}
+        >
+          <Tab label="All Orders" {...a11yProps(0)} />
+          <Tab label="Pending" {...a11yProps(1)} />
+          <Tab label="Preparing" {...a11yProps(2)} />
+          <Tab label="Done" {...a11yProps(3)} />
+          <Tab label="Failed" {...a11yProps(4)} />
+        </Tabs>
+      </Box>
       <TableContainer>
         <Table>
           <TableHead>
@@ -176,9 +197,9 @@ function CustomTable({
         </Table>
       </TableContainer>
       <TablePagination
-        rowsPerPageOptions={rowsPerPageOptions}
+        rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={data.length}
+        count={filteredRows.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
