@@ -1,15 +1,25 @@
 import React, { useState } from "react";
-import { TextField, Button, Container, Stack, Box } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Container,
+  Stack,
+  Box,
+  Typography,
+} from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "@mui/styles";
+
+import loginLogo from "../assets/loginLogo.svg";
 
 function LoginPage() {
+  const theme = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    // For now, we can just navigate directly to the dashboard
-    // Add your authentication logic here
     if (username && password) {
       navigate("/dashboard");
     } else {
@@ -18,18 +28,44 @@ function LoginPage() {
   };
   return (
     <Stack
-      sx={{ width: "100%", height: "100vh", minHeight: "500px" }}
+      sx={{
+        width: "100%",
+        height: "100vh",
+        minHeight: "500px",
+      }}
       alignItems={"center"}
       justifyContent={"center"}
     >
-      <Stack direction={"row"}>
-        <Box
-          sx={{ width: "400px", height: "500px", border: "1px solid white" }}
-        ></Box>
+      <Stack
+        direction={"row"}
+        sx={{
+          overflow: "hidden",
+          backgroundColor: theme.palette.grey.main,
+          padding: "10px",
+          borderRadius: "15px",
+        }}
+        gap={"20px"}
+      >
         <Stack
-          sx={{ width: "400px", height: "500px", border: "1px solid white" }}
+          sx={{
+            width: "400px",
+            height: "500px",
+            backgroundColor: "#fff",
+            padding: "50px",
+            borderRadius: "15px",
+          }}
+          alignItems={"center"}
+          justifyContent={"center"}
         >
-          <h2>Login</h2>
+          <img src={loginLogo} width={"100%"} />
+        </Stack>
+        <Stack
+          sx={{ width: "400px", height: "500px" }}
+          justifyContent={"center"}
+        >
+          <Typography variant="h4">Login</Typography>
+          <Typography>Welcome Back!</Typography>
+
           <TextField
             label="Username"
             variant="outlined"
