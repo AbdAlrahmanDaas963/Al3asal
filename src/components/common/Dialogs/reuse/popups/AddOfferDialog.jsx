@@ -13,10 +13,10 @@ import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 
-import DialogWrapper from "./DialogWrapper";
+import DialogWrapper from "../DialogWrapper";
 
 import { useTheme } from "@emotion/react";
-import ImageInput from "../../ImageInput";
+import ImageInput from "../../../ImageInput";
 
 function AddOfferDialog({ open, handleClose, onSubmit }) {
   const [productImage, setProductImage] = useState(null);

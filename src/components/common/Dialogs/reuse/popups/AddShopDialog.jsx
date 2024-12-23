@@ -1,6 +1,6 @@
 import React from "react";
 import { TextField, Stack } from "@mui/material";
-import DialogWrapper from "./DialogWrapper";
+import DialogWrapper from "../DialogWrapper";
 
 function AddShopDialog({ open, handleClose, onSubmit }) {
   const handleFormSubmit = () => {

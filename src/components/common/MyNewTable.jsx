@@ -11,17 +11,10 @@ import {
   Typography,
   TablePagination,
   TableSortLabel,
+  Box,
 } from "@mui/material";
 
-import { Tabs, Tab, Box } from "@mui/material";
-import PropTypes from "prop-types";
-
-function a11yProps(index) {
-  return {
-    id: `simple-tab-${index}`,
-    "aria-controls": `simple-tabpanel-${index}`,
-  };
-}
+import ShowRowDetails from "./Dialogs/reuse/popups/ShowRowDetails";
 
 function CustomTable({
   title = "Table",
@@ -35,6 +28,19 @@ function CustomTable({
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("");
   const [filter, setFilter] = useState("all");
+  // ?
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleDialogOpen = (row) => {
+    setSelectedRow(row);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedRow(null);
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -165,7 +171,7 @@ function CustomTable({
                   <Button
                     variant="contained"
                     size="small"
-                    onClick={() => alert(`Details of ${row.customerName}`)}
+                    onClick={() => handleDialogOpen(row)}
                   >
                     Details
                   </Button>
@@ -184,6 +190,14 @@ function CustomTable({
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+      {selectedRow && (
+        <ShowRowDetails
+          open={dialogOpen}
+          handleClose={handleDialogClose}
+          onSubmit={(formData) => console.log("Form Submitted:", formData)}
+          data={selectedRow} // Pass row data to the dialog
+        />
+      )}
     </Paper>
   );
 }

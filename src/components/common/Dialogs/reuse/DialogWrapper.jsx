@@ -17,7 +17,7 @@ const DialogWrapper = ({ open, handleClose, title, children }) => {
       keepMounted
       onClose={handleClose}
       fullWidth
-      maxWidth="sm"
+      maxWidth="md"
     >
       <Stack p={3} spacing={2}>
         {/* Header with Title and Close Button */}

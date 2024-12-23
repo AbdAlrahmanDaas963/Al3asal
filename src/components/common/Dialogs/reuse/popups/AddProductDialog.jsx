@@ -5,9 +5,9 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 
-import DialogWrapper from "./DialogWrapper";
+import DialogWrapper from "../DialogWrapper";
 
-import ImageInput from "../../ImageInput";
+import ImageInput from "../../../ImageInput";
 
 const AddProductDialog = ({ open, handleClose, onSubmit }) => {
   const [productImage, setProductImage] = useState(null);

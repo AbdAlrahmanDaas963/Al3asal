@@ -10,7 +10,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 
 import { useDialog } from "../components/common/Dialogs/reuse/DialogContext";
-import AddCategoryDialog from "../components/common/Dialogs/reuse/AddCategoryDialog";
+import AddCategoryDialog from "../components/common/Dialogs/reuse/popups/AddCategoryDialog";
 
 const dummy = [
   {

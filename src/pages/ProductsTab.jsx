@@ -3,16 +3,13 @@ import {
   Button,
   Stack,
   Typography,
-  Box,
   TextField,
   InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 import { useDialog } from "../components/common/Dialogs/reuse/DialogContext";
-import AddProductDialog from "../components/common/Dialogs/reuse/AddProductDialog";
-
-import { useTheme } from "@emotion/react";
+import AddProductDialog from "../components/common/Dialogs/reuse/popups/AddProductDialog";
 
 const dummy = [
   {

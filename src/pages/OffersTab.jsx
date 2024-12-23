@@ -10,7 +10,7 @@ import SearchIcon from "@mui/icons-material/Search";
 
 import { useDialog } from "../components/common/Dialogs/reuse/DialogContext";
 
-import AddOfferDialog from "../components/common/Dialogs/reuse/AddOfferDialog";
+import AddOfferDialog from "../components/common/Dialogs/reuse/popups/AddOfferDialog";
 
 import { useTheme } from "@emotion/react";
 
