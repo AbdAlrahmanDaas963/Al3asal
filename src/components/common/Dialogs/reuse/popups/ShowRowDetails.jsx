@@ -24,6 +24,20 @@ const statuses = [
   { label: "Cancelled", color: "#EF5350" }, // Red
 ];
 
+const details = {
+  customerName: "John Doe",
+  receiverName: "Jane Smith",
+  id: "12345",
+  card: "VISA - 5261 8494 0897 1834",
+  location: "New York, NY",
+  status: "Delivered",
+  customerNumber: "+1 234 567 8901",
+  receiverNumber: "+1 987 654 3210",
+  deliveryDate: "2024-12-30",
+  payment: "$150.00",
+  category: "Electronics",
+};
+
 const StatusDropdown = () => {
   const [status, setStatus] = useState(statuses[0]);
 
@@ -192,18 +206,24 @@ function ShowRowDetails({ open, handleClose, onSubmit, data }) {
           <Stack direction={"row"} gap={"50px"}>
             <Stack gap={"10px"}>
               <KeyValue thekey={"Customer Name"} value={data.customerName} />
-              <KeyValue thekey={"Receiver Name"} value={data.customerName} />
-              <KeyValue thekey={"ID"} value={data.customerName} />
-              <KeyValue thekey={"Card"} value={data.customerName} />
-              <KeyValue thekey={"Location"} value={data.customerName} />
+              <KeyValue thekey={"Receiver Name"} value={details.receiverName} />
+              <KeyValue thekey={"ID"} value={details.id} />
+              <KeyValue thekey={"Card"} value={details.card} />
+              <KeyValue thekey={"Location"} value={details.location} />
               <StatusDropdown />
             </Stack>
             <Stack gap={"10px"}>
-              <KeyValue thekey={"Customer Name"} value={data.customerName} />
-              <KeyValue thekey={"Receiver Name"} value={data.customerName} />
-              <KeyValue thekey={"ID"} value={data.customerName} />
-              <KeyValue thekey={"Card"} value={data.customerName} />
-              <KeyValue thekey={"Location"} value={data.customerName} />
+              <KeyValue
+                thekey={"Customer Number"}
+                value={details.customerNumber}
+              />
+              <KeyValue
+                thekey={"Receiver Number"}
+                value={details.receiverNumber}
+              />
+              <KeyValue thekey={"Delivery Date"} value={details.deliveryDate} />
+              <KeyValue thekey={"Payment"} value={details.payment} />
+              <KeyValue thekey={"Category"} value={details.category} />
             </Stack>
           </Stack>
         </Stack>
@@ -213,9 +233,47 @@ function ShowRowDetails({ open, handleClose, onSubmit, data }) {
             <Typography variant="h5">Premium Service</Typography>
           </Stack>
 
-          <Stack direction={"row"}>
+          <Stack direction={"column"}>
             <Typography>Customer Name</Typography>
-            <Typography>{data.customerName}</Typography>
+            <KeyValue thekey={"Delivery Date"} value={details.deliveryDate} />
+            <Stack>
+              <Typography>Files:</Typography>
+              <Stack direction={"row"} gap={"10px"}>
+                <Box
+                  sx={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "grey",
+                    borderRadius: "10px",
+                  }}
+                ></Box>
+                <Box
+                  sx={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "grey",
+                    borderRadius: "10px",
+                  }}
+                ></Box>
+                <Box
+                  sx={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "grey",
+                    borderRadius: "10px",
+                  }}
+                ></Box>
+              </Stack>
+            </Stack>
+            <Stack>
+              <Typography>Notes:</Typography>
+              <TextField
+                id="outlined-multiline-static"
+                multiline
+                rows={4}
+                defaultValue="..."
+              />
+            </Stack>
           </Stack>
         </Stack>
       </Stack>
