@@ -9,7 +9,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const DialogWrapper = ({ open, handleClose, title, children }) => {
+const DialogWrapper = ({ open, handleClose, title, fullScreen, children }) => {
   return (
     <Dialog
       open={open}
@@ -18,6 +18,7 @@ const DialogWrapper = ({ open, handleClose, title, children }) => {
       onClose={handleClose}
       fullWidth
       maxWidth="md"
+      fullScreen={fullScreen}
     >
       <Stack p={3} spacing={2}>
         {/* Header with Title and Close Button */}

@@ -15,6 +15,8 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 
 import DialogWrapper from "../DialogWrapper";
 
+import DeviceFrame from "../../../DeviceFrame";
+
 import { useTheme } from "@emotion/react";
 import ImageInput from "../../../ImageInput";
 

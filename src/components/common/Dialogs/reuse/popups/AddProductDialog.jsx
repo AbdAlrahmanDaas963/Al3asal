@@ -8,14 +8,14 @@ import Select from "@mui/material/Select";
 import DialogWrapper from "../DialogWrapper";
 
 import ImageInput from "../../../ImageInput";
+import LookLike from "../../../LookLike";
+import DeviceFrame from "../../../DeviceFrame";
 
 const AddProductDialog = ({ open, handleClose, onSubmit }) => {
   const [productImage, setProductImage] = useState(null);
-
-  const [username, setUsername] = React.useState("");
-
-  const [shop, setShop] = React.useState("");
-  const [category, setCategory] = React.useState("");
+  const [username, setUsername] = useState("");
+  const [shop, setShop] = useState("");
+  const [category, setCategory] = useState("");
 
   const handleChangeShop = (event) => {
     setShop(event.target.value);
@@ -31,7 +31,12 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
   };
 
   return (
-    <DialogWrapper open={open} handleClose={handleClose} title="Add Product">
+    <DialogWrapper
+      fullScreen={true}
+      open={open}
+      handleClose={handleClose}
+      title="Add Product"
+    >
       <Stack
         direction={"row"}
         alignItems={"center"}
@@ -106,24 +111,8 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
             rows={4}
           />
         </Stack>
-        <Stack
-          sx={{
-            width: "100%",
-            height: "350px",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
-          }}
-        >
-          <img
-            src="https://picsum.photos/250?random=141"
-            alt="Sample"
-            height={"100%"}
-            style={{
-              objectFit: "cover",
-            }}
-          />
+        <Stack sx={{ width: "100%" }}>
+          <DeviceFrame />
         </Stack>
       </Stack>
     </DialogWrapper>
