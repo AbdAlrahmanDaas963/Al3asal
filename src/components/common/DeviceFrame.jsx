@@ -2,13 +2,20 @@ import React from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 
-import img from "../../assets/frame.png";
+import frame from "../../assets/frame.png";
 
 import BackIco from "../../assets/back.svg";
 import CartIco from "../../assets/icons/cart.svg";
 import ArrowRightIco from "../../assets/icons/ArrowRight.svg";
 
-function DeviceFrame() {
+function DeviceFrame({
+  img,
+  giftName,
+  price,
+  location,
+  paragraph1,
+  paragraph2,
+}) {
   return (
     <Stack
       sx={{
@@ -23,7 +30,6 @@ function DeviceFrame() {
         justifyContent: "center",
       }}
     >
-      {/* Background Image */}
       <Stack
         sx={{
           position: "absolute",
@@ -34,7 +40,7 @@ function DeviceFrame() {
         }}
       >
         <img
-          src={img}
+          src={frame}
           alt="Background"
           style={{
             width: "100%",
@@ -73,7 +79,7 @@ function DeviceFrame() {
           gap={"10px"}
         >
           <img src={BackIco} />
-          <Typography sx={{ color: "#000" }}>Gift Name</Typography>
+          <Typography sx={{ color: "#000" }}>{giftName}</Typography>
         </Stack>
         {/* BODY */}
         <Stack sx={{ padding: "20px 20px 0px 20px" }}>
@@ -100,14 +106,14 @@ function DeviceFrame() {
             </Stack>
             <Stack gap={"3px"}>
               <Typography sx={{ color: "#000" }} fontWeight={"bold"}>
-                Headphones
+                {giftName}
               </Typography>
-              <Typography sx={{ color: "#000" }}>$33</Typography>
+              <Typography sx={{ color: "#000" }}>${price}</Typography>
               <Typography
                 sx={{ color: "#000", fontSize: "12px" }}
                 fontWeight={"light"}
               >
-                Store name and location
+                {location}
               </Typography>
               <Stack direction={"row"} justifyContent={"space-between"}>
                 <Button
@@ -144,10 +150,7 @@ function DeviceFrame() {
                   textOverflow: "ellipsis",
                 }}
               >
-                Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet, Lorem
-                ipsum dolor sit amet, Lorem ipsum dolor sit amet Lorem ipsum
-                dolor sit amet, Lorem ipsum dolor sit amet, Lorem ipsum dolor
-                sit amet, Lorem ipsum dolor sit amet
+                {paragraph1}
               </Typography>
               <Typography
                 sx={{
@@ -160,10 +163,7 @@ function DeviceFrame() {
                   marginTop: "15px",
                 }}
               >
-                Lorem ipsum dolor sit amet, Lorem ipsum dolor sit amet, Lorem
-                ipsum dolor sit amet, Lorem ipsum dolor sit amet Lorem ipsum
-                dolor sit amet, Lorem ipsum dolor sit amet, Lorem ipsum dolor
-                sit amet, Lorem ipsum dolor sit amet
+                {paragraph2}
               </Typography>
             </Stack>
 
@@ -230,44 +230,3 @@ function DeviceFrame() {
 }
 
 export default DeviceFrame;
-{
-  /* <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        // height: "100%",
-        border: "1px dotted grey",
-      }}
-    >
-      
-      <Box
-        sx={{
-          border: "1px dotted red",
-          position: "relative",
-          width: "400px",
-          height: "600px",
-          backgroundImage: `url(${img})`,
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          backgroundPosition: "center",
-        }}
-      >
-        
-        <Box
-          sx={{
-            backgroundColor: "#fff",
-            width: "100%",
-            height: "100%",
-            position: "absolute",
-            overflow: "hidden",
-            borderRadius: "15px",
-          }}
-        >
-          <Typography variant="h6" align="center" gutterBottom>
-            Mockup Screen
-          </Typography>
-        </Box>
-      </Box>
-    </Box>  */
-}

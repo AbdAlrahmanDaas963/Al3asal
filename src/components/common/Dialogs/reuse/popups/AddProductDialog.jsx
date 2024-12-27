@@ -1,32 +1,42 @@
 import React, { useState } from "react";
-import { TextField, Stack, Typography } from "@mui/material";
+import { TextField, Stack } from "@mui/material";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 
 import DialogWrapper from "../DialogWrapper";
-
 import ImageInput from "../../../ImageInput";
-import LookLike from "../../../LookLike";
 import DeviceFrame from "../../../DeviceFrame";
 
 const AddProductDialog = ({ open, handleClose, onSubmit }) => {
   const [productImage, setProductImage] = useState(null);
-  const [username, setUsername] = useState("");
-  const [shop, setShop] = useState("");
-  const [category, setCategory] = useState("");
-
-  const handleChangeShop = (event) => {
-    setShop(event.target.value);
-  };
-  const handleChangeCategory = (event) => {
-    setCategory(event.target.value);
-  };
+  const [giftName, setGiftName] = useState("Holiday Special Gift");
+  const [originalPrice, setOriginalPrice] = useState("50");
+  const [profitPercentage, setProfitPercentage] = useState("20");
+  const [shop, setShop] = useState("10");
+  const [category, setCategory] = useState("20");
+  const [detailedData, setDetailedData] = useState(
+    "This is a high-quality, unique gift perfect for any occasion."
+  );
 
   const handleFormSubmit = () => {
-    // ? Handle form submit logic here
-    onSubmit({ productName: "Sample", price: 100 });
+    const calculatedPrice = (
+      parseFloat(originalPrice) +
+      (parseFloat(originalPrice) * parseFloat(profitPercentage)) / 100
+    ).toFixed(2);
+
+    onSubmit({
+      giftName,
+      originalPrice,
+      profitPercentage,
+      shop,
+      category,
+      productImage,
+      detailedData,
+      calculatedPrice,
+    });
+
     handleClose();
   };
 
@@ -51,51 +61,46 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
             label="Gift Name"
             variant="outlined"
             fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={giftName}
+            onChange={(e) => setGiftName(e.target.value)}
           />
           <TextField
             label="Original Price"
             variant="outlined"
             fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={originalPrice}
+            onChange={(e) => setOriginalPrice(e.target.value)}
           />
           <TextField
             label="Profit Percentage"
             variant="outlined"
             fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={profitPercentage}
+            onChange={(e) => setProfitPercentage(e.target.value)}
           />
-          <Stack direction={"row"}>
+          <Stack direction={"row"} gap={2}>
             <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">Shop</InputLabel>
+              <InputLabel id="shop-select-label">Shop</InputLabel>
               <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
+                labelId="shop-select-label"
                 value={shop}
-                label="Shop"
-                onChange={handleChangeShop}
+                onChange={(e) => setShop(e.target.value)}
               >
-                <MenuItem value={10}>your</MenuItem>
-                <MenuItem value={20}>shop</MenuItem>
-                <MenuItem value={30}>select</MenuItem>
-                <MenuItem value={30}>wow</MenuItem>
+                <MenuItem value="10">Shop A</MenuItem>
+                <MenuItem value="20">Shop B</MenuItem>
+                <MenuItem value="30">Shop C</MenuItem>
               </Select>
             </FormControl>
             <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label">Category</InputLabel>
+              <InputLabel id="category-select-label">Category</InputLabel>
               <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
+                labelId="category-select-label"
                 value={category}
-                label="Category"
-                onChange={handleChangeCategory}
+                onChange={(e) => setCategory(e.target.value)}
               >
-                <MenuItem value={10}>select</MenuItem>
-                <MenuItem value={20}>your</MenuItem>
-                <MenuItem value={30}>category</MenuItem>
+                <MenuItem value="10">Electronics</MenuItem>
+                <MenuItem value="20">Fashion</MenuItem>
+                <MenuItem value="30">Home Decor</MenuItem>
               </Select>
             </FormControl>
           </Stack>
@@ -105,14 +110,25 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
             onRemove={() => setProductImage(null)}
           />
           <TextField
-            id="outlined-multiline-static5"
-            label="Detailed data"
+            label="Detailed Data"
             multiline
             rows={4}
+            fullWidth
+            value={detailedData}
+            onChange={(e) => setDetailedData(e.target.value)}
           />
         </Stack>
         <Stack sx={{ width: "100%" }}>
-          <DeviceFrame />
+          <DeviceFrame
+            giftName={giftName}
+            location={shop}
+            paragraph1={detailedData}
+            paragraph2={`Category: ${category}`}
+            price={`${(
+              parseFloat(originalPrice) +
+              (parseFloat(originalPrice) * parseFloat(profitPercentage)) / 100
+            ).toFixed(2)}`}
+          />
         </Stack>
       </Stack>
     </DialogWrapper>
@@ -120,13 +136,3 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
 };
 
 export default AddProductDialog;
-
-{
-  /* <DialogWrapper open={open} handleClose={handleClose} title="Add Product">
-      <Stack spacing={2}>
-        <TextField label="Product Name" fullWidth />
-        <TextField label="Price" type="number" fullWidth />
-        <button onClick={handleFormSubmit}>Submit</button>
-      </Stack>
-    </DialogWrapper> */
-}
