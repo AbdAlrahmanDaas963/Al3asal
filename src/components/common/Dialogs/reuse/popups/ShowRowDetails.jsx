@@ -183,17 +183,17 @@ function ShowRowDetails({ open, handleClose, onSubmit, data }) {
       <Stack
         alignItems={"center"}
         justifyContent={"center"}
-        gap={"10px"}
+        gap={"50px"}
         sx={{
           height: "fit-content",
         }}
       >
-        <Stack sx={{ border: "1px solid black" }}>
+        <Stack sx={{ border: "0px solid black" }}>
           <Typography variant="h5">Products</Typography>
           <Stack
             flexWrap={"wrap"}
             gap={"10px"}
-            sx={{ border: "1px solid red" }}
+            sx={{ border: "0px solid red" }}
             direction={"row"}
           >
             <GiftCard />
@@ -201,7 +201,7 @@ function ShowRowDetails({ open, handleClose, onSubmit, data }) {
             <GiftCard />
           </Stack>
         </Stack>
-        <Stack sx={{ border: "1px solid black", width: "100%" }}>
+        <Stack sx={{ border: "0px solid black", width: "100%" }}>
           <Typography variant="h5">Order Details</Typography>
           <Stack direction={"row"} gap={"50px"}>
             <Stack gap={"10px"}>
@@ -227,7 +227,7 @@ function ShowRowDetails({ open, handleClose, onSubmit, data }) {
             </Stack>
           </Stack>
         </Stack>
-        <Stack sx={{ border: "1px solid black", width: "100%" }}>
+        <Stack sx={{ border: "0px solid black", width: "100%" }}>
           <Stack direction={"row"} gap={"10px"}>
             <img src={PremuimIcon} width={"30px"} />
             <Typography variant="h5">Premium Service</Typography>
