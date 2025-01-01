@@ -2,11 +2,11 @@ import React from "react";
 import { Box, Typography, Button, Stack } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 
-import frame from "../../assets/frame.png";
+import frame from "../../../assets/frame.png";
 
-import BackIco from "../../assets/back.svg";
-import CartIco from "../../assets/icons/cart.svg";
-import ArrowRightIco from "../../assets/icons/ArrowRight.svg";
+import BackIco from "../../../assets/back.svg";
+import CartIco from "../../../assets/icons/cart.svg";
+import ArrowRightIco from "../../../assets/icons/ArrowRight.svg";
 
 function DeviceFrame({
   img,
@@ -16,6 +16,8 @@ function DeviceFrame({
   paragraph1,
   paragraph2,
 }) {
+  console.log(img);
+
   return (
     <Stack
       sx={{
@@ -92,19 +94,24 @@ function DeviceFrame({
                   color: "#000",
                   borderRadius: "10px",
                   overflow: "hidden",
+                  border: img ? "0px " : "3px dashed grey",
                 }}
               >
-                <img
-                  src="https://picsum.photos/250?random=141"
-                  alt="Sample"
-                  height={"100%"}
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
+                {img ? (
+                  <img
+                    src={img}
+                    alt="Sample"
+                    height={"100%"}
+                    style={{
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <Typography>Add me</Typography>
+                )}
               </Box>
             </Stack>
-            <Stack gap={"3px"}>
+            <Stack gap={"3px"} width={"100%"}>
               <Typography sx={{ color: "#000" }} fontWeight={"bold"}>
                 {giftName}
               </Typography>
@@ -115,7 +122,11 @@ function DeviceFrame({
               >
                 {location}
               </Typography>
-              <Stack direction={"row"} justifyContent={"space-between"}>
+              <Stack
+                direction={"row"}
+                justifyContent={"space-between"}
+                width={"100%"}
+              >
                 <Button
                   variant="contained"
                   size="small"

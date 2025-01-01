@@ -6,7 +6,7 @@ import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import EastIcon from "@mui/icons-material/East";
 
 function LookLike() {
-  console.log(<ArrowBackIosNewIcon htmlColor="black" />);
+  // console.log(<ArrowBackIosNewIcon htmlColor="black" />);
 
   return (
     <Stack

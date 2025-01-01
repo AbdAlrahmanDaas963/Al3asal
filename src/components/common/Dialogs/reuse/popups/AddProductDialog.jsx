@@ -7,7 +7,7 @@ import Select from "@mui/material/Select";
 
 import DialogWrapper from "../DialogWrapper";
 import ImageInput from "../../../ImageInput";
-import DeviceFrame from "../../../DeviceFrame";
+import DeviceFrame from "../../../Device/DeviceFrame";
 
 const AddProductDialog = ({ open, handleClose, onSubmit }) => {
   const [productImage, setProductImage] = useState(null);
@@ -56,7 +56,7 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
           height: "fit-content",
         }}
       >
-        <Stack sx={{ width: "100%" }}>
+        <Stack sx={{ width: "100%" }} gap={"20px"}>
           <TextField
             label="Gift Name"
             variant="outlined"
@@ -128,6 +128,7 @@ const AddProductDialog = ({ open, handleClose, onSubmit }) => {
               parseFloat(originalPrice) +
               (parseFloat(originalPrice) * parseFloat(profitPercentage)) / 100
             ).toFixed(2)}`}
+            img={productImage ? URL.createObjectURL(productImage) : null}
           />
         </Stack>
       </Stack>

@@ -15,19 +15,21 @@ import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 
 import DialogWrapper from "../DialogWrapper";
 
-import DeviceFrame from "../../../DeviceFrame";
+import DeviceFrame from "../../../Device/DeviceFrame";
+
+import DeviceFrameProvider from "../../../Device/DeviceFrameProvider";
+import DeviceOfferContent from "../../../Device/DeviceOfferContent";
 
 import { useTheme } from "@emotion/react";
 import ImageInput from "../../../ImageInput";
 
 function AddOfferDialog({ open, handleClose, onSubmit }) {
   const [productImage, setProductImage] = useState(null);
+  const [category, setCategory] = useState("");
+  const [shop, setShop] = useState("");
+  const [sale, setSale] = useState("");
 
   const theme = useTheme();
-  const [username, setUsername] = React.useState("");
-
-  const [shop, setShop] = React.useState("");
-  const [category, setCategory] = React.useState("");
 
   const handleChangeShop = (event) => {
     setShop(event.target.value);
@@ -56,7 +58,12 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
   };
 
   return (
-    <DialogWrapper open={open} handleClose={handleClose} title="Add Offer">
+    <DialogWrapper
+      fullScreen
+      open={open}
+      handleClose={handleClose}
+      title="Add Offer"
+    >
       <Stack
         direction={"row"}
         alignItems={"center"}
@@ -76,10 +83,10 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
               label="Shop"
               onChange={handleChangeShop}
             >
-              <MenuItem value={10}>your</MenuItem>
-              <MenuItem value={20}>shop</MenuItem>
-              <MenuItem value={30}>select</MenuItem>
-              <MenuItem value={30}>wow</MenuItem>
+              <MenuItem value={"Shop 1"}>Shop 1</MenuItem>
+              <MenuItem value={"Shop 2"}>Shop 2</MenuItem>
+              <MenuItem value={"Shop 3"}>Shop 3</MenuItem>
+              <MenuItem value={"Shop 4"}>Shop 4</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth>
@@ -91,97 +98,43 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
               label="Category"
               onChange={handleChangeCategory}
             >
-              <MenuItem value={10}>select</MenuItem>
-              <MenuItem value={20}>your</MenuItem>
-              <MenuItem value={30}>category</MenuItem>
+              <MenuItem value={"Category 1"}>Category 1</MenuItem>
+              <MenuItem value={"Category 2"}>Category 2</MenuItem>
+              <MenuItem value={"Category 3"}>Category 3</MenuItem>
+              <MenuItem value={"Category 4"}>Category 4</MenuItem>
             </Select>
           </FormControl>
           <TextField
             label="Sale percentage"
             variant="outlined"
             fullWidth
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={sale}
+            onChange={(e) => setSale(e.target.value)}
           />
           <ImageInput
             value={productImage ? URL.createObjectURL(productImage) : null}
             onChange={setProductImage}
             onRemove={() => setProductImage(null)}
           />
-          {/* <Stack direction="column" spacing={2} alignItems="center">
-            <Stack
-              direction="row"
-              justifyContent={"space-between"}
-              sx={{ width: "100%" }}
-            >
-              <Typography>Upload an Image</Typography>
-              <Button
-                variant="outlined"
-                component="label"
-                color={theme.palette.grey.main}
-                endIcon={<AddPhotoAlternateIcon />}
-              >
-                Choose File
-                <input
-                  type="file"
-                  hidden
-                  accept="image/*"
-                  onChange={handleImageChange}
-                />
-              </Button>
-            </Stack>
-
-            {selectedImage && (
-              <Box
-                sx={{
-                  width: 150,
-                  height: 150,
-                  border: "1px solid #ccc",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                }}
-              >
-                <Avatar
-                  src={selectedImage}
-                  variant="square"
-                  sx={{ width: "100%", height: "100%" }}
-                  alt="Uploaded Image"
-                />
-              </Box>
-            )}
-
-            {selectedImage && (
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleRemoveImage}
-              >
-                Remove Image
-              </Button>
-            )}
-          </Stack> */}
         </Stack>
         <Stack
           sx={{
             width: "100%",
-            height: "350px",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
           }}
         >
-          <img
-            src="https://picsum.photos/250?random=141"
-            alt="Sample"
-            height={"100%"}
-            style={{
-              objectFit: "cover",
-            }}
-          />
+          <DeviceFrameProvider>
+            <DeviceOfferContent
+              giftName="Holiday Gift"
+              price="20.00"
+              location="Shop A"
+              paragraph1="This is a great gift for the holidays."
+              paragraph2="Category: Holiday Items"
+              shop={shop}
+              category={category}
+              sale={sale}
+              img={productImage ? URL.createObjectURL(productImage) : null}
+            />
+          </DeviceFrameProvider>
         </Stack>
       </Stack>
     </DialogWrapper>
@@ -189,11 +142,3 @@ function AddOfferDialog({ open, handleClose, onSubmit }) {
 }
 
 export default AddOfferDialog;
-
-{
-  /* <Stack spacing={2}>
-        <TextField label="Offer Name" fullWidth />
-        <TextField label="Price" type="number" fullWidth />
-        <button onClick={handleFormSubmit}>Submit</button>
-      </Stack> */
-}

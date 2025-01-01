@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { TextField, Stack } from "@mui/material";
 import DialogWrapper from "../DialogWrapper";
 import ImageInput from "../../../ImageInput";
+import DeviceShopContent from "../../../Device/DeviceShopContent";
+import DeviceFrameProvider from "../../../Device/DeviceFrameProvider";
 
 function AddShopDialog({ open, handleClose, onSubmit }) {
   const [productImage, setProductImage] = useState(null);
@@ -14,7 +16,12 @@ function AddShopDialog({ open, handleClose, onSubmit }) {
   };
 
   return (
-    <DialogWrapper open={open} handleClose={handleClose} title="Add Shop">
+    <DialogWrapper
+      fullScreen
+      open={open}
+      handleClose={handleClose}
+      title="Add Shop"
+    >
       <Stack
         direction={"row"}
         alignItems={"center"}
@@ -26,7 +33,7 @@ function AddShopDialog({ open, handleClose, onSubmit }) {
       >
         <Stack sx={{ width: "100%" }}>
           <TextField
-            label="Category Name"
+            label="Shop Name"
             variant="outlined"
             fullWidth
             value={username}
@@ -42,21 +49,11 @@ function AddShopDialog({ open, handleClose, onSubmit }) {
         <Stack
           sx={{
             width: "100%",
-            height: "350px",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
           }}
         >
-          <img
-            src="https://picsum.photos/250?random=141"
-            alt="Sample"
-            height={"100%"}
-            style={{
-              objectFit: "cover",
-            }}
-          />
+          <DeviceFrameProvider>
+            <DeviceShopContent />
+          </DeviceFrameProvider>
         </Stack>
       </Stack>
     </DialogWrapper>
