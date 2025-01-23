@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -13,19 +13,36 @@ import { useTheme } from "@mui/styles";
 
 import loginLogo from "../assets/loginLogo.svg";
 
+import { useDispatch, useSelector } from "react-redux";
+
+import { login } from "../store/features/auth/authSlice";
+
 function LoginPage() {
   const theme = useTheme();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  const dispatch = useDispatch();
+  const { loading, error, token, user } = useSelector((state) => state.auth);
+
   const handleLogin = () => {
     if (username && password) {
-      navigate("/dashboard");
+      // navigate("/dashboard");
+      dispatch(login({ username, password }));
+      console.log("sent");
     } else {
       alert("Please enter valid credentials.");
     }
   };
+
+  // useEffect(() => {
+  //   // Ensure token is defined and non-empty
+  //   if (token && token.trim() !== "") {
+  //     navigate("/dashboard");
+  //   }
+  // }, [token, navigate]);
+
   return (
     <Stack
       sx={{
@@ -89,9 +106,15 @@ function LoginPage() {
             onClick={handleLogin}
             fullWidth
             style={{ marginTop: "20px" }}
+            disabled={loading} // Disable button while loading
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </Button>
+          {error && (
+            <Typography color="error" style={{ marginTop: "10px" }}>
+              {error}
+            </Typography>
+          )}
         </Stack>
       </Stack>
     </Stack>

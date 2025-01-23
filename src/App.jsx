@@ -5,6 +5,7 @@ import {
   Route,
   Link,
   useNavigate,
+  Navigate,
 } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
@@ -35,17 +36,20 @@ import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 
 import { DialogProvider } from "./components/common/Dialogs/reuse/DialogContext";
 
+import ProtectedRoute from "./utils/ProtectedRoute";
+import Login from "./features/Auth/Login";
+
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
 
 function App() {
-  const [direction, setDirection] = useState("ltr");
+  // const [direction, setDirection] = useState("ltr");
 
-  const theme = getTheme(direction);
+  // const theme = getTheme(direction);
 
-  useEffect(() => {
-    document.dir = direction;
-  }, [direction]);
+  // useEffect(() => {
+  //   document.dir = direction;
+  // }, [direction]);
 
   return (
     <DialogProvider>
@@ -54,16 +58,48 @@ function App() {
           {({ direction }) => (
             <ThemeProvider theme={getTheme(direction)}>
               <CssBaseline />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/dashboard/*"
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<HomeDash />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="accounts" element={<Accounts />} />
+                  <Route path="statistics" element={<Statistics />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="shops" element={<Shops />} />
+                  <Route path="category" element={<Category />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/login" replace />} />
+              </Routes>
+            </ThemeProvider>
+          )}
+        </LanguageContext.Consumer>
+      </LanguageProvider>
+    </DialogProvider>
+  );
+}
+
+export default App;
+
+{
+  /* <DialogProvider>
+      <LanguageProvider>
+        <LanguageContext.Consumer>
+          {({ direction }) => (
+            <ThemeProvider theme={getTheme(direction)}>
+              <CssBaseline />
               <Router>
-                {/* <Box sx={{ textAlign: "center", marginTop: 4 }}>
-                  <Typography variant="h4" sx={{ marginBottom: 2 }}>
-                    {direction === "ltr"
-                      ? "Welcome to the Dashboard"
-                      : "مرحبًا بك في لوحة التحكم"}
-                  </Typography>
-                  <LanguageToggleButton />
-                </Box> */}
+                
                 <Routes>
+                  
+                  <Route path="*" element={<Navigate to="/login" replace />} />
                   <Route path="/" element={<LoginPage />} />
                   <Route path="/dashboard/*" element={<Dashboard />} />
                   <Route path="/dashboard/*" element={<Dashboard />}>
@@ -81,11 +117,8 @@ function App() {
           )}
         </LanguageContext.Consumer>
       </LanguageProvider>
-    </DialogProvider>
-  );
+    </DialogProvider> */
 }
-
-export default App;
 
 {
   /* <ThemeProvider theme={theme}>
