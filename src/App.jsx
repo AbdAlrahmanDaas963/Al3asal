@@ -12,11 +12,14 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 
 import HomeDash from "./pages/HomeDash";
-import Accounts from "./pages/Accounts";
+// import Accounts from "./pages/Accounts";
+import Accounts from "./features/Dashboard/Accounts";
 import Orders from "./pages/Orders";
+//! import Orders from "./features/Orders/Orders";
+import Shops from "./features/Shops/Shops";
 import Statistics from "./pages/Statistics";
 import Products from "./pages/Products";
-import Shops from "./pages/Shops";
+// import Shops from "./pages/Shops";
 import Category from "./pages/Category";
 
 import { CssBaseline, Button, Box, Typography } from "@mui/material";
@@ -74,6 +77,8 @@ function App() {
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="products" element={<Products />} />
                   <Route path="shops" element={<Shops />} />
+                  <Route path="shops/edit/:shopId" element={<Shops />} />{" "}
+                  {/* Edit shop route */}
                   <Route path="category" element={<Category />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
