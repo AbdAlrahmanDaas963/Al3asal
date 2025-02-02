@@ -9,7 +9,12 @@ export const logIn = createAsyncThunk(
     try {
       const response = await axios.post(
         "https://asool-gifts.com/api/dashboard/login",
-        credentials
+        credentials,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        }
       );
       const { token, user } = response.data.data; // Extract data
       localStorage.setItem("token", token); // Save token to localStorage

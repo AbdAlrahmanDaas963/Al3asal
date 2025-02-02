@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Box, Button, TextField, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  MenuItem,
+} from "@mui/material";
 import { addShop } from "./shopSlice";
 
 const AddShopForm = () => {
@@ -10,6 +17,7 @@ const AddShopForm = () => {
     is_interested: "1",
     image: null,
   });
+
   const dispatch = useDispatch();
   const { status, error } = useSelector((state) => state.shops);
 
@@ -63,6 +71,7 @@ const AddShopForm = () => {
           margin="normal"
           required
         />
+        {/* ✅ FIXED: Use MenuItem instead of option */}
         <TextField
           select
           label="Is Interested"
@@ -73,19 +82,23 @@ const AddShopForm = () => {
           margin="normal"
           required
         >
-          <option value="1">Yes</option>
-          <option value="0">No</option>
+          <MenuItem value="1">Yes</MenuItem>
+          <MenuItem value="0">No</MenuItem>
         </TextField>
+
+        {/* ✅ FIXED: Added name="image" */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
           Upload Image
-          <input type="file" hidden onChange={handleFileChange} />
+          <input type="file" name="image" hidden onChange={handleFileChange} />
         </Button>
+
         {status === "failed" && (
           <Alert severity="error">{error || "Failed to add shop"}</Alert>
         )}
         {status === "succeeded" && (
           <Alert severity="success">Shop added successfully!</Alert>
         )}
+
         <Button
           type="submit"
           variant="contained"

@@ -14,6 +14,7 @@ export const addUser = createAsyncThunk(
         {
           headers: {
             Authorization: `Bearer ${auth.token}`,
+            Accept: "application/json",
           },
         }
       );

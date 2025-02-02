@@ -1,9 +1,19 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createShop, updateShop } from "./shopSlice";
-import { Box, Button, TextField, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Alert,
+  MenuItem,
+} from "@mui/material";
 
 const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.shops);
+
   const [formData, setFormData] = useState({
     "name[ar]": initialData["name[ar]"] || "",
     "name[en]": initialData["name[en]"] || "",
@@ -11,21 +21,23 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
     is_interested: initialData.is_interested || "1",
   });
 
-  const dispatch = useDispatch();
-  const { status, error } = useSelector((state) => state.shops);
-
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({ ...formData, [name]: files ? files[0] : value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (isEdit) {
-      dispatch(updateShop({ id: shopId, shopData: formData }));
-    } else {
-      dispatch(createShop(formData));
+
+    if (!formData.image) {
+      alert("Please upload an image");
+      return;
     }
+
+    dispatch(createShop(formData));
   };
 
   return (
@@ -54,20 +66,27 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
         margin="normal"
       />
       <TextField
-        label="Interested (1/0)"
+        select
+        label="Interested?"
         name="is_interested"
         value={formData.is_interested}
         onChange={handleChange}
         fullWidth
         margin="normal"
-      />
+        required
+      >
+        <MenuItem value="1">Yes</MenuItem>
+        <MenuItem value="0">No</MenuItem>
+      </TextField>
       <Button variant="contained" component="label" sx={{ mt: 2 }}>
         Upload Image
         <input type="file" name="image" hidden onChange={handleChange} />
       </Button>
-      {status === "failed" && (
+      {status === "failed" && error && (
         <Alert severity="error">
-          {error?.message || "Failed to save shop"}
+          {typeof error.message === "string"
+            ? error.message
+            : "An unexpected error occurred."}
         </Alert>
       )}
       {status === "succeeded" && (
