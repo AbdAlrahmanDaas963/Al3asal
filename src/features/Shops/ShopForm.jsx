@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createShop, updateShop } from "./shopSlice";
 import {
@@ -14,30 +14,72 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
   const dispatch = useDispatch();
   const { status, error } = useSelector((state) => state.shops);
 
+  // Set initial form data properly
   const [formData, setFormData] = useState({
-    "name[ar]": initialData["name[ar]"] || "",
-    "name[en]": initialData["name[en]"] || "",
+    name: {
+      ar: initialData?.name?.ar || "",
+      en: initialData?.name?.en || "",
+    },
     image: null,
-    is_interested: initialData.is_interested || "1",
+    is_interested: initialData?.is_interested || "1",
   });
 
+  // Update formData when initialData changes (needed for edit mode)
+  useEffect(() => {
+    setFormData({
+      name: {
+        ar: initialData?.name?.ar || "",
+        en: initialData?.name?.en || "",
+      },
+      image: null, // Keep existing image unless user uploads a new one
+      is_interested: initialData?.is_interested || "1",
+    });
+  }, [initialData]);
+
+  // Handle text input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
+    if (name.startsWith("name.")) {
+      // Handle nested name fields properly
+      const lang = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        name: {
+          ...prev.name,
+          [lang]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: files ? files[0] : value,
+      }));
+    }
   };
 
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.image) {
+    if (!isEdit && !formData.image) {
       alert("Please upload an image");
       return;
     }
 
-    dispatch(createShop(formData));
+    const formPayload = new FormData();
+    formPayload.append("name[ar]", formData.name.ar);
+    formPayload.append("name[en]", formData.name.en);
+    formPayload.append("is_interested", formData.is_interested);
+
+    if (formData.image) {
+      formPayload.append("image", formData.image);
+    }
+
+    if (isEdit) {
+      dispatch(updateShop({ id: shopId, shopData: formPayload }));
+    } else {
+      dispatch(createShop(formPayload));
+    }
   };
 
   return (
@@ -49,22 +91,25 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
       <Typography variant="h5">
         {isEdit ? "Edit Shop" : "Create Shop"}
       </Typography>
+
       <TextField
         label="Shop Name (AR)"
-        name="name[ar]"
-        value={formData["name[ar]"]}
+        name="name.ar"
+        value={formData.name.ar}
         onChange={handleChange}
         fullWidth
         margin="normal"
       />
+
       <TextField
         label="Shop Name (EN)"
-        name="name[en]"
-        value={formData["name[en]"]}
+        name="name.en"
+        value={formData.name.en}
         onChange={handleChange}
         fullWidth
         margin="normal"
       />
+
       <TextField
         select
         label="Interested?"
@@ -78,20 +123,22 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
         <MenuItem value="1">Yes</MenuItem>
         <MenuItem value="0">No</MenuItem>
       </TextField>
+
       <Button variant="contained" component="label" sx={{ mt: 2 }}>
         Upload Image
         <input type="file" name="image" hidden onChange={handleChange} />
       </Button>
+
       {status === "failed" && error && (
         <Alert severity="error">
-          {typeof error.message === "string"
-            ? error.message
-            : "An unexpected error occurred."}
+          {error?.message || "An unexpected error occurred."}
         </Alert>
       )}
+
       {status === "succeeded" && (
         <Alert severity="success">Shop saved successfully!</Alert>
       )}
+
       <Button
         type="submit"
         variant="contained"

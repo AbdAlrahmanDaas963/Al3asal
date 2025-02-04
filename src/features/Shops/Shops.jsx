@@ -1,37 +1,45 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+
+import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchShops } from "./shopSlice";
 import ShopList from "./ShopList";
 import ShopForm from "./ShopForm";
+import { Button } from "@mui/material";
 
 const Shops = () => {
-  const { shopId } = useParams(); // Get shopId from the URL if present
-  const [shops, setShops] = useState([]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { shops, status, error } = useSelector((state) => state.shops);
+  const { shopId } = useParams();
   const [initialData, setInitialData] = useState(null);
 
-  // Fetch the list of shops
   useEffect(() => {
-    fetch("https://asool-gifts.com/api/shops")
-      .then((response) => response.json())
-      .then((data) => setShops(data))
-      .catch((error) => console.error("Error fetching shops:", error));
-  }, []);
+    dispatch(fetchShops());
+  }, [dispatch]);
 
-  // Fetch data for a specific shop when editing
   useEffect(() => {
     if (shopId) {
       fetch(`https://asool-gifts.com/api/shops/${shopId}`)
         .then((response) => response.json())
         .then((data) => setInitialData(data))
-        .catch((error) => console.error("Error fetching shop:", error));
+        .catch(() => setInitialData(null));
     }
   }, [shopId]);
 
-  if (shopId && !initialData) {
-    return <div>Loading...</div>; // Show a loader while fetching data
-  }
+  if (status === "loading") return <p>Loading shops...</p>;
+  if (status === "failed") return <p>Error: {error}</p>;
 
   return (
-    <div>
+    <div className="shops-container">
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => navigate("/dashboard/shops/add")} // Navigate to AddShopForm
+      >
+        + Add Shop
+      </Button>
+
       {!shopId ? (
         <>
           <h1>Shops</h1>
@@ -40,11 +48,15 @@ const Shops = () => {
       ) : (
         <>
           <h1>{shopId ? "Edit Shop" : "Create Shop"}</h1>
-          <ShopForm
-            isEdit={!!shopId}
-            shopId={shopId}
-            initialData={initialData || {}}
-          />
+          {initialData === null && shopId ? (
+            <p>Loading shop data...</p>
+          ) : (
+            <ShopForm
+              isEdit={!!shopId}
+              shopId={shopId}
+              initialData={initialData || {}}
+            />
+          )}
         </>
       )}
     </div>

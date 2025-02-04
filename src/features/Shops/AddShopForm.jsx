@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -8,7 +9,7 @@ import {
   Alert,
   MenuItem,
 } from "@mui/material";
-import { addShop } from "./shopSlice";
+import { addShop, resetStatus } from "./shopSlice";
 
 const AddShopForm = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +20,13 @@ const AddShopForm = () => {
   });
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { status, error } = useSelector((state) => state.shops);
+
+  // Reset status when the component mounts
+  useEffect(() => {
+    dispatch(resetStatus());
+  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,7 +39,11 @@ const AddShopForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(addShop(formData));
+    dispatch(addShop(formData)).then(() => {
+      if (status === "succeeded") {
+        navigate("/dashboard/shops"); // Redirect to shops list
+      }
+    });
   };
 
   return (
@@ -71,7 +82,6 @@ const AddShopForm = () => {
           margin="normal"
           required
         />
-        {/* ✅ FIXED: Use MenuItem instead of option */}
         <TextField
           select
           label="Is Interested"
@@ -86,7 +96,6 @@ const AddShopForm = () => {
           <MenuItem value="0">No</MenuItem>
         </TextField>
 
-        {/* ✅ FIXED: Added name="image" */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
           Upload Image
           <input type="file" name="image" hidden onChange={handleFileChange} />

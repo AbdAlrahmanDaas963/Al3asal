@@ -18,12 +18,35 @@ export const addShop = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${auth.token}`,
             "Content-Type": "multipart/form-data",
+            Accept: "application/json",
           },
         }
       );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to create shop");
+    }
+  }
+);
+
+// Async thunk for fetching shops
+export const fetchShops = createAsyncThunk(
+  "shops/fetchShops",
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    console.log("Fetching shops with token:", auth.token); // Log the token
+    try {
+      const response = await axios.get("https://asool-gifts.com/api/shops", {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+      console.log("Shops fetched successfully:", response.data); // Log the response
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching shops:", error.response || error.message); // Log the error
+      return rejectWithValue(error.response?.data || "Failed to fetch shops");
     }
   }
 );
@@ -42,7 +65,10 @@ export const createShop = createAsyncThunk(
         "https://asool-gifts.com/api/shops/create",
         formData,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: "application/json",
+          },
         }
       );
       return response.data;
@@ -66,7 +92,10 @@ export const updateShop = createAsyncThunk(
         `https://asool-gifts.com/api/shops/update/${id}`,
         formData,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: "application/json",
+          },
         }
       );
       return response.data;
@@ -85,7 +114,10 @@ export const deleteShop = createAsyncThunk(
       const response = await axios.delete(
         `https://asool-gifts.com/api/shops/destroy/${id}`,
         {
-          headers: { Authorization: `Bearer ${auth.token}` },
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: "application/json",
+          },
         }
       );
       return response.data;
@@ -97,8 +129,17 @@ export const deleteShop = createAsyncThunk(
 
 const shopSlice = createSlice({
   name: "shops",
-  initialState: { status: "idle", error: null, shops: [] },
-  reducers: {},
+  initialState: {
+    status: "idle",
+    error: null,
+    shops: { data: [], status: null, error: null, statusCode: null },
+  },
+  reducers: {
+    resetStatus: (state) => {
+      state.status = "idle";
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(createShop.pending, (state) => {
@@ -135,14 +176,37 @@ const shopSlice = createSlice({
         state.status = "loading";
       })
       .addCase(addShop.fulfilled, (state, action) => {
+        console.log("Current state:", state);
+        console.log("Incoming shop:", action.payload);
         state.status = "succeeded";
-        state.shops.push(action.payload);
+        if (Array.isArray(state.shops.data)) {
+          state.shops.data.push(action.payload); // ✅ Add shop inside `data`
+        } else {
+          state.shops.data = [action.payload]; // ✅ Ensure it's always an array
+        }
+
+        // state.shops = Array.isArray(state.shops)
+        //   ? [...state.shops, action.payload]
+        //   : [action.payload];
       })
       .addCase(addShop.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(fetchShops.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchShops.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.shops = action.payload; // ✅ Store the whole API response
+      })
+      .addCase(fetchShops.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });
   },
 });
+
+export const { resetStatus } = shopSlice.actions;
 
 export default shopSlice.reducer;
