@@ -23,22 +23,42 @@ export const fetchCategories = createAsyncThunk(
   }
 );
 
+export const fetchCategoryById = createAsyncThunk(
+  "categories/fetchCategoryById",
+  async (id, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const response = await axios.get(`${API_BASE_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch category"
+      );
+    }
+  }
+);
+
 export const createCategory = createAsyncThunk(
   "categories/createCategory",
   async (categoryData, { getState, rejectWithValue }) => {
     const { auth } = getState();
     try {
-      const formData = new FormData();
-      Object.keys(categoryData).forEach((key) =>
-        formData.append(key, categoryData[key])
+      const response = await axios.post(
+        `${API_BASE_URL}/create`,
+        categoryData,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
       );
-      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-          "Content-Type": "multipart/form-data",
-          Accept: "application/json",
-        },
-      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -53,17 +73,13 @@ export const updateCategory = createAsyncThunk(
   async ({ id, categoryData }, { getState, rejectWithValue }) => {
     const { auth } = getState();
     try {
-      const formData = new FormData();
-      Object.keys(categoryData).forEach((key) =>
-        formData.append(key, categoryData[key])
-      );
-      const response = await axios.post(
+      const response = await axios.put(
         `${API_BASE_URL}/update/${id}`,
-        formData,
+        categoryData,
         {
           headers: {
             Authorization: `Bearer ${auth.token}`,
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
             Accept: "application/json",
           },
         }
@@ -102,7 +118,8 @@ const categorySlice = createSlice({
   initialState: {
     status: "idle",
     error: null,
-    categories: { data: [], status: null, error: null },
+    categories: [],
+    selectedCategory: null,
   },
   reducers: {
     resetStatus: (state) => {
@@ -123,12 +140,22 @@ const categorySlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      .addCase(fetchCategoryById.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchCategoryById.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.selectedCategory = action.payload;
+      })
+      .addCase(fetchCategoryById.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
       .addCase(createCategory.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(createCategory.fulfilled, (state, action) => {
+      .addCase(createCategory.fulfilled, (state) => {
         state.status = "succeeded";
-        state.categories.data.push(action.payload);
       })
       .addCase(createCategory.rejected, (state, action) => {
         state.status = "failed";

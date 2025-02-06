@@ -3,11 +3,11 @@ import { Stack, Typography, TextField, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ProductCard from "../../components/common/ProdcutCard";
 
-const ShopList = ({ shops, status, error }) => {
+const CategoryList = ({ category, status, error }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   if (status === "loading") {
-    return <Typography variant="body1">Loading shops...</Typography>;
+    return <Typography variant="body1">Loading category...</Typography>;
   }
 
   if (status === "failed") {
@@ -18,15 +18,15 @@ const ShopList = ({ shops, status, error }) => {
     );
   }
 
-  if (!Array.isArray(shops?.data) || shops.data.length === 0) {
-    return <Typography variant="body1">No shops available.</Typography>;
+  if (!Array.isArray(category?.data) || category.data.length === 0) {
+    return <Typography variant="body1">No category available.</Typography>;
   }
 
-  const filteredShops = shops.data.filter((shop) =>
+  const filteredCategory = category.data.filter((shop) =>
     shop?.name?.toLowerCase()?.includes(searchQuery.toLowerCase())
   );
 
-  console.log("Rendering shops:", filteredShops); // Debugging
+  console.log("Rendering category:", filteredCategory);
 
   return (
     <Stack
@@ -64,11 +64,13 @@ const ShopList = ({ shops, status, error }) => {
         alignItems="stretch"
         gap={2}
       >
-        {filteredShops.length > 0 ? (
-          filteredShops.map((shop) => <ProductCard key={shop.id} item={shop} />)
+        {filteredCategory.length > 0 ? (
+          filteredCategory.map((shop) => (
+            <ProductCard key={shop.id} item={shop} />
+          ))
         ) : (
           <Typography variant="body1" color="warning">
-            No matching shops found.
+            No matching Category found.
           </Typography>
         )}
       </Stack>
@@ -76,4 +78,4 @@ const ShopList = ({ shops, status, error }) => {
   );
 };
 
-export default ShopList;
+export default CategoryList;

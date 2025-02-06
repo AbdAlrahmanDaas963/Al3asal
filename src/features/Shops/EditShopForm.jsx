@@ -18,8 +18,7 @@ const EditShopForm = () => {
   const { status, error, selectedShop } = useSelector((state) => state.shops);
 
   const [formData, setFormData] = useState({
-    "name[ar]": "",
-    "name[en]": "",
+    name: "", // Updated to match the backend response
     is_interested: "1",
     image: null,
   });
@@ -31,13 +30,12 @@ const EditShopForm = () => {
 
   // Pre-fill the form when selectedShop is available
   useEffect(() => {
-    if (selectedShop) {
-      console.log("Selected shop:", selectedShop); // Log the selected shop
+    if (selectedShop?.data) {
+      console.log("Selected shop:", selectedShop.data); // Log the selected shop data
       setFormData({
-        "name[ar]": selectedShop.name?.ar || "",
-        "name[en]": selectedShop.name?.en || "",
-        is_interested: selectedShop.is_interested || "1",
-        image: null,
+        name: selectedShop.data.name || "", // Updated to match the backend response
+        is_interested: selectedShop.data.is_interested?.toString() || "1", // Ensure it's a string
+        image: null, // Keep existing image unless user uploads a new one
       });
     }
   }, [selectedShop]);
@@ -70,7 +68,7 @@ const EditShopForm = () => {
     });
   };
 
-  if (!selectedShop) {
+  if (!selectedShop?.data) {
     return <Typography variant="body1">Loading shop data...</Typography>;
   }
 
@@ -93,18 +91,9 @@ const EditShopForm = () => {
         sx={{ mt: 2, width: "400px" }}
       >
         <TextField
-          label="Shop Name (Arabic)"
-          name="name[ar]"
-          value={formData["name[ar]"]}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-        <TextField
-          label="Shop Name (English)"
-          name="name[en]"
-          value={formData["name[en]"]}
+          label="Shop Name"
+          name="name"
+          value={formData.name} // Updated to match the backend response
           onChange={handleChange}
           fullWidth
           margin="normal"

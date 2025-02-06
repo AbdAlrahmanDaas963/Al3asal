@@ -12,9 +12,12 @@ import HomeDash from "./pages/HomeDash";
 import Accounts from "./features/Dashboard/Accounts";
 import Orders from "./pages/Orders";
 import Shops from "./features/Shops/Shops";
+import Category from "./features/category/Category";
+import CategoryForm from "./features/category/CategoryForm";
+import CategoryList from "./features/category/CategoryList";
 import Statistics from "./pages/Statistics";
 import Products from "./pages/Products";
-import Category from "./pages/Category";
+// import Category from "./pages/Category";
 import AddShopForm from "./features/Shops/AddShopForm"; // Import the AddShopForm component
 
 import { CssBaseline } from "@mui/material";
@@ -57,12 +60,12 @@ function App() {
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="products" element={<Products />} />
+
+                  <Route path="category" element={<Category />} />
+
                   <Route path="shops" element={<Shops />} />
                   <Route path="shops/add" element={<AddShopForm />} />
-                  {/* Add this route */}
                   <Route path="shops/edit/:shopId" element={<EditShopForm />} />
-                  {/* Edit shop route */}
-                  <Route path="category" element={<Category />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>

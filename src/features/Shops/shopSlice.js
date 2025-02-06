@@ -32,6 +32,7 @@ export const fetchShopById = createAsyncThunk(
           Accept: "application/json",
         },
       });
+      console.log("Shop data fetched:", response.data);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch shop");
@@ -91,11 +92,13 @@ export const updateShop = createAsyncThunk(
     const { auth } = getState();
     try {
       const formData = new FormData();
-      Object.keys(shopData).forEach((key) =>
-        formData.append(key, shopData[key])
-      );
+      formData.append("name", shopData.name); // Updated to match the backend
+      formData.append("is_interested", shopData.is_interested); // Updated to match the backend
+      if (shopData.image) {
+        formData.append("image", shopData.image);
+      }
       const response = await axios.post(
-        `${API_BASE_URL}/update/${id}`,
+        `https://asool-gifts.com/api/shops/update/${id}`,
         formData,
         {
           headers: {
@@ -188,6 +191,7 @@ const shopSlice = createSlice({
       .addCase(fetchShopById.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.selectedShop = action.payload;
+        console.log("Selected shop set in state:", action.payload);
       })
       .addCase(fetchShopById.rejected, (state, action) => {
         state.status = "failed";
