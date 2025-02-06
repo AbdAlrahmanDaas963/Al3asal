@@ -29,6 +29,7 @@ import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 import { DialogProvider } from "./components/common/Dialogs/reuse/DialogContext";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Login from "./features/Auth/Login";
+import EditShopForm from "./features/Shops/EditShopForm";
 
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
@@ -57,9 +58,9 @@ function App() {
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="products" element={<Products />} />
                   <Route path="shops" element={<Shops />} />
-                  <Route path="shops/add" element={<AddShopForm />} />{" "}
+                  <Route path="shops/add" element={<AddShopForm />} />
                   {/* Add this route */}
-                  <Route path="shops/edit/:shopId" element={<Shops />} />{" "}
+                  <Route path="shops/edit/:shopId" element={<EditShopForm />} />
                   {/* Edit shop route */}
                   <Route path="category" element={<Category />} />
                 </Route>

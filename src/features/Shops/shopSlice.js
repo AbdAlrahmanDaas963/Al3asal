@@ -1,18 +1,101 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Async thunk for creating a shop
+const API_BASE_URL = "https://asool-gifts.com/api/shops";
+
+export const fetchShops = createAsyncThunk(
+  "shops/fetchShops",
+  async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const response = await axios.get(API_BASE_URL, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch shops");
+    }
+  }
+);
+
+export const fetchShopById = createAsyncThunk(
+  "shops/fetchShopById",
+  async (id, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const response = await axios.get(`${API_BASE_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch shop");
+    }
+  }
+);
+
+export const createShop = createAsyncThunk(
+  "shops/createShop",
+  async (shopData, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const formData = new FormData();
+      Object.keys(shopData).forEach((key) =>
+        formData.append(key, shopData[key])
+      );
+      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to create shop");
+    }
+  }
+);
+
 export const addShop = createAsyncThunk(
   "shops/addShop",
   async (shopData, { getState, rejectWithValue }) => {
     const { auth } = getState();
     try {
       const formData = new FormData();
-      Object.keys(shopData).forEach((key) => {
-        formData.append(key, shopData[key]);
+      Object.keys(shopData).forEach((key) =>
+        formData.append(key, shopData[key])
+      );
+      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
       });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to add shop");
+    }
+  }
+);
+
+export const updateShop = createAsyncThunk(
+  "shops/updateShop",
+  async ({ id, shopData }, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const formData = new FormData();
+      Object.keys(shopData).forEach((key) =>
+        formData.append(key, shopData[key])
+      );
       const response = await axios.post(
-        "https://asool-gifts.com/api/shops/create",
+        `${API_BASE_URL}/update/${id}`,
         formData,
         {
           headers: {
@@ -24,105 +107,25 @@ export const addShop = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to create shop");
+      return rejectWithValue(error.response?.data || "Failed to update shop");
     }
   }
 );
 
-// Async thunk for fetching shops
-export const fetchShops = createAsyncThunk(
-  "shops/fetchShops",
-  async (_, { getState, rejectWithValue }) => {
-    const { auth } = getState();
-    console.log("Fetching shops with token:", auth.token); // Log the token
-    try {
-      const response = await axios.get("https://asool-gifts.com/api/shops", {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-          Accept: "application/json",
-        },
-      });
-      console.log("Shops fetched successfully:", response.data); // Log the response
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching shops:", error.response || error.message); // Log the error
-      return rejectWithValue(error.response?.data || "Failed to fetch shops");
-    }
-  }
-);
-
-// Async thunk for creating a shop
-export const createShop = createAsyncThunk(
-  "shops/createShop",
-  async (shopData, { getState, rejectWithValue }) => {
-    const { auth } = getState();
-    try {
-      const formData = new FormData();
-      Object.keys(shopData).forEach((key) =>
-        formData.append(key, shopData[key])
-      );
-      const response = await axios.post(
-        "https://asool-gifts.com/api/shops/create",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-// Async thunk for updating a shop
-export const updateShop = createAsyncThunk(
-  "shops/updateShop",
-  async ({ id, shopData }, { getState, rejectWithValue }) => {
-    const { auth } = getState();
-    try {
-      const formData = new FormData();
-      Object.keys(shopData).forEach((key) =>
-        formData.append(key, shopData[key])
-      );
-      const response = await axios.post(
-        `https://asool-gifts.com/api/shops/update/${id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-// Async thunk for deleting a shop
 export const deleteShop = createAsyncThunk(
   "shops/deleteShop",
   async (id, { getState, rejectWithValue }) => {
     const { auth } = getState();
     try {
-      const response = await axios.delete(
-        `https://asool-gifts.com/api/shops/destroy/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await axios.delete(`${API_BASE_URL}/destroy/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error.response?.data || "Failed to delete shop");
     }
   }
 );
@@ -133,6 +136,7 @@ const shopSlice = createSlice({
     status: "idle",
     error: null,
     shops: { data: [], status: null, error: null, statusCode: null },
+    selectedShop: null,
   },
   reducers: {
     resetStatus: (state) => {
@@ -152,42 +156,16 @@ const shopSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      .addCase(updateShop.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(updateShop.fulfilled, (state) => {
-        state.status = "succeeded";
-      })
-      .addCase(updateShop.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      .addCase(deleteShop.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(deleteShop.fulfilled, (state) => {
-        state.status = "succeeded";
-      })
-      .addCase(deleteShop.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
       .addCase(addShop.pending, (state) => {
         state.status = "loading";
       })
       .addCase(addShop.fulfilled, (state, action) => {
-        console.log("Current state:", state);
-        console.log("Incoming shop:", action.payload);
         state.status = "succeeded";
         if (Array.isArray(state.shops.data)) {
-          state.shops.data.push(action.payload); // ✅ Add shop inside `data`
+          state.shops.data.push(action.payload);
         } else {
-          state.shops.data = [action.payload]; // ✅ Ensure it's always an array
+          state.shops.data = [action.payload];
         }
-
-        // state.shops = Array.isArray(state.shops)
-        //   ? [...state.shops, action.payload]
-        //   : [action.payload];
       })
       .addCase(addShop.rejected, (state, action) => {
         state.status = "failed";
@@ -198,9 +176,30 @@ const shopSlice = createSlice({
       })
       .addCase(fetchShops.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.shops = action.payload; // ✅ Store the whole API response
+        state.shops = action.payload;
       })
       .addCase(fetchShops.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(fetchShopById.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchShopById.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.selectedShop = action.payload;
+      })
+      .addCase(fetchShopById.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateShop.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateShop.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(updateShop.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });
@@ -208,5 +207,4 @@ const shopSlice = createSlice({
 });
 
 export const { resetStatus } = shopSlice.actions;
-
 export default shopSlice.reducer;

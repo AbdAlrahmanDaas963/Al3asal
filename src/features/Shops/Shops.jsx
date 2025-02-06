@@ -33,16 +33,20 @@ const Shops = () => {
   return (
     <div className="shops-container">
       <Button
-        variant="contained"
-        color="primary"
-        onClick={() => navigate("/dashboard/shops/add")} // Navigate to AddShopForm
+        onClick={() => navigate("/dashboard/shops/add")}
+        sx={{
+          width: "100%",
+          height: "100px",
+          border: "4px dashed #fff",
+          fontSize: "20px",
+        }}
       >
-        + Add Shop
+        Add Shop +
       </Button>
 
       {!shopId ? (
         <>
-          <h1>Shops</h1>
+          <h3>Shops</h3>
           <ShopList shops={shops} />
         </>
       ) : (
