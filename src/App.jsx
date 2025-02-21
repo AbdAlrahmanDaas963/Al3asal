@@ -66,7 +66,6 @@ function App() {
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="products" element={<Products />} />
 
-                  {/* <Route path="category" element={<Category />} /> */}
                   <Route path="category" element={<Categories />} />
                   <Route
                     path="category/add"

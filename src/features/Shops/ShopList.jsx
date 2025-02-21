@@ -72,7 +72,9 @@ const ShopList = ({ shops, status, error }) => {
         gap={2}
       >
         {filteredShops.length > 0 ? (
-          filteredShops.map((shop) => <ProductCard key={shop.id} item={shop} />)
+          filteredShops.map((shop, index) => (
+            <ProductCard key={index} item={shop} />
+          ))
         ) : (
           <Typography variant="body1" color="warning">
             No matching shops found.
