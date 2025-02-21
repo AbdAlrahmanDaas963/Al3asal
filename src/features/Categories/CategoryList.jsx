@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Stack, Typography, TextField, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import ProductCard from "../../components/common/ProdcutCard";
+import CategoryCard from "../../components/common/CategoryCard";
 
-const ShopList = ({ shops, status, error }) => {
+const CategoryList = ({ categories, status, error }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    console.log("Categories received:", categories);
+  }, [categories]);
+
   if (status === "loading") {
-    return <Typography variant="body1">Loading shops...</Typography>;
+    return <Typography variant="body1">Loading categories...</Typography>;
   }
 
   if (status === "failed") {
@@ -18,21 +22,17 @@ const ShopList = ({ shops, status, error }) => {
     );
   }
 
-  if (!Array.isArray(shops?.data) || shops.data.length === 0) {
-    return <Typography variant="body1">No shops available.</Typography>;
+  if (!Array.isArray(categories) || categories.length === 0) {
+    return <Typography variant="body1">No categories available.</Typography>;
   }
 
-  const filteredShops = (shops?.data || []).filter((shop) => {
-    const shopName =
-      typeof shop.name === "string"
-        ? shop.name
-        : shop.name?.en || shop.name?.ar || ""; // Handle object names
-    return shopName.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredCategories = categories.filter((category) => {
+    const categoryName =
+      typeof category.name === "string"
+        ? category.name
+        : category.name?.en || category.name?.ar || "";
+    return categoryName.toLowerCase().includes(searchQuery.toLowerCase());
   });
-
-  useEffect(() => {
-    console.log("Filtered shops updated:", filteredShops);
-  }, [filteredShops]);
 
   return (
     <Stack
@@ -42,7 +42,7 @@ const ShopList = ({ shops, status, error }) => {
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Search for Shop"
+        placeholder="Search for Category"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
@@ -71,11 +71,13 @@ const ShopList = ({ shops, status, error }) => {
         alignItems="stretch"
         gap={2}
       >
-        {filteredShops.length > 0 ? (
-          filteredShops.map((shop) => <ProductCard key={shop.id} item={shop} />)
+        {filteredCategories.length > 0 ? (
+          filteredCategories.map((category, index) => (
+            <CategoryCard key={index} category={category} />
+          ))
         ) : (
           <Typography variant="body1" color="warning">
-            No matching shops found.
+            No matching categories found.
           </Typography>
         )}
       </Stack>
@@ -83,4 +85,4 @@ const ShopList = ({ shops, status, error }) => {
   );
 };
 
-export default ShopList;
+export default CategoryList;

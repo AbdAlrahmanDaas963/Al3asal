@@ -12,9 +12,9 @@ import HomeDash from "./pages/HomeDash";
 import Accounts from "./features/Dashboard/Accounts";
 import Orders from "./pages/Orders";
 import Shops from "./features/Shops/Shops";
-import Category from "./features/category/Category";
-import CategoryForm from "./features/category/CategoryForm";
-import CategoryList from "./features/category/CategoryList";
+import Category from "./features/category-old/Category";
+import CategoryForm from "./features/category-old/CategoryForm";
+import CategoryList from "./features/category-old/CategoryList";
 import Statistics from "./pages/Statistics";
 import Products from "./pages/Products";
 // import Category from "./pages/Category";
@@ -33,6 +33,11 @@ import { DialogProvider } from "./components/common/Dialogs/reuse/DialogContext"
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Login from "./features/Auth/Login";
 import EditShopForm from "./features/Shops/EditShopForm";
+
+import Categories from "./features/Categories/Categories";
+import AddCategoryForm from "./features/Categories/AddCategoryForm";
+
+import EditCategory from "./features/Categories/EditCategory";
 
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
@@ -61,11 +66,24 @@ function App() {
                   <Route path="statistics" element={<Statistics />} />
                   <Route path="products" element={<Products />} />
 
-                  <Route path="category" element={<Category />} />
+                  {/* <Route path="category" element={<Category />} /> */}
+                  <Route path="category" element={<Categories />} />
+                  <Route
+                    path="category/add"
+                    element={<AddCategoryForm isEdit={false} />}
+                  />
+                  <Route
+                    path="category/edit/:categoryId"
+                    element={<EditCategory />}
+                  />
 
                   <Route path="shops" element={<Shops />} />
                   <Route path="shops/add" element={<AddShopForm />} />
                   <Route path="shops/edit/:shopId" element={<EditShopForm />} />
+                  {/* 
+                  <Route path="shops" element={<ShopsPage />} />
+                  <Route path="shops/new" element={<ShopForm />} />
+                  <Route path="shops/edit/:id" element={<EditShopForm />} /> */}
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>

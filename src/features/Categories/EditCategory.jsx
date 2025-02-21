@@ -9,20 +9,25 @@ import {
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchShopById, updateShop, resetStatus } from "./shopSlice";
+import {
+  fetchCategoryById,
+  updateCategory,
+  resetStatus,
+} from "./categorySlice"; // Assuming you have these actions
 
-const EditShopForm = () => {
-  const { shopId } = useParams();
+const EditCategoryForm = () => {
+  const { categoryId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const shopFromState = location.state?.item;
-  const { status, error, selectedShop } = useSelector((state) => state.shops);
+  const categoryFromState = location.state?.item;
+  const { status, error, selectedCategory } = useSelector(
+    (state) => state.categories
+  );
 
   const [formData, setFormData] = useState({
     name: { en: "", ar: "" },
-    is_interested: "1",
     image: null,
   });
 
@@ -30,22 +35,26 @@ const EditShopForm = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [preview, setPreview] = useState(null);
 
+  // Fetch category data on mount if not present in state
   useEffect(() => {
-    if (!shopFromState) {
-      dispatch(fetchShopById(shopId));
+    if (!categoryFromState && !selectedCategory?.data) {
+      dispatch(fetchCategoryById(categoryId));
     }
-  }, [dispatch, shopId, shopFromState]);
+  }, [dispatch, categoryId, categoryFromState, selectedCategory?.data]);
 
+  // Set form data when category data is fetched
   useEffect(() => {
-    const shopData = shopFromState || selectedShop?.data;
-    if (shopData) {
+    const categoryData = categoryFromState || selectedCategory?.data;
+    if (categoryData) {
       setFormData({
-        name: { en: shopData.name?.en || "", ar: shopData.name?.ar || "" },
-        is_interested: shopData.is_interested?.toString() || "1",
-        image: shopData.image || null,
+        name: {
+          en: categoryData.name?.en || "",
+          ar: categoryData.name?.ar || "",
+        },
+        image: categoryData.image || null,
       });
     }
-  }, [shopFromState, selectedShop]);
+  }, [categoryFromState, selectedCategory]);
 
   useEffect(() => {
     dispatch(resetStatus());
@@ -81,11 +90,9 @@ const EditShopForm = () => {
 
   const isFormUnchanged = () => {
     return (
-      formData.name.en === selectedShop?.data?.name?.en &&
-      formData.name.ar === selectedShop?.data?.name?.ar &&
-      formData.is_interested ===
-        selectedShop?.data?.is_interested?.toString() &&
-      formData.image === selectedShop?.data?.image
+      formData.name.en === selectedCategory?.data?.name?.en &&
+      formData.name.ar === selectedCategory?.data?.name?.ar &&
+      formData.image === selectedCategory?.data?.image
     );
   };
 
@@ -96,11 +103,11 @@ const EditShopForm = () => {
 
     if (isFormUnchanged()) return;
 
-    dispatch(updateShop({ id: shopId, shopData: formData }))
+    dispatch(updateCategory({ id: categoryId, categoryData: formData }))
       .unwrap()
-      .then(() => navigate("/dashboard/shops"))
+      .then(() => navigate("/dashboard/categories"))
       .catch((err) => {
-        console.error("Failed to update shop:", err);
+        console.error("Failed to update category:", err);
         if (err.response && err.response.data.errors) {
           setValidationErrors(err.response.data.errors);
         } else {
@@ -123,8 +130,8 @@ const EditShopForm = () => {
     />
   );
 
-  if (!selectedShop?.data && !shopFromState) {
-    return <Typography variant="body1">Loading shop data...</Typography>;
+  if (status === "loading" || (!selectedCategory?.data && !categoryFromState)) {
+    return <Typography variant="body1">Loading category data...</Typography>;
   }
 
   return (
@@ -137,29 +144,15 @@ const EditShopForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Edit Shop
+        Edit Category
       </Typography>
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{ mt: 2, width: "400px" }}
       >
-        {renderTextField("Shop Name (English)", "name.en")}
-        {renderTextField("Shop Name (Arabic)", "name.ar")}
-
-        <TextField
-          select
-          label="Is Interested"
-          name="is_interested"
-          value={formData.is_interested}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        >
-          <MenuItem value="1">Yes</MenuItem>
-          <MenuItem value="0">No</MenuItem>
-        </TextField>
+        {renderTextField("Category Name (English)", "name.en")}
+        {renderTextField("Category Name (Arabic)", "name.ar")}
 
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
           Upload New Image
@@ -175,7 +168,7 @@ const EditShopForm = () => {
                   ? formData.image
                   : preview || "/default-image.jpg"
               }
-              alt="Shop"
+              alt="Category"
               style={{ width: "100%", maxHeight: "150px" }}
             />
           </Box>
@@ -195,11 +188,11 @@ const EditShopForm = () => {
           sx={{ mt: 2 }}
           disabled={status === "loading" || isFormUnchanged()}
         >
-          {status === "loading" ? "Updating..." : "Update Shop"}
+          {status === "loading" ? "Updating..." : "Update Category"}
         </Button>
       </Box>
     </Box>
   );
 };
 
-export default EditShopForm;
+export default EditCategoryForm;

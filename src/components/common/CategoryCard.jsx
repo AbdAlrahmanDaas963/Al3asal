@@ -1,19 +1,18 @@
 import { Button, Stack, Typography, Chip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { deleteShop } from "../../features/Shops/shopSlice";
+import { deleteCategory } from "../../features/Categories/categorySlice";
 
-function ProductCard({ item }) {
-  const { id, name, image, is_interested } = item;
+function CategoryCard({ category }) {
+  const { id, name, image, is_featured } = category;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleEdit = (shop) => {
-    navigate(`/dashboard/shops/edit/${shop.id}`, { state: { shop } });
-  };
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this shop?")) {
-      dispatch(deleteShop(id));
+    if (
+      window.confirm(`Are you sure you want to delete this category? ${id}`)
+    ) {
+      dispatch(deleteCategory(id));
     }
   };
 
@@ -42,9 +41,9 @@ function ProductCard({ item }) {
         }}
       />
 
-      {is_interested ? (
+      {is_featured ? (
         <Chip
-          label="Interested"
+          label="Featured"
           color="primary"
           size="small"
           sx={{ position: "absolute", top: 10, right: 10 }}
@@ -53,7 +52,7 @@ function ProductCard({ item }) {
 
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">
-          Product Name:
+          Category Name:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
           {name}
@@ -66,7 +65,7 @@ function ProductCard({ item }) {
           color="primary"
           size="small"
           onClick={() =>
-            navigate(`/dashboard/shops/edit/${id}`, { state: { item } })
+            navigate(`/dashboard/category/edit/${id}`, { state: { category } })
           }
         >
           Edit
@@ -84,4 +83,4 @@ function ProductCard({ item }) {
   );
 }
 
-export default ProductCard;
+export default CategoryCard;

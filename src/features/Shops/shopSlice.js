@@ -92,11 +92,29 @@ export const updateShop = createAsyncThunk(
     const { auth } = getState();
     try {
       const formData = new FormData();
-      formData.append("name", shopData.name); // Updated to match the backend
-      formData.append("is_interested", shopData.is_interested); // Updated to match the backend
-      if (shopData.image) {
+
+      // Debugging: Log shopData before appending
+      console.log("shopData received:", shopData);
+
+      // Ensure name exists and is an object
+      if (shopData.name && typeof shopData.name === "object") {
+        if (shopData.name.en) formData.append("name[en]", shopData.name.en);
+        if (shopData.name.ar) formData.append("name[ar]", shopData.name.ar);
+      } else {
+        console.error("shopData.name is missing or incorrect:", shopData.name);
+      }
+
+      // Convert is_interested to string format
+      formData.append("is_interested", shopData.is_interested ? "1" : "0");
+
+      // Append image only if it's a File object
+      if (shopData.image instanceof File) {
         formData.append("image", shopData.image);
       }
+
+      // Debugging: Log FormData values
+      console.log("FormData being sent:", Object.fromEntries(formData));
+
       const response = await axios.post(
         `https://asool-gifts.com/api/shops/update/${id}`,
         formData,
@@ -108,9 +126,13 @@ export const updateShop = createAsyncThunk(
           },
         }
       );
+
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to update shop");
+      console.error("Error response:", error.response?.data);
+      return rejectWithValue(
+        error.response?.data || { message: "Failed to update shop" }
+      );
     }
   }
 );
@@ -211,4 +233,66 @@ const shopSlice = createSlice({
 });
 
 export const { resetStatus } = shopSlice.actions;
+
 export default shopSlice.reducer;
+
+// export const updateShop = createAsyncThunk(
+//   "shops/updateShop",
+//   async ({ id, shopData }, { getState, rejectWithValue }) => {
+//     const { auth } = getState();
+//     try {
+//       const formData = new FormData();
+//       formData.append("name", shopData.name);
+//       formData.append("is_interested", shopData.is_interested);
+//       if (shopData.image) {
+//         formData.append("image", shopData.image);
+//       }
+//       const response = await axios.put(
+//         `https://asool-gifts.com/api/shops/update/${id}`,
+//         formData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${auth.token}`,
+//             "Content-Type": "multipart/form-data",
+//             Accept: "application/json",
+//           },
+//         }
+//       );
+//       return response.data;
+//     } catch (error) {
+//       // Return the error response from the backend
+//       return rejectWithValue(
+//         error.response?.data || { message: "Failed to update shop" }
+//       );
+//     }
+//   }
+// );
+
+// export const updateShop = createAsyncThunk(
+//   "shops/updateShop",
+//   async ({ id, shopData }, { getState, rejectWithValue }) => {
+//     const { auth } = getState();
+//     try {
+//       const formData = new FormData();
+//       formData.append("name", shopData.name); // Updated to match the backend
+//       formData.append("is_interested", shopData.is_interested); // Updated to match the backend
+//       if (shopData.image) {
+//         formData.append("image", shopData.image);
+//       }
+//       const response = await axios.post(
+//         `https://asool-gifts.com/api/shops/update/${id}`,
+//         formData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${auth.token}`,
+//             "Content-Type": "multipart/form-data",
+//             Accept: "application/json",
+//           },
+//         }
+//       );
+//       return response.data;
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data || "Failed to update shop");
+//     }
+//   }
+// );

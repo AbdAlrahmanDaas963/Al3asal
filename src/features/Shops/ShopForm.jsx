@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createShop, updateShop } from "./shopSlice";
+import { useLocation, useParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -10,51 +11,40 @@ import {
   MenuItem,
 } from "@mui/material";
 
-const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
+const ShopForm = ({ isEdit = false, initialData = {} }) => {
+  const location = useLocation();
+  const { shopId } = useParams();
   const dispatch = useDispatch();
   const { status, error } = useSelector((state) => state.shops);
 
-  // Set initial form data properly
   const [formData, setFormData] = useState({
-    name: {
-      ar: initialData?.name?.ar || "",
-      en: initialData?.name?.en || "",
-    },
+    name: { ar: "", en: "" },
+    is_interested: "1",
     image: null,
-    is_interested: initialData?.is_interested || "1",
   });
 
-  // Update formData when initialData changes (needed for edit mode)
+  // Populate form when editing
   useEffect(() => {
-    setFormData({
-      name: {
-        ar: initialData?.name?.ar || "",
-        en: initialData?.name?.en || "",
-      },
-      image: null, // Keep existing image unless user uploads a new one
-      is_interested: initialData?.is_interested || "1",
-    });
+    if (initialData && Object.keys(initialData).length > 0) {
+      setFormData({
+        name: initialData.name || { ar: "", en: "" },
+        is_interested: initialData.is_interested?.toString() || "1",
+        image: null,
+      });
+    }
   }, [initialData]);
 
-  // Handle text input changes
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name.startsWith("name.")) {
-      // Handle nested name fields properly
-      const lang = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        name: {
-          ...prev.name,
-          [lang]: value,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: files ? files[0] : value,
-      }));
-    }
+
+    setFormData((prev) => {
+      if (name.startsWith("name.")) {
+        const lang = name.split(".")[1];
+        return { ...prev, name: { ...prev.name, [lang]: value } };
+      }
+      return { ...prev, [name]: files ? files[0] : value };
+    });
   };
 
   // Handle form submission
@@ -70,10 +60,7 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
     formPayload.append("name[ar]", formData.name.ar);
     formPayload.append("name[en]", formData.name.en);
     formPayload.append("is_interested", formData.is_interested);
-
-    if (formData.image) {
-      formPayload.append("image", formData.image);
-    }
+    if (formData.image) formPayload.append("image", formData.image);
 
     if (isEdit) {
       dispatch(updateShop({ id: shopId, shopData: formPayload }));
@@ -93,21 +80,23 @@ const ShopForm = ({ isEdit = false, shopId = null, initialData = {} }) => {
       </Typography>
 
       <TextField
-        label="Shop Name (AR)"
+        label="Shop Name (Arabic)"
         name="name.ar"
         value={formData.name.ar}
         onChange={handleChange}
         fullWidth
         margin="normal"
+        required
       />
 
       <TextField
-        label="Shop Name (EN)"
+        label="Shop Name (English)"
         name="name.en"
         value={formData.name.en}
         onChange={handleChange}
         fullWidth
         margin="normal"
+        required
       />
 
       <TextField
