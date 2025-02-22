@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchShops } from "./shopSlice";
 import ShopList from "./ShopList";
 import ShopForm from "./ShopForm";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 
 const Shops = ({ shopId }) => {
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ const Shops = ({ shopId }) => {
     dispatch(fetchShops());
   }, [dispatch]);
 
-  if (status === "loading") return <p>Loading shops...</p>;
+  if (status === "loading") return <CircularProgress />;
   if (status === "failed") return <p>Error: {error}</p>;
 
   return (

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Stack, Typography, TextField, InputAdornment } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  TextField,
+  InputAdornment,
+  CircularProgress,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ProductCard from "../../components/common/ProdcutCard";
 
@@ -7,7 +13,7 @@ const ShopList = ({ shops, status, error }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   if (status === "loading") {
-    return <Typography variant="body1">Loading shops...</Typography>;
+    return <CircularProgress />;
   }
 
   if (status === "failed") {

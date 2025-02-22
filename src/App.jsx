@@ -14,7 +14,7 @@ import Orders from "./pages/Orders";
 import Shops from "./features/Shops/Shops";
 
 import Statistics from "./pages/Statistics";
-import Products from "./pages/Products";
+// import Products from "./pages/Products";
 // import Category from "./pages/Category";
 import AddShopForm from "./features/Shops/AddShopForm"; // Import the AddShopForm component
 
@@ -36,6 +36,10 @@ import Categories from "./features/Categories/Categories";
 import AddCategoryForm from "./features/Categories/AddCategoryForm";
 
 import EditCategory from "./features/Categories/EditCategory";
+
+import Products from "./features/Products/Products";
+import AddProductForm from "./features/Products/AddProductForm";
+import EditProductForm from "./features/Products/EditProductForm";
 
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
@@ -62,7 +66,13 @@ function App() {
                   <Route path="orders" element={<Orders />} />
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="statistics" element={<Statistics />} />
+
                   <Route path="products" element={<Products />} />
+                  <Route path="products/add" element={<AddProductForm />} />
+                  <Route
+                    path="products/edit/:productId"
+                    element={<EditProductForm />}
+                  />
 
                   <Route path="category" element={<Categories />} />
                   <Route
@@ -77,10 +87,6 @@ function App() {
                   <Route path="shops" element={<Shops />} />
                   <Route path="shops/add" element={<AddShopForm />} />
                   <Route path="shops/edit/:shopId" element={<EditShopForm />} />
-                  {/* 
-                  <Route path="shops" element={<ShopsPage />} />
-                  <Route path="shops/new" element={<ShopForm />} />
-                  <Route path="shops/edit/:id" element={<EditShopForm />} /> */}
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>

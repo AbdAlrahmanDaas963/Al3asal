@@ -176,7 +176,12 @@ const EditShopForm = () => {
                   : preview || "/default-image.jpg"
               }
               alt="Shop"
-              style={{ width: "100%", maxHeight: "150px" }}
+              style={{
+                width: "100%",
+                maxWidth: "100%", // Ensure the image doesn't exceed the container width
+                maxHeight: "300px", // Control the maximum height to avoid distortion
+                objectFit: "cover", // Maintain aspect ratio while covering the area
+              }}
             />
           </Box>
         )}

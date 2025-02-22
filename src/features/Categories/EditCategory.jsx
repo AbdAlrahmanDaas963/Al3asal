@@ -169,7 +169,12 @@ const EditCategoryForm = () => {
                   : preview || "/default-image.jpg"
               }
               alt="Category"
-              style={{ width: "100%", maxHeight: "150px" }}
+              style={{
+                width: "100%", // Ensure the image fills the width of the container
+                maxWidth: "100%", // Ensure image doesn't exceed container width
+                maxHeight: "300px", // Adjust max height for better fitting
+                objectFit: "cover", // Maintain aspect ratio while covering the container
+              }}
             />
           </Box>
         )}

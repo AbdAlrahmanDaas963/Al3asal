@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategories } from "./categorySlice";
 import CategoryList from "./CategoryList";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 import AddCategoryForm from "./AddCategoryForm";
 
 const Categories = ({ categoryId }) => {
@@ -25,7 +25,7 @@ const Categories = ({ categoryId }) => {
     }
   }, [categoryId, categories]);
 
-  if (status === "loading") return <p>Loading categories...</p>;
+  if (status === "loading") return <CircularProgress />;
   if (status === "failed") return <p>Error: {error}</p>;
 
   return (
