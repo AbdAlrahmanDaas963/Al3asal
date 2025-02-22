@@ -12,9 +12,7 @@ import HomeDash from "./pages/HomeDash";
 import Accounts from "./features/Dashboard/Accounts";
 import Orders from "./pages/Orders";
 import Shops from "./features/Shops/Shops";
-import Category from "./features/category-old/Category";
-import CategoryForm from "./features/category-old/CategoryForm";
-import CategoryList from "./features/category-old/CategoryList";
+
 import Statistics from "./pages/Statistics";
 import Products from "./pages/Products";
 // import Category from "./pages/Category";
