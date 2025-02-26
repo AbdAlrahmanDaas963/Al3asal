@@ -1,45 +1,44 @@
-// features/Orders/ordersSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const BASE_URL = "https://asool-gifts.com/api"; // Update the base URL
+const API_BASE_URL = "http://127.0.0.1:8000/api/orders";
 
-// Async thunk for filtering orders
+// Fetch Orders with filters
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
-  async (_, { getState, rejectWithValue }) => {
+  async (filters, { getState, rejectWithValue }) => {
     const { auth } = getState();
     try {
-      const response = await axios.get("https://asool-gifts.com/api/orders", {
-        headers: { Authorization: `Bearer ${auth.token}` }, // Add token if required
+      const response = await axios.get(API_BASE_URL, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+        params: filters,
       });
       return response.data;
     } catch (error) {
-      console.error(
-        "Error fetching orders:",
-        error.response?.data || error.message
-      );
       return rejectWithValue(error.response?.data || "Failed to fetch orders");
     }
   }
 );
 
-// Async thunk for updating order status
+// Update Order Status
 export const updateOrderStatus = createAsyncThunk(
   "orders/updateOrderStatus",
-  async ({ orderId, status, reason }, { getState, rejectWithValue }) => {
+  async ({ orderId, status }, { getState, rejectWithValue }) => {
     const { auth } = getState();
-    const url = reason
-      ? `${BASE_URL}/orders/${orderId}/status/${status}`
-      : `${BASE_URL}/orders/${orderId}/status/${status}`;
-    const config = {
-      headers: { Authorization: `Bearer ${auth.token}` },
-    };
-
     try {
-      const response = reason
-        ? await axios.post(url, { reject_reason: reason }, config)
-        : await axios.post(url, {}, config);
+      const response = await axios.post(
+        `${API_BASE_URL}/${orderId}/status/${status}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            Accept: "application/json",
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -49,14 +48,45 @@ export const updateOrderStatus = createAsyncThunk(
   }
 );
 
+// Reject Order
+export const rejectOrder = createAsyncThunk(
+  "orders/rejectOrder",
+  async ({ orderId, rejectReason }, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+    try {
+      const formData = new FormData();
+      formData.append("reject_reason", rejectReason);
+      const response = await axios.post(
+        `${API_BASE_URL}/${orderId}/status/rejected`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to reject order");
+    }
+  }
+);
+
 const ordersSlice = createSlice({
   name: "orders",
   initialState: {
-    orders: [],
     status: "idle",
     error: null,
+    orders: { data: [], status: null, error: null, statusCode: null },
   },
-  reducers: {},
+  reducers: {
+    resetStatus: (state) => {
+      state.status = "idle";
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchOrders.pending, (state) => {
@@ -79,8 +109,19 @@ const ordersSlice = createSlice({
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+      .addCase(rejectOrder.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(rejectOrder.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(rejectOrder.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });
 
+export const { resetStatus } = ordersSlice.actions;
 export default ordersSlice.reducer;

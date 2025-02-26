@@ -105,7 +105,7 @@ const EditCategoryForm = () => {
 
     dispatch(updateCategory({ id: categoryId, categoryData: formData }))
       .unwrap()
-      .then(() => navigate("/dashboard/categories"))
+      .then(() => navigate("/dashboard/category"))
       .catch((err) => {
         console.error("Failed to update category:", err);
         if (err.response && err.response.data.errors) {
