@@ -7,6 +7,8 @@ import shopReducer from "../features/Shops/shopSlice";
 import categoryReducer from "../features/Categories/categorySlice";
 import productSlice from "../features/Products/productsSlice";
 
+import statisticsReducer from "../features/Statistics/statisticsSlice";
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -15,6 +17,7 @@ const store = configureStore({
     shops: shopReducer,
     categories: categoryReducer,
     products: productSlice,
+    statistics: statisticsReducer,
   },
 });
 

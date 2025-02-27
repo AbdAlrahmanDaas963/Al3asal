@@ -32,6 +32,8 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 import Login from "./features/Auth/Login";
 import EditShopForm from "./features/Shops/EditShopForm";
 
+import StatisticsTest from "./features/Statistics/StatisticsTest";
+
 import Categories from "./features/Categories/Categories";
 import AddCategoryForm from "./features/Categories/AddCategoryForm";
 
@@ -65,7 +67,7 @@ function App() {
                   <Route index element={<HomeDash />} />
                   <Route path="orders" element={<Orders />} />
                   <Route path="accounts" element={<Accounts />} />
-                  <Route path="statistics" element={<Statistics />} />
+                  <Route path="statistics" element={<StatisticsTest />} />
 
                   <Route path="products" element={<Products />} />
                   <Route path="products/add" element={<AddProductForm />} />
