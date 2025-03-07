@@ -8,6 +8,7 @@ import categoryReducer from "../features/Categories/categorySlice";
 import productSlice from "../features/Products/productsSlice";
 
 import statisticsReducer from "../features/Statistics/statisticsSlice";
+import offersReducer from "../features/Offers/offersSlice"; // Import the offers slice
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     categories: categoryReducer,
     products: productSlice,
     statistics: statisticsReducer,
+    offers: offersReducer,
   },
 });
 

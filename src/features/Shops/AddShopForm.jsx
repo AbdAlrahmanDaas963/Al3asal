@@ -9,7 +9,7 @@ import {
   Alert,
   MenuItem,
 } from "@mui/material";
-import { addShop, resetStatus } from "./shopSlice";
+import { resetStatus, createShop } from "./shopSlice";
 
 const AddShopForm = () => {
   const [formData, setFormData] = useState({
@@ -24,9 +24,9 @@ const AddShopForm = () => {
   const { status, error } = useSelector((state) => state.shops);
 
   // Reset status when the component mounts
-  useEffect(() => {
-    dispatch(resetStatus());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(resetStatus());
+  // }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +39,7 @@ const AddShopForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(addShop(formData)).then(() => {
+    dispatch(createShop(formData)).then(() => {
       if (status === "succeeded") {
         navigate("/dashboard/shops"); // Redirect to shops list
       }

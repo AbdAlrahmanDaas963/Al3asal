@@ -1,56 +1,40 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders, updateOrderStatus } from "./ordersSlice";
-import {
-  Box,
-  Button,
-  Typography,
-  CircularProgress,
-  Alert,
-} from "@mui/material";
+import { fetchOrders } from "./ordersSlice";
+import OrdersTable from "./OrdersTable";
 
 const Orders = () => {
   const dispatch = useDispatch();
-  const { orders, status, error } = useSelector((state) => state.orders);
+  const { orders, loading, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
-    dispatch(fetchOrders());
+    dispatch(fetchOrders({ min_price: 0, per_page: 50 })); // Request 50 orders per page
   }, [dispatch]);
 
-  const handleUpdateStatus = (orderId, status) => {
-    dispatch(updateOrderStatus({ orderId, status }));
-  };
+  useEffect(() => {
+    console.log("Full API Response:", orders); // Log full response
+  }, [orders]);
 
-  if (status === "loading") return <CircularProgress />;
-  if (status === "failed") return <Alert severity="error">{error}</Alert>;
+  useEffect(() => {
+    if (orders.length > 0) {
+      console.log(
+        orders.map((order) => ({
+          customerName: order.customer_name,
+          accountId: order.account_id,
+          category: order.category,
+          card: order.card,
+          deliverDate: order.deliver_date,
+          payment: order.payment,
+          status: order.status,
+        }))
+      );
+    }
+  }, [orders]);
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Orders
-      </Typography>
-      {orders.map((order) => (
-        <Box key={order.id} sx={{ mb: 2, p: 2, border: "1px solid #ccc" }}>
-          <Typography variant="h6">Order ID: {order.id}</Typography>
-          <Typography>Status: {order.status}</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleUpdateStatus(order.id, "preparing")}
-            sx={{ mr: 2 }}
-          >
-            Mark as Preparing
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={() => handleUpdateStatus(order.id, "done")}
-          >
-            Mark as Done
-          </Button>
-        </Box>
-      ))}
-    </Box>
+    <div>
+      <OrdersTable orders={orders} />
+    </div>
   );
 };
 

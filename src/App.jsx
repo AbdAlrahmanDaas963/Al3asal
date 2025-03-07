@@ -10,7 +10,8 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import HomeDash from "./pages/HomeDash";
 import Accounts from "./features/Dashboard/Accounts";
-import Orders from "./pages/Orders";
+// import Orders from "./pages/Orders";
+
 import Shops from "./features/Shops/Shops";
 
 import Statistics from "./pages/Statistics";
@@ -35,11 +36,13 @@ import EditShopForm from "./features/Shops/EditShopForm";
 import StatisticsTest from "./features/Statistics/StatisticsTest";
 
 import Categories from "./features/Categories/Categories";
+import Orders from "./features/Orders/Orders";
 import AddCategoryForm from "./features/Categories/AddCategoryForm";
 
 import EditCategory from "./features/Categories/EditCategory";
 
 import Products from "./features/Products/Products";
+import Offers from "./features/Offers/Offers";
 import AddProductForm from "./features/Products/AddProductForm";
 import EditProductForm from "./features/Products/EditProductForm";
 
@@ -70,6 +73,7 @@ function App() {
                   <Route path="statistics" element={<StatisticsTest />} />
 
                   <Route path="products" element={<Products />} />
+                  <Route path="offers" element={<Offers />} />
                   <Route path="products/add" element={<AddProductForm />} />
                   <Route
                     path="products/edit/:productId"
