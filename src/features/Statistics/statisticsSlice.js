@@ -2,9 +2,8 @@ const API_BASE_URL = "https://asool-gifts.com/api/analytics";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Replace with your correct API base URL
-// const API_BASE_URL = "http://127.0.0.1:8000/api/analytics"; // or use production URL
-const TEST_TOKEN = "493|lAPTaFUMAlKEpLiwugJ0neemfcUgBnSwmBipFiCIe87a4d3e"; // Ensure the correct token
+const TEST_TOKEN = "493|lAPTaFUMAlKEpLiwugJ0neemfcUgBnSwmBipFiCIe87a4d3e";
+const getToken = () => localStorage.getItem("token");
 
 const fetchStatistics = (endpoint) =>
   createAsyncThunk(`statistics/${endpoint}`, async (_, { rejectWithValue }) => {
@@ -12,7 +11,7 @@ const fetchStatistics = (endpoint) =>
       console.log(`Fetching: ${API_BASE_URL}/${endpoint}`);
       const response = await axios.get(`${API_BASE_URL}/${endpoint}`, {
         headers: {
-          Authorization: `Bearer ${TEST_TOKEN}`, // Correct token
+          Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
           "Content-Type": "application/json",
         },

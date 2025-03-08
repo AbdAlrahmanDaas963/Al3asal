@@ -31,6 +31,7 @@ import Stack from "@mui/material/Stack";
 import LanguageToggleButton from "./common/LanguageToggleButton";
 
 import { useTranslation } from "react-i18next";
+import LogOutButton from "./common/LogOutButton";
 
 const drawerWidth = 240;
 
@@ -161,6 +162,7 @@ const Dashboard = () => {
               Dashboard
             </Typography>
             <LanguageToggleButton />
+            <LogOutButton />
           </Stack>
         </Toolbar>
       </AppBar>
