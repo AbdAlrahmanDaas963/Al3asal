@@ -6,45 +6,40 @@ import {
   Navigate,
 } from "react-router-dom";
 
+// Pages
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import HomeDash from "./pages/HomeDash";
-import Accounts from "./features/Dashboard/Accounts";
-// import Orders from "./pages/Orders";
-
-import Shops from "./features/Shops/Shops";
-
 import Statistics from "./pages/Statistics";
-// import Products from "./pages/Products";
-// import Category from "./pages/Category";
-import AddShopForm from "./features/Shops/AddShopForm"; // Import the AddShopForm component
 
-import { CssBaseline } from "@mui/material";
+// Features
+import Accounts from "./features/Dashboard/Accounts";
+import Shops from "./features/Shops/Shops";
+import AddShopForm from "./features/Shops/AddShopForm";
+import EditShopForm from "./features/Shops/EditShopForm";
+import Categories from "./features/Categories/Categories";
+import AddCategoryForm from "./features/Categories/AddCategoryForm";
+import EditCategory from "./features/Categories/EditCategory";
+import Orders from "./features/Orders/Orders";
+import Products from "./features/Products/Products";
+import AddProductForm from "./features/Products/AddProductForm";
+import EditProductForm from "./features/Products/EditProductForm";
+import Offers from "./features/Offers/Offers";
+import StatisticsTest from "./features/Statistics/StatisticsTest";
+import Login from "./features/Auth/Login";
+
+// Theme & Styles
+import { CssBaseline, ThemeProvider } from "@mui/material";
 import getTheme from "./theme";
-import { ThemeProvider } from "@mui/material/styles";
 import { StylesProvider, jssPreset } from "@mui/styles";
 import { create } from "jss";
 import rtl from "jss-rtl";
-import LanguageToggleButton from "./components/common/LanguageToggleButton";
+
+// Contexts & Utils
 import "./i18n/i18n";
-import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 import { DialogProvider } from "./components/common/Dialogs/reuse/DialogContext";
+import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 import ProtectedRoute from "./utils/ProtectedRoute";
-import Login from "./features/Auth/Login";
-import EditShopForm from "./features/Shops/EditShopForm";
-
-import StatisticsTest from "./features/Statistics/StatisticsTest";
-
-import Categories from "./features/Categories/Categories";
-import Orders from "./features/Orders/Orders";
-import AddCategoryForm from "./features/Categories/AddCategoryForm";
-
-import EditCategory from "./features/Categories/EditCategory";
-
-import Products from "./features/Products/Products";
-import Offers from "./features/Offers/Offers";
-import AddProductForm from "./features/Products/AddProductForm";
-import EditProductForm from "./features/Products/EditProductForm";
 
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
@@ -58,7 +53,10 @@ function App() {
             <ThemeProvider theme={getTheme(direction)}>
               <CssBaseline />
               <Routes>
+                {/* Public Routes */}
                 <Route path="/login" element={<Login />} />
+
+                {/* Protected Routes */}
                 <Route
                   path="/dashboard/*"
                   element={
@@ -71,16 +69,17 @@ function App() {
                   <Route path="orders" element={<Orders />} />
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="statistics" element={<StatisticsTest />} />
-
                   <Route path="products" element={<Products />} />
                   <Route path="offers" element={<Offers />} />
 
+                  {/* Product Management */}
                   <Route path="products/add" element={<AddProductForm />} />
                   <Route
                     path="products/edit/:productId"
                     element={<EditProductForm />}
                   />
 
+                  {/* Category Management */}
                   <Route path="category" element={<Categories />} />
                   <Route
                     path="category/add"
@@ -91,10 +90,13 @@ function App() {
                     element={<EditCategory />}
                   />
 
+                  {/* Shop Management */}
                   <Route path="shops" element={<Shops />} />
                   <Route path="shops/add" element={<AddShopForm />} />
                   <Route path="shops/edit/:shopId" element={<EditShopForm />} />
                 </Route>
+
+                {/* Redirect unknown routes */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
             </ThemeProvider>

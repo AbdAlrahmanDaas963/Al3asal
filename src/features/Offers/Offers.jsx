@@ -1,18 +1,31 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchOffers } from "./offersSlice";
+import React, { useState } from "react";
+import OfferList from "./OfferList";
+import AddOfferForm from "./AddOfferForm";
+import { Button } from "@mui/material";
 
-const Offers = () => {
-  const dispatch = useDispatch();
-  const { offers, loading, error } = useSelector((state) => state.offers);
+function Offers() {
+  const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchOffers()).then((response) => {
-      console.log("Offers Response:", response);
-    });
-  }, [dispatch]);
-
-  return <div>Check console for offers data</div>;
-};
+  return (
+    <>
+      {showForm ? (
+        <AddOfferForm onClose={() => setShowForm(false)} />
+      ) : (
+        <Button
+          onClick={() => setShowForm(true)}
+          sx={{
+            width: "100%",
+            height: "100px",
+            border: "4px dashed #fff",
+            fontSize: "20px",
+          }}
+        >
+          Add Offer +
+        </Button>
+      )}
+      <OfferList />
+    </>
+  );
+}
 
 export default Offers;

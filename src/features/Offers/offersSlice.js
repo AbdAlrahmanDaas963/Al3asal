@@ -45,21 +45,38 @@ export const fetchOfferById = createAsyncThunk(
 );
 
 // Create a new offer
+// export const createOffer = createAsyncThunk(
+//   "offers/create",
+//   async (offerData, thunkAPI) => {
+//     try {
+//       const response = await axios.post(`${API_URL}/offers`, offerData, {
+//         headers: {
+//           Authorization: `Bearer ${getToken()}`,
+//           Accept: "application/json",
+//         },
+//       });
+//       return response.data;
+//     } catch (error) {
+//       return thunkAPI.rejectWithValue(
+//         error.response?.data || "Error creating offer"
+//       );
+//     }
+//   }
+// );
 export const createOffer = createAsyncThunk(
-  "offers/create",
-  async (offerData, thunkAPI) => {
+  "offers/createOffer",
+  async (offerData, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(`${API_URL}/offers`, offerData, {
         headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       });
       return response.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data || "Error creating offer"
-      );
+      return rejectWithValue(error.response.data);
     }
   }
 );
@@ -69,7 +86,7 @@ export const updateOffer = createAsyncThunk(
   "offers/update",
   async ({ id, updateData }, thunkAPI) => {
     try {
-      const response = await axios.post(`${API_URL}/offers/${id}`, updateData, {
+      const response = await axios.put(`${API_URL}/offers/${id}`, updateData, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
@@ -121,7 +138,7 @@ const offersSlice = createSlice({
       })
       .addCase(fetchOffers.fulfilled, (state, action) => {
         state.loading = false;
-        state.offers = action.payload;
+        state.offers.data = action.payload.data;
       })
       .addCase(fetchOffers.rejected, (state, action) => {
         state.loading = false;
@@ -139,8 +156,17 @@ const offersSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      .addCase(createOffer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(createOffer.fulfilled, (state, action) => {
-        state.offers.data.push(action.payload);
+        state.loading = false;
+        state.offers.data = [...state.offers.data, action.payload]; // Add new offer to the array
+      })
+      .addCase(createOffer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
       .addCase(updateOffer.fulfilled, (state, action) => {
         const index = state.offers.data.findIndex(
