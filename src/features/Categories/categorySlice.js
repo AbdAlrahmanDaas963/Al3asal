@@ -112,33 +112,34 @@ export const createCategory = createAsyncThunk(
     try {
       const formData = new FormData();
 
-      // Assuming categoryData has 'name' (with 'en' and 'ar' keys) and an image
       if (categoryData.name && typeof categoryData.name === "object") {
-        // Append names in English and Arabic
         formData.append("name[en]", categoryData.name.en);
         formData.append("name[ar]", categoryData.name.ar);
       }
 
-      // Append 'is_interested' and 'shop_id' if provided
       if (categoryData.is_interested) {
         formData.append("is_interested", categoryData.is_interested);
       }
       if (categoryData.shop_id) {
-        formData.append("shop_id", categoryData.shop_id);
+        const shopIdsArray = Array.isArray(categoryData.shop_id)
+          ? categoryData.shop_id
+          : [categoryData.shop_id]; // Ensure it's always an array
+
+        shopIdsArray.forEach((id) => {
+          formData.append("shop_ids[]", id); // Append each shop ID properly
+        });
       }
 
-      // Append the image if provided
       if (categoryData.image instanceof File) {
         formData.append("image", categoryData.image);
       }
 
-      // Making the request to create the category
       const response = await axios.post(
-        "https://asool-gifts.com/api/categories/create", // Modify with your API URL
+        "https://asool-gifts.com/api/categories/create",
         formData,
         {
           headers: {
-            Authorization: `Bearer ${auth.token}`, // Attach the token
+            Authorization: `Bearer ${auth.token}`,
             "Content-Type": "multipart/form-data",
             Accept: "application/json",
           },

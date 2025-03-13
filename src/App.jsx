@@ -74,6 +74,7 @@ function App() {
 
                   <Route path="products" element={<Products />} />
                   <Route path="offers" element={<Offers />} />
+
                   <Route path="products/add" element={<AddProductForm />} />
                   <Route
                     path="products/edit/:productId"

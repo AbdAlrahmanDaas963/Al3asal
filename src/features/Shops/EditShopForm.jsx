@@ -96,7 +96,14 @@ const EditShopForm = () => {
 
     if (isFormUnchanged()) return;
 
-    dispatch(updateShop({ id: shopId, shopData: formData }))
+    const updatedFormData = { ...formData };
+
+    // ✅ Remove 'image' if no new file is uploaded
+    if (!updatedFormData.image || typeof updatedFormData.image === "string") {
+      delete updatedFormData.image;
+    }
+
+    dispatch(updateShop({ shop_id: shopId, formData: updatedFormData }))
       .unwrap()
       .then(() => navigate("/dashboard/shops"))
       .catch((err) => {

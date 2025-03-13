@@ -21,7 +21,7 @@ const Products = () => {
           variant="contained"
           color="primary"
           component={Link}
-          to="/products/add"
+          to="/dashboard/products/add"
         >
           Add Product
         </Button>

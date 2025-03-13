@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 // ✅ Login
+const getToken = () => localStorage.getItem("token");
+
 export const logIn = createAsyncThunk(
   "auth/logIn",
   async (credentials, { rejectWithValue }) => {
@@ -11,7 +13,7 @@ export const logIn = createAsyncThunk(
       formData.append("password", credentials.password);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/dashboard/login",
+        "https://asool-gifts.com/api/dashboard/login",
         formData,
         {
           headers: {
@@ -35,11 +37,11 @@ export const logOut = createAsyncThunk(
     try {
       const token = getState().auth.token;
       await axios.post(
-        "https://asool-gifts.com/api/logout",
+        "https://asool-gifts.com/api/auth/logout",
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${getToken()}`,
             Accept: "application/json",
           },
         }

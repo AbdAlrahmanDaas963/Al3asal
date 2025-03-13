@@ -1,45 +1,65 @@
+const API_URL = "https://asool-gifts.com/api/dashboard/product";
+const API_URL2 = "https://asool-gifts.com/api/products";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_BASE_URL = "https://asool-gifts.com/api/products";
+const getToken = () => localStorage.getItem("token");
+
+// Fetch all products
 
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
-  async (_, { getState, rejectWithValue }) => {
-    const { auth } = getState();
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(API_BASE_URL, {
+      const response = await axios.get(API_URL, {
         headers: {
-          Authorization: `Bearer ${auth.token}`,
-          Accept: "application/json",
+          Authorization: `Bearer ${getToken()}`,
+          "Content-Type": "multipart/form-data",
         },
       });
-      return response.data; // Successful response
+      console.log("API Response Data:", response.data); // Log the full response
+      return response.data; // Return the full response data
     } catch (error) {
-      // Handle errors, but don't break the UI
-      const errorMessage =
-        error.response?.data || error.message || "Failed to fetch products";
-      return rejectWithValue(errorMessage); // Pass the error message to the UI
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch products"
+      );
     }
   }
 );
 
-export const createProduct = createAsyncThunk(
-  "products/createProduct",
-  async (productData, { getState, rejectWithValue }) => {
-    const { auth } = getState();
+// Fetch a product by ID
+export const fetchProductById = createAsyncThunk(
+  "products/fetchProductById",
+  async (productId, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      Object.keys(productData).forEach((key) => {
-        formData.append(key, productData[key]);
-      });
-      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
+      const response = await axios.get(`${API_URL2}/${productId}`, {
         headers: {
-          Authorization: `Bearer ${auth.token}`,
           "Content-Type": "multipart/form-data",
-          Accept: "application/json",
+          Authorization: `Bearer ${getToken()}`,
         },
       });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "Failed to fetch product");
+    }
+  }
+);
+
+// Create a new product
+export const createProduct = createAsyncThunk(
+  "products/createProduct",
+  async (productData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        "https://asool-gifts.com/api/products/create",
+        productData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -49,42 +69,18 @@ export const createProduct = createAsyncThunk(
   }
 );
 
-export const fetchProductById = createAsyncThunk(
-  "products/fetchProductById",
-  async (id, { getState, rejectWithValue }) => {
-    const { auth } = getState();
-    try {
-      const response = await axios.get(`${API_BASE_URL}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-          Accept: "application/json",
-        },
-      });
-      console.log("Product data fetched:", response.data); // Remove this in production
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to fetch product");
-    }
-  }
-);
-
+// Update a product
 export const updateProduct = createAsyncThunk(
   "products/updateProduct",
-  async ({ id, productData }, { getState, rejectWithValue }) => {
-    const { auth } = getState();
+  async ({ productId, updatedData }, { rejectWithValue }) => {
     try {
-      const formData = new FormData();
-      Object.keys(productData).forEach((key) => {
-        formData.append(key, productData[key]);
-      });
-      const response = await axios.post(
-        `${API_BASE_URL}/update/${id}`,
-        formData,
+      const response = await axios.put(
+        `${API_URL2}/${productId}`,
+        updatedData,
         {
           headers: {
-            Authorization: `Bearer ${auth.token}`,
             "Content-Type": "multipart/form-data",
-            Accept: "application/json",
+            Authorization: `Bearer ${getToken()}`,
           },
         }
       );
@@ -97,18 +93,21 @@ export const updateProduct = createAsyncThunk(
   }
 );
 
+// Delete a product
 export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
-  async (id, { getState, rejectWithValue }) => {
-    const { auth } = getState();
+  async (productId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/destroy/${id}`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-          Accept: "application/json",
-        },
-      });
-      return { id };
+      await axios.delete(
+        `https://asool-gifts.com/api/products/destroy/${productId}`,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+      return productId; // Return the deleted product ID to update the state
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to delete product"
@@ -117,54 +116,87 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
-const productSlice = createSlice({
+const productsSlice = createSlice({
   name: "products",
   initialState: {
-    status: "idle",
-    error: null,
-    products: { data: [], status: null, error: null },
+    data: [], // This will hold the list of products
     selectedProduct: null,
+    status: "idle", // Track the loading status
+    error: null, // Track any errors
   },
-  reducers: {
-    resetStatus: (state) => {
-      state.status = "idle";
-      state.error = null;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
+      // Fetch all products
       .addCase(fetchProducts.pending, (state) => {
         state.status = "loading";
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.products.data = action.payload;
+        console.log("Fetched products:", action.payload);
+        state.data = action.payload.data || []; // Access the nested `data` array
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
+
+      // Fetch product by ID
+      .addCase(fetchProductById.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.selectedProduct = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Create product
+      .addCase(createProduct.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.products.data.push(action.payload);
+        state.data.push(action.payload);
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Update product
+      .addCase(updateProduct.pending, (state) => {
+        state.status = "loading";
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const index = state.products.data.findIndex(
-          (p) => p.id === action.payload.id
+        state.data = state.data.map((product) =>
+          product.id === action.payload.id ? action.payload : product
         );
-        if (index !== -1) {
-          state.products.data[index] = action.payload;
-        }
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Delete product
+      .addCase(deleteProduct.pending, (state) => {
+        state.status = "loading";
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.products.data = state.products.data.filter(
-          (p) => p.id !== action.payload.id
+        state.data = state.data.filter(
+          (product) => product.id !== action.payload
         );
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       });
   },
 });
 
-export const { resetStatus } = productSlice.actions;
-export default productSlice.reducer;
+export default productsSlice.reducer;
