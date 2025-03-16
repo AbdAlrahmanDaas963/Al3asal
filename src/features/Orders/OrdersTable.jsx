@@ -18,6 +18,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 
+import OrderDetailsModal from "./OrderDetailsModal";
+
 const statusColors = {
   done: "green",
   pending: "yellow",
@@ -29,11 +31,13 @@ const statusColors = {
 const statusFilters = ["all", "pending", "preparing", "done", "failed"];
 
 const OrdersTable = ({ orders }) => {
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [open, setOpen] = useState(false);
+
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(0);
-  const rowsPerPage = 8; // Fixed rows per page like the image
+  const rowsPerPage = 8;
 
-  // Handle filtering by status
   const filteredOrders =
     status === "all"
       ? orders
@@ -41,7 +45,16 @@ const OrdersTable = ({ orders }) => {
 
   const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
 
-  // Handle pagination
+  const handleOpen = (order) => {
+    setSelectedOrder(order);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedOrder(null);
+  };
+
   const handlePrevious = () => {
     if (page > 0) setPage(page - 1);
   };
@@ -94,17 +107,16 @@ const OrdersTable = ({ orders }) => {
               .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
               .map((order, index) => (
                 <TableRow key={index}>
-                  {/* Status Indicator + Customer Name */}
                   <TableCell>
                     <Box display="flex" alignItems="center">
-                      {/* Status Indicator */}
                       <Box
                         sx={{
                           width: 10,
                           height: 10,
                           borderRadius: "50%",
                           bgcolor:
-                            statusColors[order.status] || statusColors.default,
+                            statusColors[order.status?.toLowerCase()] ||
+                            statusColors.default,
                           mr: 1,
                         }}
                       />
@@ -113,36 +125,24 @@ const OrdersTable = ({ orders }) => {
                       </Typography>
                     </Box>
                   </TableCell>
-
-                  {/* Account ID */}
                   <TableCell sx={{ color: "white" }}>#{order.id}</TableCell>
-
-                  {/* Category */}
                   <TableCell sx={{ color: "white" }}>
                     {order.category || "N/A"}
                   </TableCell>
-
-                  {/* Card */}
                   <TableCell sx={{ color: "white" }}>****</TableCell>
-
-                  {/* Delivery Date */}
                   <TableCell sx={{ color: "white" }}>
-                    {new Date(order.date).toLocaleString()}
+                    {new Date(order.date).toLocaleDateString()}
                   </TableCell>
-
-                  {/* Payment */}
                   <TableCell sx={{ color: "white" }}>
                     ${order.total_price || 0}
                   </TableCell>
-
-                  {/* Actions */}
                   <TableCell>
                     <Button
-                      variant={index === 0 ? "contained" : "outlined"}
+                      variant="contained"
                       color="primary"
-                      sx={{ ml: 1 }}
+                      onClick={() => handleOpen(order)}
                     >
-                      Detail
+                      Details
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -151,45 +151,52 @@ const OrdersTable = ({ orders }) => {
         </Table>
       </TableContainer>
 
-      {/* Custom Pagination Controls */}
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        sx={{ mt: 2, color: "white" }}
-      >
-        {/* Previous Button */}
-        <IconButton onClick={handlePrevious} disabled={page === 0}>
-          <ArrowBackIosIcon sx={{ color: page === 0 ? "gray" : "white" }} />
-        </IconButton>
+      {/* Custom Pagination */}
+      {totalPages > 0 && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          sx={{ mt: 2, color: "white" }}
+        >
+          <IconButton onClick={handlePrevious} disabled={page === 0}>
+            <ArrowBackIosIcon sx={{ color: page === 0 ? "gray" : "white" }} />
+          </IconButton>
 
-        {/* Page Numbers */}
-        {Array.from({ length: totalPages }, (_, i) => (
-          <Button
-            key={i}
-            variant={i === page ? "contained" : "text"}
-            sx={{
-              mx: 0.5,
-              minWidth: 30,
-              color: i === page ? "white" : "#ccc",
-              backgroundColor: i === page ? "#E4272B" : "transparent",
-              "&:hover": {
-                backgroundColor: i === page ? "#E4272B" : "#292929",
-              },
-            }}
-            onClick={() => setPage(i)}
-          >
-            {i + 1}
-          </Button>
-        ))}
+          {Array.from({ length: totalPages }, (_, i) => (
+            <Button
+              key={i}
+              variant={i === page ? "contained" : "text"}
+              sx={{
+                mx: 0.5,
+                minWidth: 30,
+                color: i === page ? "white" : "#ccc",
+                backgroundColor: i === page ? "#E4272B" : "transparent",
+                "&:hover": {
+                  backgroundColor: i === page ? "#E4272B" : "#292929",
+                },
+              }}
+              onClick={() => setPage(i)}
+            >
+              {i + 1}
+            </Button>
+          ))}
 
-        {/* Next Button */}
-        <IconButton onClick={handleNext} disabled={page === totalPages - 1}>
-          <ArrowForwardIosIcon
-            sx={{ color: page === totalPages - 1 ? "gray" : "white" }}
-          />
-        </IconButton>
-      </Box>
+          <IconButton onClick={handleNext} disabled={page === totalPages - 1}>
+            <ArrowForwardIosIcon
+              sx={{ color: page === totalPages - 1 ? "gray" : "white" }}
+            />
+          </IconButton>
+        </Box>
+      )}
+
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          open={open}
+          handleClose={handleClose}
+        />
+      )}
     </Box>
   );
 };
