@@ -7,7 +7,7 @@ import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 import { useTheme } from "@mui/material/styles";
 import OrdersTable from "../features/orders/OrdersTable";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders } from "../features/orders/ordersSlice";
+import { fetchOrders } from "../features/Orders/ordersSlice";
 
 const TinyCard = ({ children, title, value }) => {
   const theme = useTheme();
