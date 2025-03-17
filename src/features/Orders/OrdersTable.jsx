@@ -30,13 +30,13 @@ const statusColors = {
 
 const statusFilters = ["all", "pending", "preparing", "done", "failed"];
 
-const OrdersTable = ({ orders }) => {
+const OrdersTable = ({ orders, rows = 8 }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
 
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(0);
-  const rowsPerPage = 8;
+  const rowsPerPage = rows;
 
   const filteredOrders =
     status === "all"
