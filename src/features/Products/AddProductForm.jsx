@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { createProduct } from "./productsSlice";
-import { fetchShops } from "../../features/shops/shopSlice";
+import { fetchShops } from "../../features/Shops/shopSlice";
 import { fetchCategories } from "../../features/Categories/categorySlice";
 import {
   TextField,
