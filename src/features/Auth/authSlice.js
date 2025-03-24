@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 // ✅ Login
 const getToken = () => localStorage.getItem("token");
 
@@ -13,7 +15,7 @@ export const logIn = createAsyncThunk(
       formData.append("password", credentials.password);
 
       const response = await axios.post(
-        "https://asool-gifts.com/api/dashboard/login",
+        `${BASE_URL}/dashboard/login`,
         formData,
         {
           headers: {

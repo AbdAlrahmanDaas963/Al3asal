@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 const API_URL = "https://asool-gifts.com/api";
 const getToken = () => localStorage.getItem("token");
 
@@ -9,7 +11,7 @@ export const fetchOffers = createAsyncThunk(
   "offers/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/offers`, {
+      const response = await axios.get(`${BASE_URL}/offers`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
@@ -29,7 +31,7 @@ export const fetchOfferById = createAsyncThunk(
   "offers/fetchOne",
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/offers/${id}`, {
+      const response = await axios.get(`${BASE_URL}/offers/${id}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
@@ -68,7 +70,7 @@ export const createOffer = createAsyncThunk(
   async (offerData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.post(`${API_URL}/offers`, offerData, {
+      const response = await axios.post(`${BASE_URL}/offers`, offerData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -86,7 +88,7 @@ export const updateOffer = createAsyncThunk(
   "offers/update",
   async ({ id, updateData }, thunkAPI) => {
     try {
-      const response = await axios.put(`${API_URL}/offers/${id}`, updateData, {
+      const response = await axios.put(`${BASE_URL}/offers/${id}`, updateData, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",
@@ -106,7 +108,7 @@ export const deleteOffer = createAsyncThunk(
   "offers/delete",
   async (id, thunkAPI) => {
     try {
-      await axios.delete(`${API_URL}/offers/${id}`, {
+      await axios.delete(`${BASE_URL}/offers/${id}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           Accept: "application/json",

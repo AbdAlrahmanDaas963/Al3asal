@@ -2,6 +2,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 // Async thunk for adding a user
 export const addUser = createAsyncThunk(
   "users/addUser",
@@ -9,7 +11,7 @@ export const addUser = createAsyncThunk(
     const { auth } = getState();
     try {
       const response = await axios.post(
-        "https://asool-gifts.com/api/dashboard/work-users",
+        `${BASE_URL}/dashboard/work-users`,
         userData,
         {
           headers: {

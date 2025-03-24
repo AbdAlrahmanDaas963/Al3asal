@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "https://asool-gifts.com/api/categories";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const API_URL = `${BASE_URL}/categories`;
 
 // Update Category
 export const updateCategory = createAsyncThunk(
@@ -36,17 +38,13 @@ export const updateCategory = createAsyncThunk(
       // Debugging: Log FormData values
       console.log("FormData being sent:", Object.fromEntries(formData));
 
-      const response = await axios.post(
-        `https://asool-gifts.com/api/categories/update/${id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`, // Attach the token
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/update/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`, // Attach the token
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
 
       return response.data;
     } catch (error) {
@@ -63,7 +61,7 @@ export const fetchCategories = createAsyncThunk(
   "categories/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch("https://asool-gifts.com/api/categories");
+      const response = await fetch(API_URL);
 
       if (!response.ok) {
         throw new Error("Failed to fetch categories");
@@ -83,15 +81,12 @@ export const fetchCategoryById = createAsyncThunk(
   async (id, { getState, rejectWithValue }) => {
     const { auth } = getState(); // Get authentication token from state
     try {
-      const response = await axios.get(
-        `https://asool-gifts.com/api/categories/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`, // Attach the token to the request
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await axios.get(`${API_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`, // Attach the token to the request
+          Accept: "application/json",
+        },
+      });
 
       console.log("Category data fetched:", response.data);
       return response.data; // Return the fetched category data
@@ -134,17 +129,13 @@ export const createCategory = createAsyncThunk(
         formData.append("image", categoryData.image);
       }
 
-      const response = await axios.post(
-        "https://asool-gifts.com/api/categories/create",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${auth.token}`,
-            "Content-Type": "multipart/form-data",
-            Accept: "application/json",
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL}/create`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
+      });
 
       return response.data;
     } catch (error) {

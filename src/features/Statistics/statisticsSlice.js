@@ -1,4 +1,6 @@
-const API_BASE_URL = "https://asool-gifts.com/api/analytics";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const API_BASE_URL = `${BASE_URL}/analytics`;
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 

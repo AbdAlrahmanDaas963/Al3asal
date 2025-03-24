@@ -1,5 +1,7 @@
-const API_URL = "https://asool-gifts.com/api/dashboard/product";
-const API_URL2 = "https://asool-gifts.com/api/products";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const API_URL = `${BASE_URL}/dashboard/product`;
+const API_URL2 = `${BASE_URL}/products`;
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -50,16 +52,12 @@ export const createProduct = createAsyncThunk(
   "products/createProduct",
   async (productData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        "https://asool-gifts.com/api/products/create",
-        productData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${getToken()}`,
-          },
-        }
-      );
+      const response = await axios.post(`${API_URL2}/create`, productData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -98,15 +96,12 @@ export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
   async (productId, { rejectWithValue }) => {
     try {
-      await axios.delete(
-        `https://asool-gifts.com/api/products/destroy/${productId}`,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${getToken()}`,
-          },
-        }
-      );
+      await axios.delete(`${API_URL2}/destroy/${productId}`, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
       return productId; // Return the deleted product ID to update the state
     } catch (error) {
       return rejectWithValue(

@@ -4,6 +4,8 @@ import axios from "axios";
 const API_URL = "https://asool-gifts.com/api";
 const getToken = () => localStorage.getItem("token"); // Retrieve token dynamically
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 // Fetch Orders with Filters
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
@@ -14,7 +16,7 @@ export const fetchOrders = createAsyncThunk(
       ).toString();
 
       const response = await axios.get(
-        `${API_URL}/orders/filter?${queryParams}`,
+        `${BASE_URL}/orders/filter?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,

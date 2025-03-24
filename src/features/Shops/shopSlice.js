@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_BASE_URL = "https://asool-gifts.com/api/shops";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
+const API_BASE_URL = `${BASE_URL}/shops`;
 const getToken = () => localStorage.getItem("token"); // Retrieve token dynamically
 
 // Fetch all shops
