@@ -2,21 +2,31 @@ import React from "react";
 import { Button, Stack, Typography, Chip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { deleteOffer } from "./offersSlice"; // Create this action in your slice if not done already
+import { deleteOffer } from "./offersSlice";
 
 const OfferCard = ({ offer }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    if (
-      window.confirm(`Are you sure you want to delete this offer? ${offer.id}`)
-    ) {
+    if (window.confirm(`Are you sure you want to delete offer ${offer.id}?`)) {
       dispatch(deleteOffer(offer.id));
     }
   };
 
-  console.log("offer", offer);
+  const handleEdit = () => {
+    navigate("/dashboard/offers/edit", {
+      state: {
+        offer: {
+          ...offer,
+          product_name: offer.product?.name,
+          shop_name: offer.product?.shop?.name,
+          product_image: offer.product?.image,
+          category_name: offer.product?.category?.name,
+        },
+      },
+    });
+  };
 
   return (
     <Stack
@@ -56,17 +66,16 @@ const OfferCard = ({ offer }) => {
         />
       )}
 
-      {/* Product Name */}
+      {/* Product Info */}
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">
-          Product Name:
+          Product:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
           {offer.product?.name || "N/A"}
         </Typography>
       </Stack>
 
-      {/* Price */}
       <Stack direction="row" justifyContent="space-between">
         <Typography variant="body2" color="textSecondary">
           Price:
@@ -76,21 +85,22 @@ const OfferCard = ({ offer }) => {
         </Typography>
       </Stack>
 
-      {/* Sale Percentage */}
       {offer.percentage && (
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="textSecondary">
-            Profit:
+            Discount:
           </Typography>
           <Typography variant="body1" fontWeight="bold">
             {offer.percentage}%
           </Typography>
         </Stack>
       )}
-      {offer.product && (
+
+      {/* Category */}
+      {offer.product?.category && (
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="textSecondary">
-            Profit:
+            Category:
           </Typography>
           <Typography variant="body1" fontWeight="bold">
             {offer.product.category.name}
@@ -99,15 +109,8 @@ const OfferCard = ({ offer }) => {
       )}
 
       {/* Action Buttons */}
-      <Stack direction="row" spacing={1} mt={1} justifyContent="center">
-        <Button
-          variant="contained"
-          color="primary"
-          size="small"
-          onClick={() =>
-            navigate(`/dashboard/offer/edit/${offer.id}`, { state: { offer } })
-          }
-        >
+      <Stack direction="row" spacing={1} mt={2}>
+        <Button variant="contained" size="small" onClick={handleEdit}>
           Edit
         </Button>
         <Button

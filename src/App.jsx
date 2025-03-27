@@ -25,6 +25,7 @@ import Products from "./features/Products/Products";
 import AddProductForm from "./features/Products/AddProductForm";
 import EditProductForm from "./features/Products/EditProductForm";
 import Offers from "./features/Offers/Offers";
+import EditOfferForm from "./features/Offers/EditOfferForm";
 import StatisticsTest from "./features/Statistics/StatisticsTest";
 import Login from "./features/Auth/Login";
 
@@ -69,15 +70,18 @@ function App() {
                   <Route path="orders" element={<Orders />} />
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="statistics" element={<StatisticsTest />} />
-                  <Route path="products" element={<Products />} />
-                  <Route path="offers" element={<Offers />} />
 
-                  {/* Product Management */}
+                  {/* Products Routes */}
+                  <Route path="products" element={<Products />} />
                   <Route path="products/add" element={<AddProductForm />} />
                   <Route
                     path="products/edit/:productId"
                     element={<EditProductForm />}
                   />
+
+                  {/* Offers Routes - Updated */}
+                  <Route path="offers" element={<Offers />} />
+                  <Route path="offers/edit" element={<EditOfferForm />} />
 
                   {/* Category Management */}
                   <Route path="category" element={<Categories />} />

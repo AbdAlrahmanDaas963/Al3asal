@@ -124,6 +124,7 @@ const shopSlice = createSlice({
       .addCase(fetchShops.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.shops.data = action.payload.data; // Updated to match API response
+        state.data = action.payload;
       })
       .addCase(fetchShops.rejected, (state, action) => {
         state.status = "failed";

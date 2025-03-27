@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { createSelector } from "reselect";
 import { createProduct } from "./productsSlice";
 import { fetchShops } from "../../features/Shops/shopSlice";
 import { fetchCategories } from "../../features/Categories/categorySlice";
@@ -18,124 +19,166 @@ import {
   FormHelperText,
   Snackbar,
   Alert,
+  Box,
 } from "@mui/material";
+
+// Memoized selectors
+const selectShops = createSelector(
+  (state) => state.shops,
+  (shops) => ({
+    data: shops.data?.data || [],
+    status: shops.status,
+  })
+);
+
+const selectCategories = createSelector(
+  (state) => state.categories,
+  (categories) => ({
+    data: categories.data || [],
+    status: categories.status,
+  })
+);
+
+const selectProducts = createSelector(
+  (state) => state.products,
+  (products) => ({
+    status: products.status,
+    error: products.error,
+  })
+);
+
+// Initial form state
+const initialFormState = {
+  name: { en: "", ar: "" },
+  description: { en: "", ar: "" },
+  price: "",
+  profit_percentage: "",
+  is_hot: false,
+  image: null,
+  shop_id: "",
+  category_id: "",
+};
+
+const MAX_IMAGE_SIZE = 100 * 1024; // 100kB limit
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 
 const AddProductForm = ({ onSuccess }) => {
   const dispatch = useDispatch();
-  const { status, error } = useSelector((state) => state.products);
-  const { shops, status: shopsStatus } = useSelector((state) => state.shops);
-  const { categories, status: categoriesStatus } = useSelector(
-    (state) => state.categories
-  );
 
-  const [formData, setFormData] = useState({
-    name_en: "",
-    name_ar: "",
-    image: null,
-    is_hot: false,
-    category_id: "",
-    profit_percentage: "",
-    price: "",
-    description_en: "",
-    description_ar: "",
-    shop_id: "",
-  });
+  // Using memoized selectors
+  const { data: shops, status: shopsStatus } = useSelector(selectShops);
+  const { data: categories, status: categoriesStatus } =
+    useSelector(selectCategories);
+  const { status, error } = useSelector(selectProducts);
 
-  const [imageError, setImageError] = useState(""); // State for image validation errors
-  const [profitPercentageError, setProfitPercentageError] = useState(""); // State for profit percentage validation errors
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // State for success message
+  const [formData, setFormData] = useState(initialFormState);
+  const [errors, setErrors] = useState({});
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
 
+  // Fetch data on mount
   useEffect(() => {
     if (shopsStatus === "idle") dispatch(fetchShops());
     if (categoriesStatus === "idle") dispatch(fetchCategories());
   }, [dispatch, shopsStatus, categoriesStatus]);
 
+  // Fixed category filtering logic
+  const getCategoriesForShop = useMemo(() => {
+    if (!formData.shop_id) return [];
+    return categories.filter((category) =>
+      category.shops?.some(
+        (shop) => String(shop.id) === String(formData.shop_id)
+      )
+    );
+  }, [formData.shop_id, categories]);
+
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
-    if (name === "image") {
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (name === "image") {
       const file = files[0];
-      if (!file) {
-        setImageError("Image is required");
-      } else if (file.size > 100 * 1024) {
-        setImageError("Image size must be less than 100KB");
-      } else if (
-        !["image/jpeg", "image/png", "image/jpg"].includes(file.type)
-      ) {
-        setImageError("Image must be a JPG, JPEG, or PNG file");
-      } else {
-        setImageError(""); // Clear error if validation passes
-      }
-    }
+      if (!file) return;
 
-    if (name === "profit_percentage") {
-      if (value > 100) {
-        setProfitPercentageError(
-          "Profit percentage must not be greater than 100"
-        );
-      } else {
-        setProfitPercentageError(""); // Clear error if validation passes
+      // Validate image
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          image: "Only JPG/PNG images allowed",
+        }));
+        return;
       }
-    }
+      if (file.size > MAX_IMAGE_SIZE) {
+        setErrors((prev) => ({ ...prev, image: "Image must be <100KB" }));
+        return;
+      }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "file" ? files[0] : type === "checkbox" ? checked : value,
-    }));
+      setErrors((prev) => ({ ...prev, image: "" }));
+      setFormData((prev) => ({ ...prev, image: file }));
+      setImagePreview(URL.createObjectURL(file));
+    } else if (name.includes(".")) {
+      const [field, subfield] = name.split(".");
+      setFormData((prev) => ({
+        ...prev,
+        [field]: { ...prev[field], [subfield]: value },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: name.endsWith("_id") ? String(value) : value,
+        ...(name === "shop_id" && { category_id: "" }), // Reset category on shop change
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate image before submission
-    if (!formData.image || imageError) {
-      setImageError("Please upload a valid image");
-      return;
-    }
-
-    // Validate profit percentage before submission
+    // Validate required fields
+    const newErrors = {};
+    if (!formData.name.ar) newErrors.name_ar = "Arabic name is required";
+    if (!formData.price) newErrors.price = "Price is required";
+    if (!formData.shop_id) newErrors.shop = "Shop is required";
+    if (!formData.category_id) newErrors.category = "Category is required";
     if (formData.profit_percentage > 100) {
-      setProfitPercentageError(
-        "Profit percentage must not be greater than 100"
-      );
+      newErrors.profit_percentage = "Must be ≤ 100";
+    }
+    if (!formData.image) {
+      newErrors.image = "Image is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!formData.shop_id || !formData.category_id) {
-      console.error("Category ID or Shop ID is missing");
-      return;
-    }
-
+    // Prepare FormData
     const form = new FormData();
-    form.append("name[en]", formData.name_en);
-    form.append("name[ar]", formData.name_ar);
-    form.append("image", formData.image); // Append the image file
+    form.append("name[en]", formData.name.en);
+    form.append("name[ar]", formData.name.ar);
+    form.append("image", formData.image);
     form.append("is_hot", formData.is_hot ? "1" : "0");
     form.append("category_id", formData.category_id);
     form.append("profit_percentage", formData.profit_percentage);
     form.append("price", formData.price);
-    form.append("description[en]", formData.description_en);
-    form.append("description[ar]", formData.description_ar);
+    if (formData.description.en)
+      form.append("description[en]", formData.description.en);
+    if (formData.description.ar)
+      form.append("description[ar]", formData.description.ar);
     form.append("shop_id", formData.shop_id);
 
     try {
       const result = await dispatch(createProduct(form));
       if (result.meta.requestStatus === "fulfilled") {
-        setSnackbarOpen(true); // Show success message
-        if (typeof onSuccess === "function") {
-          onSuccess();
-        }
-      } else {
-        console.error("Product creation failed:", result.payload);
+        setSnackbarOpen(true);
+        setFormData(initialFormState);
+        setImagePreview(null);
+        onSuccess?.();
       }
     } catch (error) {
-      console.error("Error while creating product:", error);
+      setErrors({ submit: error.message });
     }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
   };
 
   return (
@@ -143,91 +186,87 @@ const AddProductForm = ({ onSuccess }) => {
       <Typography variant="h5" gutterBottom>
         Add Product
       </Typography>
-      <form
+
+      <Box
+        component="form"
         onSubmit={handleSubmit}
-        style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
       >
+        {/* Name Fields */}
         <TextField
-          label="Product Name (English)"
-          name="name_en"
-          value={formData.name_en}
+          label="Name (English)"
+          name="name.en"
+          value={formData.name.en}
           onChange={handleChange}
-          required
           fullWidth
         />
         <TextField
-          label="Product Name (Arabic)"
-          name="name_ar"
-          value={formData.name_ar}
+          label="Name (Arabic)"
+          name="name.ar"
+          value={formData.name.ar}
           onChange={handleChange}
-          required
           fullWidth
+          required
+          error={!!errors.name_ar}
+          helperText={errors.name_ar}
         />
 
-        <FormControl fullWidth required>
-          <InputLabel>Shop</InputLabel>
+        {/* Shop Selection */}
+        <FormControl fullWidth required error={!!errors.shop}>
+          <InputLabel id="shop-select-label">Shop</InputLabel>
           <Select
+            labelId="shop-select-label"
             name="shop_id"
             value={formData.shop_id}
             onChange={handleChange}
             label="Shop"
+            disabled={shopsStatus === "loading"}
           >
-            {shops.data?.length > 0 ? (
-              shops.data.map((shop) => (
-                <MenuItem key={shop.id} value={shop.id}>
-                  {shop.name}
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>No shops available</MenuItem>
-            )}
+            <MenuItem value="" disabled>
+              Select a shop
+            </MenuItem>
+            {shops.map((shop) => (
+              <MenuItem key={shop.id} value={String(shop.id)}>
+                {shop.name}
+              </MenuItem>
+            ))}
           </Select>
-          {!formData.shop_id && (
-            <FormHelperText error>Shop is required</FormHelperText>
-          )}
+          {errors.shop && <FormHelperText error>{errors.shop}</FormHelperText>}
         </FormControl>
 
-        <FormControl fullWidth required>
-          <InputLabel>Category</InputLabel>
+        {/* Category Selection */}
+        <FormControl fullWidth required error={!!errors.category}>
+          <InputLabel id="category-select-label">Category</InputLabel>
           <Select
+            labelId="category-select-label"
             name="category_id"
             value={formData.category_id}
             onChange={handleChange}
             label="Category"
-            MenuProps={{
-              PaperProps: {
-                style: {
-                  maxHeight: 200, // Limit dropdown height
-                },
-              },
-            }}
+            disabled={!formData.shop_id || categoriesStatus === "loading"}
           >
-            {categories?.length > 0 ? (
-              categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name.en}
+            {!formData.shop_id ? (
+              <MenuItem disabled value="">
+                Select a shop first
+              </MenuItem>
+            ) : getCategoriesForShop.length === 0 ? (
+              <MenuItem disabled value="">
+                No categories available for this shop
+              </MenuItem>
+            ) : (
+              getCategoriesForShop.map((category) => (
+                <MenuItem key={category.id} value={String(category.id)}>
+                  {category.name.ar || category.name.en || category.name}
                 </MenuItem>
               ))
-            ) : (
-              <MenuItem disabled>No categories available</MenuItem>
             )}
           </Select>
-          {!formData.category_id && (
-            <FormHelperText error>Category is required</FormHelperText>
+          {errors.category && (
+            <FormHelperText error>{errors.category}</FormHelperText>
           )}
         </FormControl>
 
-        <TextField
-          label="Profit Percentage"
-          name="profit_percentage"
-          type="number"
-          value={formData.profit_percentage}
-          onChange={handleChange}
-          required
-          fullWidth
-          error={!!profitPercentageError}
-          helperText={profitPercentageError}
-        />
+        {/* Price and Profit Percentage */}
         <TextField
           label="Price"
           name="price"
@@ -236,22 +275,43 @@ const AddProductForm = ({ onSuccess }) => {
           onChange={handleChange}
           required
           fullWidth
+          error={!!errors.price}
+          helperText={errors.price}
+          InputProps={{ inputProps: { min: 0 } }}
         />
         <TextField
-          label="Description (English)"
-          name="description_en"
-          value={formData.description_en}
+          label="Profit Percentage"
+          name="profit_percentage"
+          type="number"
+          value={formData.profit_percentage}
           onChange={handleChange}
           fullWidth
+          error={!!errors.profit_percentage}
+          helperText={errors.profit_percentage}
+          InputProps={{ inputProps: { min: 0, max: 100, step: 0.01 } }}
+        />
+
+        {/* Descriptions */}
+        <TextField
+          label="Description (English)"
+          name="description.en"
+          value={formData.description.en}
+          onChange={handleChange}
+          fullWidth
+          multiline
+          rows={3}
         />
         <TextField
           label="Description (Arabic)"
-          name="description_ar"
-          value={formData.description_ar}
+          name="description.ar"
+          value={formData.description.ar}
           onChange={handleChange}
           fullWidth
+          multiline
+          rows={3}
         />
 
+        {/* Hot Product Checkbox */}
         <FormControlLabel
           control={
             <Checkbox
@@ -263,42 +323,75 @@ const AddProductForm = ({ onSuccess }) => {
           label="Hot Product"
         />
 
-        <input
-          type="file"
-          name="image"
-          onChange={handleChange}
-          accept="image/jpeg, image/png, image/jpg"
-          required
-        />
-        {imageError && (
-          <Typography color="error" variant="body2">
-            {imageError}
-          </Typography>
-        )}
+        {/* Image Upload */}
+        <Box>
+          <Button variant="contained" component="label">
+            Upload Image (max 100KB)
+            <input
+              type="file"
+              name="image"
+              onChange={handleChange}
+              accept="image/jpeg, image/png, image/jpg"
+              hidden
+            />
+          </Button>
+          {errors.image && (
+            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+              {errors.image}
+            </Typography>
+          )}
+          {imagePreview && (
+            <Box sx={{ mt: 2 }}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "200px",
+                  borderRadius: "4px",
+                }}
+              />
+            </Box>
+          )}
+        </Box>
 
+        {/* Submit Button */}
         <Button
           type="submit"
           variant="contained"
           color="primary"
-          fullWidth
+          size="large"
           disabled={status === "loading"}
+          sx={{ mt: 2 }}
         >
           {status === "loading" ? (
-            <CircularProgress size={24} />
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} />
+              Adding Product...
+            </>
           ) : (
             "Add Product"
           )}
         </Button>
-        {error && <Typography color="error">{error}</Typography>}
-      </form>
 
-      {/* Success Snackbar */}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error.message || "Failed to add product"}
+          </Alert>
+        )}
+      </Box>
+
+      {/* Success Notification */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
+        onClose={() => setSnackbarOpen(false)}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success">
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           Product added successfully!
         </Alert>
       </Snackbar>
