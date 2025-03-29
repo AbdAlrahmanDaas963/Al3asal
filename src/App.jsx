@@ -68,6 +68,7 @@ function App() {
                 >
                   <Route index element={<HomeDash />} />
                   <Route path="orders" element={<Orders />} />
+
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="statistics" element={<StatisticsTest />} />
 

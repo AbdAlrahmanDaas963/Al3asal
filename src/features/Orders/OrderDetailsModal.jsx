@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,69 +11,116 @@ import {
   Grid,
   IconButton,
   Box,
+  Menu,
+  MenuItem,
+  CircularProgress,
+  Chip,
+  TextField,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CrownIcon from "@mui/icons-material/EmojiEvents";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SaveIcon from "@mui/icons-material/Save";
 
 const statusColors = {
-  done: "#4CAF50",
-  pending: "#FFC107",
-  failed: "#F44336",
-  preparing: "#FF9800",
+  done: "#A1FCB6",
+  pending: "#6B56E0",
+  rejected: "#E05656",
+  preparing: "#FFDA85",
   default: "#9E9E9E",
 };
 
-const OrderDetailsModal = ({ order, open, handleClose }) => {
+const statusDisplayMap = {
+  preparing: "Preparing",
+  rejected: "Rejected",
+  pending: "Pending",
+  done: "Completed",
+};
+
+const getAvailableStatuses = (currentStatus) => {
+  if (currentStatus === "pending") return ["preparing", "rejected"];
+  if (currentStatus === "preparing") return ["done"];
+  return [];
+};
+
+const OrderDetailsModal = ({
+  open,
+  order,
+  onClose,
+  onStatusChange,
+  isUpdating,
+}) => {
+  const [selectedStatus, setSelectedStatus] = useState(
+    order?.status || "pending"
+  );
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   if (!order) return null;
 
+  const availableStatuses = getAvailableStatuses(order.status);
+  const showRejectReason = selectedStatus === "rejected";
+
+  const handleStatusSelect = (status) => {
+    setSelectedStatus(status);
+    setAnchorEl(null);
+  };
+
+  const handleSaveStatus = async () => {
+    await onStatusChange(
+      order.id,
+      selectedStatus,
+      showRejectReason ? rejectReason : null
+    );
+  };
+
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-      {/* Header */}
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          backgroundColor: "#121212",
-          color: "white",
-        }}
-      >
-        Order Details
-        <IconButton onClick={handleClose}>
-          <CloseIcon sx={{ color: "white" }} />
-        </IconButton>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle sx={{ backgroundColor: "#121212", color: "white" }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box display="flex" alignItems="center">
+            <Typography variant="h6">Order #{order.id}</Typography>
+            <Chip
+              label={statusDisplayMap[order.status] || order.status}
+              sx={{
+                ml: 2,
+                backgroundColor:
+                  statusColors[order.status] || statusColors.default,
+                color: "white",
+                fontWeight: "bold",
+              }}
+            />
+          </Box>
+          <IconButton onClick={onClose} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
       <DialogContent
         dividers
         sx={{ backgroundColor: "#121212", color: "white" }}
       >
-        {/* Products Section */}
         <Typography variant="h6" gutterBottom>
-          Products
+          Products ({order.items.length})
         </Typography>
         <Grid container spacing={2}>
           {order.items.map((item, index) => (
-            <Grid item xs={12} sm={4} key={index}>
-              <Card
-                sx={{
-                  backgroundColor: "#292929",
-                  color: "white",
-                  borderRadius: 2,
-                }}
-              >
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card sx={{ backgroundColor: "#292929", color: "white" }}>
                 <CardContent>
-                  <Typography variant="body1">{item.product_name}</Typography>
-                  <Typography variant="body2">
-                    Amount: {item.quantity}
+                  <Typography fontWeight="medium">
+                    {item.product_name}
                   </Typography>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mt={1}
-                  >
-                    <Typography variant="h6">${item.product_price}</Typography>
+                  <Typography color="#ccc" mt={0.5}>
+                    {item.quantity} × ${item.product_price}
+                  </Typography>
+                  <Box display="flex" justifyContent="space-between" mt={1.5}>
+                    <Typography color="#aaa">Subtotal</Typography>
+                    <Typography fontWeight="medium">
+                      ${(item.quantity * item.product_price).toFixed(2)}
+                    </Typography>
                   </Box>
                 </CardContent>
               </Card>
@@ -81,171 +128,224 @@ const OrderDetailsModal = ({ order, open, handleClose }) => {
           ))}
         </Grid>
 
-        {/* Order Details Section */}
-        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-          Order Detail
-        </Typography>
-        <Box sx={{ backgroundColor: "#292929", p: 2, borderRadius: 2 }}>
-          <Grid container spacing={2}>
-            {/* Left Column */}
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <b>Customer Name:</b> {order.user.name}
-              </Typography>
-              <Typography>
-                <b>Receiver Name:</b> {order.reciver_name}
-              </Typography>
-              <Typography>
-                <b>ID:</b> #{order.id}
-              </Typography>
-              <Typography>
-                <b>Card:</b> **** **** **** 1234
-              </Typography>
-              <Typography>
-                <b>Location:</b> 54.5461, 71.5149{" "}
-                <LocationOnIcon
-                  sx={{ fontSize: 16, verticalAlign: "middle" }}
+        <Box mt={4}>
+          <Typography variant="h6" gutterBottom>
+            Order Details
+          </Typography>
+          <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <DetailItem label="Customer Name" value={order.user?.name} />
+                <DetailItem label="Receiver Name" value={order.reciver_name} />
+                <DetailItem label="Order ID" value={`#${order.id}`} />
+                <DetailItem
+                  label="Payment Card"
+                  value={
+                    order.card_number
+                      ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
+                      : "•••• •••• •••• ••••"
+                  }
                 />
-              </Typography>
-              <Box display="flex" alignItems="center">
-                <Typography sx={{ mr: 1 }}>
-                  <b>Status:</b>
-                </Typography>
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      backgroundColor:
-                        statusColors[order.status] || statusColors.default,
-                    }}
-                  />
-                  <Typography>
-                    {order.status.charAt(0).toUpperCase() +
-                      order.status.slice(1)}
-                  </Typography>
-                </Box>
-              </Box>
+                <DetailItem
+                  label="Location"
+                  value={
+                    <Box display="flex" alignItems="center">
+                      54.5461, 71.5149
+                      <LocationOnIcon
+                        sx={{ fontSize: 16, ml: 0.5, color: "#E4272B" }}
+                      />
+                    </Box>
+                  }
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <DetailItem label="Customer Email" value={order.user?.email} />
+                <DetailItem
+                  label="Receiver Phone"
+                  value={order.reciver_phone}
+                />
+                <DetailItem
+                  label="Delivery Date"
+                  value={
+                    <span style={{ color: "#E4272B" }}>
+                      {new Date(order.date).toLocaleString()}
+                    </span>
+                  }
+                />
+                <DetailItem
+                  label="Total Payment"
+                  value={`$${order.total_price}`}
+                />
+                <DetailItem label="Category" value={order.category} />
+              </Grid>
             </Grid>
-
-            {/* Right Column */}
-            <Grid item xs={12} sm={6}>
-              <Typography>
-                <b>Customer Number:</b> {order.user.email}
-              </Typography>
-              <Typography>
-                <b>Receiver Number:</b> {order.reciver_phone}
-              </Typography>
-              <Typography>
-                <b>Deliver Date:</b>
-                <span style={{ color: "#E4272B" }}>
-                  {new Date(order.date).toLocaleString()}
-                </span>
-              </Typography>
-              <Typography>
-                <b>Payment:</b> ${order.total_price}
-              </Typography>
-              <Typography>
-                <b>Category:</b> {order.category}
-              </Typography>
-            </Grid>
-          </Grid>
+          </Box>
         </Box>
 
-        {/* Premium Service Section */}
-        <Box sx={{ backgroundColor: "#292929", p: 2, borderRadius: 2, mt: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            <CrownIcon sx={{ color: "#E4272B", mr: 1, fontSize: 20 }} />
-            Premium Service
-          </Typography>
-          <Typography>
-            <b>Deliver Date:</b>{" "}
-            <span style={{ color: "#E4272B" }}>
-              {new Date(order.date).toLocaleString()}
-            </span>
-          </Typography>
-
-          {/* Files Section */}
-          <Typography sx={{ mt: 1 }}>Files:</Typography>
-          <Box display="flex" gap={1} mt={1}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "#414141",
-                borderRadius: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              📷
-            </Box>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "#414141",
-                borderRadius: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              📷
-            </Box>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "#414141",
-                borderRadius: 1,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              📷
+        {order.user?.is_premium && (
+          <Box mt={4}>
+            <Typography variant="h6" gutterBottom>
+              <CrownIcon sx={{ color: "#E4272B", mr: 1, fontSize: 20 }} />
+              Premium Service
+            </Typography>
+            <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
+              <DetailItem
+                label="Delivery Date"
+                value={
+                  <span style={{ color: "#E4272B" }}>
+                    {new Date(order.date).toLocaleString()}
+                  </span>
+                }
+              />
+              <Box mt={2}>
+                <Typography color="#aaa" gutterBottom>
+                  Attachments
+                </Typography>
+                <Box display="flex" gap={1.5}>
+                  {[1, 2, 3].map((item) => (
+                    <Box
+                      key={item}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        backgroundColor: "#414141",
+                        borderRadius: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography>📷</Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             </Box>
           </Box>
+        )}
 
-          {/* Notes Section */}
-          <Typography sx={{ mt: 2 }}>Notes:</Typography>
-          <Box
-            sx={{
-              backgroundColor: "#414141",
-              color: "#ccc",
-              p: 1,
-              borderRadius: 1,
-              mt: 1,
-            }}
-          >
-            Vel excepturi ut culpa corporis mollitia. Quibusdam accusamus velit
-            quod maiores rem.
+        <Box mt={4}>
+          <Typography variant="h6" gutterBottom>
+            Update Order Status
+          </Typography>
+          <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={6}>
+                <Typography color="#aaa" gutterBottom>
+                  New Status
+                </Typography>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Button
+                    variant="outlined"
+                    onClick={(e) => setAnchorEl(e.currentTarget)}
+                    endIcon={<ExpandMoreIcon />}
+                    disabled={!availableStatuses.length}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        backgroundColor:
+                          statusColors[selectedStatus] || statusColors.default,
+                        mr: 1,
+                      }}
+                    />
+                    {statusDisplayMap[selectedStatus] || selectedStatus}
+                  </Button>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={() => setAnchorEl(null)}
+                  >
+                    {availableStatuses.map((status) => (
+                      <MenuItem
+                        key={status}
+                        onClick={() => handleStatusSelect(status)}
+                      >
+                        <Box
+                          sx={{
+                            width: 10,
+                            height: 10,
+                            borderRadius: "50%",
+                            backgroundColor: statusColors[status],
+                            mr: 1.5,
+                          }}
+                        />
+                        {statusDisplayMap[status]}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </Box>
+              </Grid>
+
+              {showRejectReason && (
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Rejection Reason"
+                    value={rejectReason}
+                    onChange={(e) => setRejectReason(e.target.value)}
+                    required
+                    sx={{
+                      "& .MuiInputBase-root": { color: "white" },
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#555" },
+                        "&:hover fieldset": { borderColor: "#777" },
+                      },
+                      "& .MuiInputLabel-root": { color: "#aaa" },
+                    }}
+                  />
+                </Grid>
+              )}
+            </Grid>
           </Box>
         </Box>
       </DialogContent>
 
-      {/* Actions */}
-      <DialogActions sx={{ backgroundColor: "#121212" }}>
+      <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          sx={{ color: "white", borderColor: "#555", mr: 2 }}
+        >
+          Cancel
+        </Button>
         <Button
           variant="contained"
-          color="error"
-          onClick={handleClose}
-          sx={{ borderRadius: 2, fontSize: 16, px: 4 }}
+          onClick={handleSaveStatus}
+          startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
+          disabled={
+            (showRejectReason && !rejectReason) ||
+            isUpdating ||
+            !availableStatuses.length
+          }
+          sx={{
+            backgroundColor: "#4CAF50",
+            color: "white",
+            "&:hover": { backgroundColor: "#3e8e41" },
+          }}
         >
-          Done
+          Save Changes
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
+
+const DetailItem = ({ label, value }) => (
+  <Box mb={2}>
+    <Typography variant="subtitle2" color="#aaa">
+      {label}
+    </Typography>
+    {typeof value === "string" || typeof value === "number" ? (
+      <Typography variant="body1" mt={0.5}>
+        {value}
+      </Typography>
+    ) : (
+      <Box mt={0.5}>{value}</Box>
+    )}
+  </Box>
+);
 
 export default OrderDetailsModal;

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "./ordersSlice";
 import OrdersTable from "./OrdersTable";
+import OrdersTable2 from "./OrdersTable2";
 
 const Orders = () => {
   const dispatch = useDispatch();
@@ -33,7 +34,8 @@ const Orders = () => {
 
   return (
     <div>
-      <OrdersTable orders={orders} />
+      {/* <OrdersTable orders={orders} /> */}
+      <OrdersTable2 orders={orders} />
     </div>
   );
 };
