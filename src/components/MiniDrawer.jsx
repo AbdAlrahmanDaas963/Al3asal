@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { styled, useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import MuiDrawer from "@mui/material/Drawer";
@@ -32,6 +32,7 @@ import LanguageToggleButton from "./common/LanguageToggleButton";
 
 import { useTranslation } from "react-i18next";
 import LogOutButton from "./common/LogOutButton";
+import { useMediaQuery } from "@mui/material";
 
 const drawerWidth = 240;
 
@@ -103,12 +104,37 @@ const Dashboard = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(true);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile]);
+
+  const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setOpen(!open);
+    }
   };
 
   const handleDrawerClose = () => {
-    setOpen(false);
+    if (isMobile) {
+      setMobileOpen(false);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  const handleDrawerOpen = () => {
+    if (isMobile) {
+      setMobileOpen(true);
+    } else {
+      setOpen(true);
+    }
   };
 
   const menuItems = [
@@ -130,9 +156,11 @@ const Dashboard = () => {
         open={open}
         sx={{
           backgroundColor: "#292929",
-          ...(theme.direction === "rtl"
-            ? { marginRight: open ? `${drawerWidth}px` : 0 }
-            : { marginLeft: open ? `${drawerWidth}px` : 0 }),
+          ...(!isMobile && {
+            ...(theme.direction === "rtl"
+              ? { marginRight: open ? `${drawerWidth}px` : 0 }
+              : { marginLeft: open ? `${drawerWidth}px` : 0 }),
+          }),
           transition: theme.transitions.create(["margin", "width"], {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
@@ -142,13 +170,13 @@ const Dashboard = () => {
         <Toolbar>
           <IconButton
             color="inherit"
-            onClick={handleDrawerOpen}
+            onClick={handleDrawerToggle}
             edge="start"
             sx={{
               ...(theme.direction === "rtl"
                 ? { marginLeft: 2 }
                 : { marginRight: 2 }),
-              ...(open && { display: "none" }),
+              ...(!isMobile && open && { display: "none" }),
             }}
           >
             <MenuIcon />
@@ -166,9 +194,70 @@ const Dashboard = () => {
           </Stack>
         </Toolbar>
       </AppBar>
-      <Drawer
-        variant="permanent"
+
+      {/* Mobile Drawer */}
+      <MuiDrawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerClose}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile
+        }}
         sx={{
+          display: { xs: "block", sm: "none" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: drawerWidth,
+            backgroundColor: "#292929",
+            color: "white",
+          },
+        }}
+      >
+        <DrawerHeader>
+          <IconButton onClick={handleDrawerClose}>
+            {theme.direction === "rtl" ? (
+              <ChevronRightIcon />
+            ) : (
+              <ChevronLeftIcon />
+            )}
+          </IconButton>
+        </DrawerHeader>
+        <Divider />
+        <List>
+          {menuItems.map(({ text, icon, path }) => (
+            <ListItem key={text} disablePadding>
+              <ListItemButton
+                component={Link}
+                to={
+                  path === "Dashboard"
+                    ? "/dashboard"
+                    : `/dashboard/${path.toLowerCase()}`
+                }
+                onClick={handleDrawerClose}
+                sx={{ textAlign: theme.direction === "rtl" ? "right" : "left" }}
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: theme.direction === "rtl" ? 2 : 3,
+                    ml: theme.direction === "rtl" ? 3 : 0,
+                  }}
+                >
+                  {icon}
+                </ListItemIcon>
+                <ListItemText primary={text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </MuiDrawer>
+
+      {/* Desktop Drawer */}
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={!isMobile && open}
+        sx={{
+          display: { xs: "none", sm: "block" },
           ...(theme.direction === "rtl"
             ? { right: 0, left: "auto" }
             : { left: 0, right: "auto" }),
@@ -178,7 +267,6 @@ const Dashboard = () => {
               : { left: 0, right: "auto" }),
           },
         }}
-        open={open}
       >
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
@@ -211,18 +299,23 @@ const Dashboard = () => {
                 >
                   {icon}
                 </ListItemIcon>
-                <ListItemText
-                  primary={text}
-                  sx={{
-                    textAlign: theme.direction === "rtl" ? "right" : "left",
-                  }}
-                />
+                <ListItemText primary={text} />
               </ListItemButton>
             </ListItem>
           ))}
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: {
+            sm: `calc(100% - ${open ? drawerWidth : theme.spacing(8)}px)`,
+          },
+        }}
+      >
         <DrawerHeader />
         <Outlet />
       </Box>

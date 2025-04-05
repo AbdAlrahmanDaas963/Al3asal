@@ -23,9 +23,26 @@ const getTheme = (direction) =>
     },
     typography: {
       fontFamily: "Cairo, Roboto, Arial, sans-serif",
+      htmlFontSize: 16,
       button: {
         fontFamily: "Cairo, Roboto, Arial, sans-serif",
         textTransform: "none", // Optional: to avoid uppercase transformation
+      },
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          html: {
+            width: "100%",
+            height: "100%",
+            WebkitTextSizeAdjust: "100%",
+          },
+          body: {
+            width: "100%",
+            height: "100%",
+            WebkitTextSizeAdjust: "100%",
+          },
+        },
       },
     },
   });

@@ -18,6 +18,10 @@ import {
   Snackbar,
   Alert,
   Skeleton,
+  useMediaQuery,
+  useTheme,
+  Tooltip,
+  Avatar,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -44,19 +48,20 @@ const statusDisplayMap = {
 };
 
 const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const dispatch = useDispatch();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(isMobile ? 3 : 5);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   });
   const [initialLoad, setInitialLoad] = useState(true);
-
-  const rowsPerPage = 5;
 
   // Track initial load completion
   useEffect(() => {
@@ -103,6 +108,15 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   // Reset to first page if current page is out of bounds
   useEffect(() => {
     if (page >= totalPages) setPage(0);
@@ -112,25 +126,27 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     return Array.from({ length: rowsPerPage }).map((_, index) => (
       <TableRow key={`skeleton-${index}`}>
         <TableCell>
-          <Skeleton variant="text" width={120} height={40} />
+          <Box display="flex" alignItems="center">
+            <Skeleton variant="circular" width={40} height={40} />
+            <Box ml={2}>
+              <Skeleton variant="text" width={120} height={20} />
+              <Skeleton variant="text" width={80} height={16} />
+            </Box>
+          </Box>
         </TableCell>
         <TableCell>
-          <Skeleton variant="text" width={80} height={40} />
+          <Skeleton variant="text" width={80} height={20} />
         </TableCell>
         <TableCell>
-          <Skeleton variant="text" width={100} height={40} />
+          <Skeleton variant="text" width={100} height={20} />
         </TableCell>
+        {!isMobile && (
+          <TableCell>
+            <Skeleton variant="text" width={150} height={20} />
+          </TableCell>
+        )}
         <TableCell>
-          <Skeleton variant="text" width={150} height={40} />
-        </TableCell>
-        <TableCell>
-          <Skeleton variant="text" width={100} height={40} />
-        </TableCell>
-        <TableCell>
-          <Skeleton variant="text" width={80} height={40} />
-        </TableCell>
-        <TableCell>
-          <Skeleton variant="text" width={80} height={40} />
+          <Skeleton variant="text" width={80} height={20} />
         </TableCell>
         <TableCell>
           <Skeleton variant="rectangular" width={100} height={36} />
@@ -139,16 +155,61 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     ));
   };
 
-  const renderTableContent = () => {
-    // Show skeletons if loading OR if initial load hasn't completed (empty array)
-    if (isLoading || initialLoad) {
-      return renderSkeletonRows();
-    }
+  const renderCustomerCell = (order) => (
+    <TableCell>
+      <Box display="flex" alignItems="center">
+        <Avatar
+          sx={{
+            width: 32,
+            height: 32,
+            bgcolor: statusColors[order.status] || statusColors.default,
+            mr: 1.5,
+            fontSize: "0.875rem",
+          }}
+        >
+          {order.reciver_name?.charAt(0) || "?"}
+        </Avatar>
+        <Box>
+          <Typography variant="body2" sx={{ color: "white", fontWeight: 500 }}>
+            {order.reciver_name || "N/A"}
+          </Typography>
+          {isMobile && (
+            <Typography
+              variant="caption"
+              sx={{ color: "rgba(255,255,255,0.7)" }}
+            >
+              #{order.user?.id || order.id}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+    </TableCell>
+  );
 
-    if (error) {
+  const renderStatusCell = (order) => (
+    <TableCell>
+      <Chip
+        label={statusDisplayMap[order.status] || order.status}
+        size="small"
+        sx={{
+          backgroundColor: statusColors[order.status] || statusColors.default,
+          color: "black",
+          minWidth: 80,
+        }}
+      />
+    </TableCell>
+  );
+
+  const renderTableContent = () => {
+    if (isLoading || initialLoad) return renderSkeletonRows();
+    if (error)
       return (
         <TableRow>
-          <TableCell colSpan={8} align="center" sx={{ py: 4, color: "white" }}>
+          <TableCell
+            colSpan={isMobile ? 5 : 6}
+            align="center"
+            sx={{ py: 4, color: "white" }}
+          >
             <Typography color="error">
               Error loading orders: {error.message}
             </Typography>
@@ -163,70 +224,58 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           </TableCell>
         </TableRow>
       );
-    }
-
-    if (filteredOrders.length === 0) {
+    if (filteredOrders.length === 0)
       return (
         <TableRow>
-          <TableCell colSpan={8} align="center" sx={{ py: 4, color: "white" }}>
+          <TableCell
+            colSpan={isMobile ? 5 : 6}
+            align="center"
+            sx={{ py: 4, color: "white" }}
+          >
             <Typography>No orders found</Typography>
           </TableCell>
         </TableRow>
       );
-    }
 
     return currentItems.map((order) => (
       <TableRow key={order.id}>
-        <TableCell>
-          <Box display="flex" alignItems="center">
-            <Box
-              sx={{
-                width: 10,
-                height: 10,
-                borderRadius: "50%",
-                backgroundColor:
-                  statusColors[order.status] || statusColors.default,
-                mr: 1,
-              }}
-            />
-            <Typography sx={{ color: "white" }}>
-              {order.reciver_name || "N/A"}
-            </Typography>
-          </Box>
-        </TableCell>
-        <TableCell sx={{ color: "white" }}>
-          #{order.user?.id || order.id}
-        </TableCell>
-        <TableCell sx={{ color: "white" }}>
-          <Chip label={order.category || "N/A"} size="small" />
-        </TableCell>
-        <TableCell sx={{ color: "white" }}>
-          <Box display="flex" alignItems="center">
-            <CreditCardIcon fontSize="small" sx={{ mr: 1, color: "white" }} />
-            <Typography>
-              {order.card_number
-                ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
-                : "•••• •••• •••• 0000"}
-            </Typography>
-          </Box>
-        </TableCell>
-        <TableCell sx={{ color: "white" }}>
-          {new Date(order.date).toLocaleDateString()}
-        </TableCell>
+        {renderCustomerCell(order)}
+        {!isMobile && (
+          <TableCell sx={{ color: "white" }}>
+            #{order.user?.id || order.id}
+          </TableCell>
+        )}
+        {renderStatusCell(order)}
+        {!isMobile && (
+          <TableCell sx={{ color: "white" }}>
+            <Tooltip title={order.card_number || "Card not provided"}>
+              <Box display="flex" alignItems="center">
+                <CreditCardIcon
+                  fontSize="small"
+                  sx={{ mr: 1, color: "white" }}
+                />
+                <Typography variant="body2">
+                  {order.card_number
+                    ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
+                    : "•••• •••• •••• ••••"}
+                </Typography>
+              </Box>
+            </Tooltip>
+          </TableCell>
+        )}
         <TableCell sx={{ color: "white" }}>
           ${order.total_price?.toFixed(2) || "0.00"}
-        </TableCell>
-        <TableCell sx={{ color: "white" }}>
-          {order.user?.is_premium ? <CrownIcon color="warning" /> : "Regular"}
         </TableCell>
         <TableCell>
           <Button
             variant="contained"
             color="primary"
+            size="small"
             onClick={() => {
               setSelectedOrder(order);
               setOpenModal(true);
             }}
+            sx={{ minWidth: 90 }}
           >
             Details
           </Button>
@@ -236,12 +285,15 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
   };
 
   return (
-    <Box sx={{ backgroundColor: "#121212", p: 2, borderRadius: 2 }}>
+    <Box
+      sx={{ backgroundColor: "#121212", p: isMobile ? 1 : 2, borderRadius: 2 }}
+    >
       <Box
         display="flex"
-        justifyContent="space-between"
+        justifyContent={isMobile ? "center" : "space-between"}
         alignItems="center"
         mb={2}
+        sx={{ overflowX: "auto" }}
       >
         <Tabs
           value={statusFilters.indexOf(statusFilter)}
@@ -249,6 +301,9 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
             setStatusFilter(statusFilters[newValue]);
             setPage(0);
           }}
+          variant={isMobile ? "scrollable" : "standard"}
+          scrollButtons="auto"
+          allowScrollButtonsMobile
         >
           {statusFilters.map((status) => (
             <Tab
@@ -272,6 +327,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
                     : statusDisplayMap[status] || status}
                 </Box>
               }
+              sx={{ minWidth: isMobile ? 80 : "auto", px: isMobile ? 1 : 2 }}
             />
           ))}
         </Tabs>
@@ -279,18 +335,29 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
 
       <TableContainer
         component={Paper}
-        sx={{ backgroundColor: "#121212", mt: 2 }}
+        sx={{
+          backgroundColor: "#121212",
+          mt: 2,
+          overflowX: "auto",
+          "&::-webkit-scrollbar": {
+            height: "6px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#E4272B",
+            borderRadius: "3px",
+          },
+        }}
       >
         <Table>
           <TableHead>
             <TableRow>
               <TableCell sx={{ color: "white" }}>Customer</TableCell>
-              <TableCell sx={{ color: "white" }}>Account ID</TableCell>
-              <TableCell sx={{ color: "white" }}>Category</TableCell>
-              <TableCell sx={{ color: "white" }}>Card</TableCell>
-              <TableCell sx={{ color: "white" }}>Date</TableCell>
-              <TableCell sx={{ color: "white" }}>Payment</TableCell>
-              <TableCell sx={{ color: "white" }}>Premium</TableCell>
+              {!isMobile && (
+                <TableCell sx={{ color: "white" }}>Account ID</TableCell>
+              )}
+              <TableCell sx={{ color: "white" }}>Status</TableCell>
+              {!isMobile && <TableCell sx={{ color: "white" }}>Card</TableCell>}
+              <TableCell sx={{ color: "white" }}>Amount</TableCell>
               <TableCell sx={{ color: "white" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -298,7 +365,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         </Table>
       </TableContainer>
 
-      {!isLoading && !initialLoad && filteredOrders.length > rowsPerPage && (
+      {!isLoading && !initialLoad && filteredOrders.length > 0 && (
         <Box
           display="flex"
           justifyContent="center"
@@ -308,29 +375,19 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           <IconButton
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
+            sx={{ color: "white" }}
           >
-            <ArrowBackIosIcon />
+            <ArrowBackIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <Button
-              key={i}
-              variant={i === page ? "contained" : "text"}
-              onClick={() => setPage(i)}
-              sx={{
-                mx: 0.5,
-                minWidth: 30,
-                color: i === page ? "white" : "#ccc",
-                backgroundColor: i === page ? "#E4272B" : "transparent",
-              }}
-            >
-              {i + 1}
-            </Button>
-          ))}
+          <Typography variant="body2" sx={{ mx: 2 }}>
+            Page {page + 1} of {totalPages}
+          </Typography>
           <IconButton
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
+            sx={{ color: "white" }}
           >
-            <ArrowForwardIosIcon />
+            <ArrowForwardIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
         </Box>
       )}

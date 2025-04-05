@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Stack } from "@mui/material";
+import { Box, Stack, useMediaQuery } from "@mui/material";
 import MyBarChart from "../components/MyBarChart";
 import MyGridChart from "../components/MyGridChart";
 import PersonIcon from "@mui/icons-material/Person";
@@ -11,35 +11,45 @@ import { fetchOrders } from "../features/Orders/ordersSlice";
 
 const TinyCard = ({ children, title, value }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Stack
       direction="row"
       sx={{
-        padding: "20px",
+        padding: isMobile ? "12px" : "20px",
         background: theme.palette.grey.main,
         borderRadius: "20px",
-        minWidth: "200px",
+        minWidth: isMobile ? "100%" : "200px",
         flexGrow: 1,
       }}
-      gap="20px"
+      gap={isMobile ? "12px" : "20px"}
     >
       <Box
         sx={{
           backgroundColor: "#02b2af",
           borderRadius: "50%",
-          width: "50px",
-          height: "50px",
+          width: isMobile ? "40px" : "50px",
+          height: isMobile ? "40px" : "50px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        {children}
+        {React.cloneElement(children, {
+          sx: { fontSize: isMobile ? "20px" : "24px" },
+        })}
       </Box>
       <Stack>
-        <Box color="white">{title}</Box>
-        <Box fontWeight="bold" color="white">
+        <Box color="white" fontSize={isMobile ? "0.8rem" : "0.9rem"}>
+          {title}
+        </Box>
+        <Box
+          fontWeight="bold"
+          color="white"
+          fontSize={isMobile ? "1rem" : "1.1rem"}
+        >
           {value}
         </Box>
       </Stack>
@@ -48,32 +58,62 @@ const TinyCard = ({ children, title, value }) => {
 };
 
 function HomeDash() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const dispatch = useDispatch();
   const { orders } = useSelector((state) => state.orders);
 
   useEffect(() => {
-    dispatch(fetchOrders({ min_price: 0, per_page: 50 })); // Fetch orders from API
+    dispatch(fetchOrders({ min_price: 0, per_page: 50 }));
   }, [dispatch]);
 
   return (
-    <Box sx={{ width: "100%", height: "100%", padding: "20px" }}>
-      <Stack direction="column" alignItems="flex-start" gap="30px">
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        padding: isMobile ? "10px" : "20px",
+        overflowX: "hidden",
+      }}
+    >
+      <Stack
+        direction="column"
+        alignItems="flex-start"
+        gap={isMobile ? "20px" : "30px"}
+      >
         <Stack
-          direction="row"
-          gap="30px"
+          direction={isMobile ? "column" : "row"}
+          gap={isMobile ? "15px" : "30px"}
           sx={{
             flexWrap: "wrap",
             justifyContent: "space-between",
-            minWidth: "100%",
+            width: "100%",
           }}
         >
-          <Box sx={{ flex: 1, minWidth: "300px" }}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: isMobile ? "100%" : "300px",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
             <MyBarChart />
           </Box>
-          <Box sx={{ flex: 1, minWidth: "300px" }}>
+          <Box
+            sx={{
+              flex: 1,
+              minWidth: isMobile ? "100%" : "300px",
+              width: isMobile ? "100%" : "auto",
+            }}
+          >
             <MyGridChart />
           </Box>
-          <Stack gap="5px">
+          <Stack
+            direction={isMobile ? "column" : "row"}
+            gap={isMobile ? "10px" : "20px"}
+            sx={{ width: "100%" }}
+          >
             <TinyCard title="Total Users" value="5000">
               <PersonIcon />
             </TinyCard>
@@ -82,7 +122,9 @@ function HomeDash() {
             </TinyCard>
           </Stack>
         </Stack>
-        <OrdersTable orders={orders} rows={5} />
+        <Box sx={{ width: "100%", overflowX: isMobile ? "auto" : "hidden" }}>
+          <OrdersTable orders={orders} rows={isMobile ? 3 : 5} />
+        </Box>
       </Stack>
     </Box>
   );
