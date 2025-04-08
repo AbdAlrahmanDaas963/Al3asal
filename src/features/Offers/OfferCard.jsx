@@ -32,10 +32,11 @@ const OfferCard = ({ offer }) => {
     <Stack
       sx={{
         width: "250px",
-        border: "1px dotted grey",
+        // border: "1px solid grey",
+        backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
-        backgroundColor: "#121212",
+
         color: "#fff",
         position: "relative",
       }}

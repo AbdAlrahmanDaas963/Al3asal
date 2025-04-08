@@ -20,7 +20,8 @@ function CategoryCard({ category }) {
     <Stack
       sx={{
         width: "300px",
-        border: "1px dotted grey",
+        // border: "1px solid grey",
+        backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
         position: "relative",

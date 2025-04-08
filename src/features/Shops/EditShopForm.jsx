@@ -6,6 +6,7 @@ import {
   TextField,
   Typography,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,138 +22,160 @@ const EditShopForm = () => {
   const { status, error, selectedShop } = useSelector((state) => state.shops);
 
   const [formData, setFormData] = useState({
-    name: { en: "", ar: "" },
+    name: "",
     is_interested: "1",
     image: null,
+    originalImage: null,
   });
 
-  const [errorMessage, setErrorMessage] = useState("");
-  const [validationErrors, setValidationErrors] = useState({});
+  const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [localStatus, setLocalStatus] = useState("idle");
 
+  // Fetch shop data
   useEffect(() => {
+    dispatch(resetStatus()); // Reset status on mount
     if (!shopFromState) {
       dispatch(fetchShopById(shopId));
     }
   }, [dispatch, shopId, shopFromState]);
 
+  // Sync Redux status with local status
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
+  // Initialize form
   useEffect(() => {
     const shopData = shopFromState || selectedShop?.data;
-    if (shopData) {
+    if (shopData && !isInitialized) {
       setFormData({
-        name: { en: shopData.name?.en || "", ar: shopData.name?.ar || "" },
+        name: shopData.name || "",
         is_interested: shopData.is_interested?.toString() || "1",
         image: shopData.image || null,
+        originalImage: shopData.image || null,
       });
+      setIsInitialized(true);
     }
-  }, [shopFromState, selectedShop]);
+  }, [shopFromState, selectedShop, isInitialized]);
 
-  useEffect(() => {
-    dispatch(resetStatus());
-  }, [dispatch]);
-
+  // Handle image preview
   useEffect(() => {
     if (formData.image && typeof formData.image !== "string") {
       const objectUrl = URL.createObjectURL(formData.image);
       setPreview(objectUrl);
-
       return () => URL.revokeObjectURL(objectUrl);
     }
   }, [formData.image]);
 
+  // Handle navigation after success
+  useEffect(() => {
+    if (localStatus === "succeeded") {
+      const timer = setTimeout(() => {
+        navigate("/dashboard/shops");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [localStatus, navigate]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetStatus());
+    };
+  }, [dispatch]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => {
-      if (name.startsWith("name.")) {
-        const lang = name.split(".")[1]; // Extract 'en' or 'ar'
-        return {
-          ...prev,
-          name: { ...prev.name, [lang]: value }, // ✅ Correctly update the nested object
-        };
-      }
-      return { ...prev, [name]: value };
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, image: file }));
+      setFileName(file.name);
+    }
   };
 
   const isFormUnchanged = () => {
+    const { originalImage, ...compareData } = formData;
+    const shopData = shopFromState || selectedShop?.data;
     return (
-      formData.name.en === selectedShop?.data?.name?.en &&
-      formData.name.ar === selectedShop?.data?.name?.ar &&
-      formData.is_interested ===
-        selectedShop?.data?.is_interested?.toString() &&
-      formData.image === selectedShop?.data?.image
+      compareData.name === (shopData?.name || "") &&
+      compareData.is_interested ===
+        (shopData?.is_interested?.toString() || "1") &&
+      (originalImage === compareData.image ||
+        (typeof compareData.image === "string" &&
+          compareData.image === originalImage))
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
     setValidationErrors({});
+    setLocalStatus("loading");
 
     if (isFormUnchanged()) return;
 
-    const updatedFormData = { ...formData };
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("is_interested", formData.is_interested);
 
-    // ✅ Remove 'image' if no new file is uploaded
-    if (!updatedFormData.image || typeof updatedFormData.image === "string") {
-      delete updatedFormData.image;
+    // Only append image if it's a new file (not the existing URL string)
+    if (formData.image && typeof formData.image !== "string") {
+      formDataToSend.append("image", formData.image);
     }
 
-    dispatch(updateShop({ shop_id: shopId, formData: updatedFormData }))
-      .unwrap()
-      .then(() => navigate("/dashboard/shops"))
-      .catch((err) => {
-        console.error("Failed to update shop:", err);
-        if (err.response && err.response.data.errors) {
-          setValidationErrors(err.response.data.errors);
-        } else {
-          setErrorMessage(err.message || "An unexpected error occurred.");
-        }
-      });
+    try {
+      await dispatch(
+        updateShop({
+          shop_id: shopId,
+          formData: formDataToSend,
+        })
+      ).unwrap();
+      setLocalStatus("succeeded");
+    } catch (err) {
+      setLocalStatus("failed");
+      if (err.errors) {
+        setValidationErrors(err.errors);
+      }
+      console.error("Update error:", err);
+    }
   };
 
-  const renderTextField = (label, name) => (
-    <TextField
-      label={label}
-      name={name}
-      value={formData[name]}
-      onChange={handleChange}
-      fullWidth
-      margin="normal"
-      required
-      error={!!validationErrors[name]}
-      helperText={validationErrors[name]}
-    />
-  );
-
-  if (!selectedShop?.data && !shopFromState) {
-    return <Typography variant="body1">Loading shop data...</Typography>;
+  if (!isInitialized) {
+    return (
+      <Box display="flex" justifyContent="center" mt={4}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        mt: 4,
-      }}
-    >
-      <Typography variant="h5" gutterBottom>
+    <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
+      <Typography variant="h5" gutterBottom align="center">
         Edit Shop
       </Typography>
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{ mt: 2, width: "400px" }}
-      >
-        {renderTextField("Shop Name (English)", "name.en")}
-        {renderTextField("Shop Name (Arabic)", "name.ar")}
+
+      <Box component="form" onSubmit={handleSubmit} noValidate>
+        <TextField
+          label="Shop Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+          error={!!validationErrors.name}
+          helperText={validationErrors.name}
+          autoFocus
+        />
 
         <TextField
           select
@@ -168,47 +191,67 @@ const EditShopForm = () => {
           <MenuItem value="0">No</MenuItem>
         </TextField>
 
-        <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload New Image
-          <input type="file" hidden onChange={handleFileChange} />
+        <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
+          {fileName || "Upload New Image"}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            accept="image/*"
+          />
         </Button>
 
-        {formData.image && (
+        {(formData.originalImage || preview) && (
           <Box mt={2}>
-            <Typography variant="body2">Current Image:</Typography>
+            <Typography variant="subtitle2" gutterBottom>
+              {fileName ? "New Preview" : "Current Image"}
+            </Typography>
             <img
-              src={
-                typeof formData.image === "string"
-                  ? formData.image
-                  : preview || "/default-image.jpg"
-              }
-              alt="Shop"
+              src={preview || formData.originalImage}
+              alt="Shop preview"
               style={{
-                width: "100%",
-                maxWidth: "100%", // Ensure the image doesn't exceed the container width
-                maxHeight: "300px", // Control the maximum height to avoid distortion
-                objectFit: "cover", // Maintain aspect ratio while covering the area
+                maxWidth: "100%",
+                maxHeight: 300,
+                borderRadius: 4,
               }}
             />
           </Box>
         )}
 
-        {errorMessage && (
+        {localStatus === "failed" && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {errorMessage}
+            {error || "Failed to update shop"}
           </Alert>
         )}
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 2 }}
-          disabled={status === "loading" || isFormUnchanged()}
-        >
-          {status === "loading" ? "Updating..." : "Update Shop"}
-        </Button>
+        {localStatus === "succeeded" && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            Shop updated successfully!
+          </Alert>
+        )}
+
+        <Box display="flex" gap={2} mt={3}>
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => navigate("/dashboard/shops")}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={localStatus === "loading" || isFormUnchanged()}
+            startIcon={
+              localStatus === "loading" ? <CircularProgress size={20} /> : null
+            }
+          >
+            {localStatus === "loading" ? "Updating..." : "Update Shop"}
+          </Button>
+        </Box>
       </Box>
     </Box>
   );

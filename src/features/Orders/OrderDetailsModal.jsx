@@ -16,12 +16,14 @@ import {
   CircularProgress,
   Chip,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CrownIcon from "@mui/icons-material/EmojiEvents";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SaveIcon from "@mui/icons-material/Save";
+import FileCopyIcon from "@mui/icons-material/FileCopy";
 
 const statusColors = {
   done: "#A1FCB6",
@@ -42,6 +44,28 @@ const getAvailableStatuses = (currentStatus) => {
   if (currentStatus === "pending") return ["preparing", "rejected"];
   if (currentStatus === "preparing") return ["done"];
   return [];
+};
+
+const CopyableLocation = ({ location }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(location);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Box display="flex" alignItems="center">
+      {location}
+      <LocationOnIcon sx={{ fontSize: 16, ml: 0.5, color: "#E4272B" }} />
+      <Tooltip title={copied ? "Copied!" : "Copy location"} arrow>
+        <IconButton onClick={handleCopy} size="small" sx={{ ml: 0.5 }}>
+          <FileCopyIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
 };
 
 const OrderDetailsModal = ({
@@ -148,14 +172,7 @@ const OrderDetailsModal = ({
                 />
                 <DetailItem
                   label="Location"
-                  value={
-                    <Box display="flex" alignItems="center">
-                      54.5461, 71.5149
-                      <LocationOnIcon
-                        sx={{ fontSize: 16, ml: 0.5, color: "#E4272B" }}
-                      />
-                    </Box>
-                  }
+                  value={<CopyableLocation location="54.5461, 71.5149" />}
                 />
               </Grid>
               <Grid item xs={12} md={6}>

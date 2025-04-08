@@ -21,7 +21,8 @@ function ProductCard({ item }) {
     <Stack
       sx={{
         width: "300px",
-        border: "1px dotted grey",
+        // border: "1px solid grey",
+        backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
         position: "relative",
@@ -42,14 +43,14 @@ function ProductCard({ item }) {
         }}
       />
 
-      {is_interested ? (
+      {/* {is_interested ? (
         <Chip
           label="Interested"
           color="primary"
           size="small"
           sx={{ position: "absolute", top: 10, right: 10 }}
         />
-      ) : null}
+      ) : null} */}
 
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">

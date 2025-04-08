@@ -108,86 +108,93 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+const initialState = {
+  data: [],
+  selectedProduct: null,
+  status: "idle",
+  error: null,
+};
+
 const productsSlice = createSlice({
   name: "products",
-  initialState: {
-    data: [],
-    selectedProduct: null,
-    status: "idle",
-    error: null,
+  initialState,
+  reducers: {
+    clearSelectedProduct: (state) => {
+      state.selectedProduct = null;
+    },
+    resetProductsState: () => initialState,
   },
-  reducers: {},
   extraReducers: (builder) => {
+    // Handle pending states individually
     builder
-      // Fetch all products
       .addCase(fetchProducts.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data = action.payload.data || [];
+      .addCase(fetchProductById.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
       })
+      .addCase(createProduct.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(updateProduct.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(deleteProduct.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+
+      // Handle rejected states individually
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
-      })
-
-      // Fetch product by ID
-      .addCase(fetchProductById.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.selectedProduct = action.payload;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-
-      // Create product
-      .addCase(createProduct.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(createProduct.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data.push(action.payload);
-      })
       .addCase(createProduct.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
-      })
-
-      // Update product
-      .addCase(updateProduct.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(updateProduct.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data = state.data.map((product) =>
-          product.id === action.payload.id ? action.payload : product
-        );
       })
       .addCase(updateProduct.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-
-      // Delete product
-      .addCase(deleteProduct.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(deleteProduct.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.data = state.data.filter(
-          (product) => product.id !== action.payload
-        );
-      })
       .addCase(deleteProduct.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+
+      // Handle fulfilled states
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.data = action.payload.data || [];
+        state.status = "succeeded";
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.selectedProduct = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.data.unshift(action.payload);
+        state.status = "succeeded";
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        const index = state.data.findIndex((p) => p.id === action.payload.id);
+        if (index !== -1) state.data[index] = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.data = state.data.filter((p) => p.id !== action.payload);
+        state.status = "succeeded";
       });
   },
 });
 
+export const { clearSelectedProduct, resetProductsState } =
+  productsSlice.actions;
 export default productsSlice.reducer;

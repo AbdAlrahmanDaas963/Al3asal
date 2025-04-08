@@ -8,6 +8,7 @@ import {
   Typography,
   Alert,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { resetStatus, createShop } from "./shopSlice";
 
@@ -18,15 +19,21 @@ const AddShopForm = () => {
     is_interested: "1",
     image: null,
   });
+  const [localStatus, setLocalStatus] = useState("idle"); // Track status locally
+  const [fileName, setFileName] = useState(""); // Track uploaded file name
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error } = useSelector((state) => state.shops);
+  const { status: reduxStatus, error } = useSelector((state) => state.shops);
 
-  // Reset status when the component mounts
-  // useEffect(() => {
-  //   dispatch(resetStatus());
-  // }, [dispatch]);
+  // Sync Redux status with local status and reset on unmount
+  useEffect(() => {
+    setLocalStatus(reduxStatus);
+
+    return () => {
+      dispatch(resetStatus());
+    };
+  }, [reduxStatus, dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,16 +41,23 @@ const AddShopForm = () => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
+    const file = e.target.files[0];
+    setFormData({ ...formData, image: file });
+    setFileName(file ? file.name : "");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(createShop(formData)).then(() => {
-      if (status === "succeeded") {
-        navigate("/dashboard/shops"); // Redirect to shops list
+    setLocalStatus("loading");
+
+    try {
+      const resultAction = await dispatch(createShop(formData));
+      if (createShop.fulfilled.match(resultAction)) {
+        setTimeout(() => navigate("/dashboard/shops"), 1500); // Show success message before redirect
       }
-    });
+    } catch (err) {
+      console.error("Failed to create shop:", err);
+    }
   };
 
   return (
@@ -63,6 +77,7 @@ const AddShopForm = () => {
         component="form"
         onSubmit={handleSubmit}
         sx={{ mt: 2, width: "400px" }}
+        noValidate
       >
         <TextField
           label="Shop Name (Arabic)"
@@ -72,6 +87,7 @@ const AddShopForm = () => {
           fullWidth
           margin="normal"
           required
+          autoFocus
         />
         <TextField
           label="Shop Name (English)"
@@ -97,15 +113,30 @@ const AddShopForm = () => {
         </TextField>
 
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload Image
-          <input type="file" name="image" hidden onChange={handleFileChange} />
+          {fileName || "Upload Image"}
+          <input
+            type="file"
+            name="image"
+            hidden
+            onChange={handleFileChange}
+            accept="image/*"
+          />
         </Button>
-
-        {status === "failed" && (
-          <Alert severity="error">{error || "Failed to add shop"}</Alert>
+        {fileName && (
+          <Typography variant="caption" color="text.secondary">
+            Selected: {fileName}
+          </Typography>
         )}
-        {status === "succeeded" && (
-          <Alert severity="success">Shop added successfully!</Alert>
+
+        {localStatus === "failed" && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error || "Failed to add shop"}
+          </Alert>
+        )}
+        {localStatus === "succeeded" && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            Shop added successfully!
+          </Alert>
         )}
 
         <Button
@@ -114,9 +145,12 @@ const AddShopForm = () => {
           color="primary"
           fullWidth
           sx={{ mt: 2 }}
-          disabled={status === "loading"}
+          disabled={localStatus === "loading"}
+          startIcon={
+            localStatus === "loading" ? <CircularProgress size={20} /> : null
+          }
         >
-          {status === "loading" ? "Adding..." : "Add Shop"}
+          {localStatus === "loading" ? "Adding Shop..." : "Add Shop"}
         </Button>
       </Box>
     </Box>
