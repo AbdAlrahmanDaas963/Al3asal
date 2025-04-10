@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -68,6 +68,16 @@ const CopyableLocation = ({ location }) => {
   );
 };
 
+// Helper function to handle multilingual objects
+const renderMultilingualText = (text) => {
+  if (!text) return null;
+  if (typeof text === "string") return text;
+  if (typeof text === "object" && text.en && text.ar) {
+    return text.en; // or text.ar based on your language preference
+  }
+  return JSON.stringify(text); // fallback for other cases
+};
+
 const OrderDetailsModal = ({
   open,
   order,
@@ -135,15 +145,18 @@ const OrderDetailsModal = ({
               <Card sx={{ backgroundColor: "#292929", color: "white" }}>
                 <CardContent>
                   <Typography fontWeight="medium">
-                    {item.product_name}
+                    {renderMultilingualText(item.product_name)}
                   </Typography>
                   <Typography color="#ccc" mt={0.5}>
-                    {item.quantity} × ${item.product_price}
+                    {item.quantity} × ${item.product_final_price || item.price}
                   </Typography>
                   <Box display="flex" justifyContent="space-between" mt={1.5}>
                     <Typography color="#aaa">Subtotal</Typography>
                     <Typography fontWeight="medium">
-                      ${(item.quantity * item.product_price).toFixed(2)}
+                      $
+                      {(
+                        item.quantity * (item.product_final_price || item.price)
+                      ).toFixed(2)}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -193,7 +206,10 @@ const OrderDetailsModal = ({
                   label="Total Payment"
                   value={`$${order.total_price}`}
                 />
-                <DetailItem label="Category" value={order.category} />
+                <DetailItem
+                  label="Category"
+                  value={renderMultilingualText(order.items[0]?.category_name)}
+                />
               </Grid>
             </Grid>
           </Box>
@@ -355,12 +371,12 @@ const DetailItem = ({ label, value }) => (
     <Typography variant="subtitle2" color="#aaa">
       {label}
     </Typography>
-    {typeof value === "string" || typeof value === "number" ? (
+    {React.isValidElement(value) ? (
+      <Box mt={0.5}>{value}</Box>
+    ) : (
       <Typography variant="body1" mt={0.5}>
         {value}
       </Typography>
-    ) : (
-      <Box mt={0.5}>{value}</Box>
     )}
   </Box>
 );

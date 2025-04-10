@@ -148,7 +148,7 @@ const OfferList = () => {
       {filteredOffers.length > 0 ? (
         <Grid container spacing={3} justifyContent="center">
           {filteredOffers.map((offer) => (
-            <Grid item key={offer.id} xs={12} sm={6} md={4} lg={3}>
+            <Grid item key={offer.id}>
               <OfferCard offer={offer} />
             </Grid>
           ))}

@@ -8,6 +8,7 @@ import { useTheme } from "@mui/material/styles";
 import OrdersTable from "../features/Orders/OrdersTable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "../features/Orders/ordersSlice";
+import OrdersTable2 from "../features/Orders/OrdersTable2";
 
 const TinyCard = ({ children, title, value }) => {
   const theme = useTheme();
@@ -123,7 +124,7 @@ function HomeDash() {
           </Stack>
         </Stack>
         <Box sx={{ width: "100%", overflowX: isMobile ? "auto" : "hidden" }}>
-          <OrdersTable orders={orders} rows={isMobile ? 3 : 5} />
+          <OrdersTable2 orders={orders} rows={isMobile ? 3 : 5} />
         </Box>
       </Stack>
     </Box>

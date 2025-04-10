@@ -59,16 +59,23 @@ export const updateCategory = createAsyncThunk(
 // Fetch Categories
 export const fetchCategories = createAsyncThunk(
   "categories/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const response = await fetch(API_URL);
+      const { categories } = getState();
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch categories");
+      // Return cached data if recent (5 minute cache)
+      if (
+        categories.lastFetched &&
+        Date.now() - categories.lastFetched < 300000
+      ) {
+        return categories.data || categories.categories;
       }
 
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error("Failed to fetch categories");
+
       const data = await response.json();
-      return data.data; // Extracting only categories array
+      return data.data || data; // Handle both response formats
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -170,10 +177,12 @@ export const deleteCategory = createAsyncThunk(
 const categorySlice = createSlice({
   name: "categories",
   initialState: {
-    categories: [],
-    selectedCategory: null, // Adding a field for selected category
+    data: [], // Primary data field
+    categories: [], // Legacy field (for backward compatibility)
+    selectedCategory: null,
     status: "idle",
     error: null,
+    lastFetched: null, // Track when data was last fetched
   },
   reducers: {
     resetStatus: (state) => {
@@ -199,8 +208,9 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.categories = action.payload;
         state.data = action.payload;
+        state.categories = action.payload; // Maintain both fields
+        state.lastFetched = Date.now();
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.status = "failed";

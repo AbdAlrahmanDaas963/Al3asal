@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, deleteProduct } from "./productsSlice";
 import {
   Button,
-  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -20,6 +19,7 @@ import {
   DialogContent,
   DialogContentText,
   TablePagination,
+  Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -30,7 +30,13 @@ const ProductList = () => {
     data: products,
     status,
     error,
-  } = useSelector((state) => state.products);
+    lastFetched,
+  } = useSelector((state) => ({
+    data: state.products.data || [],
+    status: state.products.status,
+    error: state.products.error,
+    lastFetched: state.products.lastFetched,
+  }));
 
   // Delete confirmation dialog state
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -42,8 +48,10 @@ const ProductList = () => {
 
   // Fetch products on component mount
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    if (!lastFetched || Date.now() - lastFetched > 300000) {
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, lastFetched]);
 
   // Handle delete confirmation
   const handleDeleteClick = (id) => {
@@ -66,18 +74,90 @@ const ProductList = () => {
     return products.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   }, [products, page, rowsPerPage]);
 
-  // Loading state
-  if (status === "loading" && products.length === 0) {
+  // Loading skeleton rows
+  const skeletonRows = Array(rowsPerPage).fill(0);
+
+  // Loading state with skeleton
+  if (status === "loading" && (!lastFetched || products.length === 0)) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
+      <TableContainer
+        component={Paper}
+        sx={{ maxWidth: "100%", overflowX: "auto" }}
+      >
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Description (EN)</TableCell>
+              <TableCell>Description (AR)</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Shop Name</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {skeletonRows.map((_, index) => (
+              <TableRow key={`skeleton-${index}`}>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" width={60} />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton variant="text" />
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={1}>
+                    <Skeleton variant="rounded" width={60} height={30} />
+                    <Skeleton variant="rounded" width={60} height={30} />
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={0}
+          rowsPerPage={rowsPerPage}
+          page={0}
+          onPageChange={() => {}}
+          onRowsPerPageChange={() => {}}
+        />
+      </TableContainer>
     );
   }
 
   // Error state
   if (status === "failed") {
-    return <Alert severity="error">{error || "Failed to load products"}</Alert>;
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        {error || "Failed to load products"}
+        <Button
+          variant="outlined"
+          onClick={() => dispatch(fetchProducts())}
+          sx={{ ml: 2 }}
+        >
+          Retry
+        </Button>
+      </Alert>
+    );
   }
 
   // Empty state
@@ -136,8 +216,8 @@ const ProductList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleProducts.map((product, index) => (
-              <TableRow key={index}>
+            {visibleProducts.map((product) => (
+              <TableRow key={product.id}>
                 <TableCell>{product.id}</TableCell>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.description?.en || "N/A"}</TableCell>

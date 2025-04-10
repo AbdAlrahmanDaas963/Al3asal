@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import OfferList from "./OfferList";
 import AddOfferForm from "./AddOfferForm";
-import { Button } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 
 function Offers() {
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <>
+    <Stack gap={"25px"}>
       {showForm ? (
         <AddOfferForm onClose={() => setShowForm(false)} />
       ) : (
@@ -24,7 +24,7 @@ function Offers() {
         </Button>
       )}
       <OfferList />
-    </>
+    </Stack>
   );
 }
 

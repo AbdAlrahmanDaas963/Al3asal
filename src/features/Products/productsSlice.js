@@ -10,8 +10,15 @@ const getToken = () => localStorage.getItem("token");
 // Fetch all products
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const { products } = getState();
+
+      // Return cached data if recent (5 minute cache)
+      if (products.lastFetched && Date.now() - products.lastFetched < 300000) {
+        return products.data;
+      }
+
       const response = await axios.get(API_URL, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -113,6 +120,7 @@ const initialState = {
   selectedProduct: null,
   status: "idle",
   error: null,
+  lastFetched: null, // Add timestamp for cache control
 };
 
 const productsSlice = createSlice({
@@ -174,6 +182,7 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.data = action.payload.data || [];
         state.status = "succeeded";
+        state.lastFetched = Date.now(); // Update last fetched timestamp
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.selectedProduct = action.payload;

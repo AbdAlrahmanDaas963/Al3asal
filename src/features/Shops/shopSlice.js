@@ -9,8 +9,15 @@ const getToken = () => localStorage.getItem("token"); // Retrieve token dynamica
 // Fetch all shops
 export const fetchShops = createAsyncThunk(
   "shops/fetchShops",
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const { shops } = getState();
+
+      // Return cached data if recent (5 minute cache)
+      if (shops.lastFetched && Date.now() - shops.lastFetched < 300000) {
+        return shops.data || shops.shops.data;
+      }
+
       const response = await axios.get(API_BASE_URL);
       return response.data;
     } catch (error) {
@@ -90,22 +97,35 @@ export const fetchShopById = createAsyncThunk(
 );
 
 // Initial state
-const initialState = {
-  shops: {
-    data: [],
-    status: true,
-    error: null,
-    statusCode: 200,
-  },
-  status: "idle",
-  error: null,
-  selectedShop: null,
-};
+// const initialState = {
+//   shops: {
+//     data: [],
+//     status: true,
+//     error: null,
+//     statusCode: 200,
+//   },
+//   status: "idle",
+//   error: null,
+//   selectedShop: null,
+// };
 
 // Create shop slice
 const shopSlice = createSlice({
   name: "shops",
-  initialState,
+  initialState: {
+    data: [], // Primary data field
+    shops: {
+      // Legacy field structure
+      data: [],
+      status: true,
+      error: null,
+      statusCode: 200,
+    },
+    status: "idle",
+    error: null,
+    selectedShop: null,
+    lastFetched: null, // Track when data was last fetched
+  },
   reducers: {
     resetStatus: (state) => {
       state.status = "idle";
@@ -117,14 +137,14 @@ const shopSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch all shops
       .addCase(fetchShops.pending, (state) => {
         state.status = "loading";
       })
       .addCase(fetchShops.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.shops.data = action.payload.data; // Updated to match API response
-        state.data = action.payload;
+        state.data = action.payload.data || action.payload;
+        state.shops.data = action.payload.data || action.payload; // Maintain both
+        state.lastFetched = Date.now();
       })
       .addCase(fetchShops.rejected, (state, action) => {
         state.status = "failed";

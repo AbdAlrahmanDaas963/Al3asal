@@ -1,59 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCategories } from "./categorySlice";
-import CategoryList from "./CategoryList";
-import { Button, CircularProgress } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import AddCategoryForm from "./AddCategoryForm";
+import CategoryList from "./CategoryList";
 
 const Categories = ({ categoryId }) => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { categories, status, error } = useSelector(
-    (state) => state.categories
-  );
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
-  useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (categoryId) {
-      const category = categories.find((cat) => cat.id === categoryId);
-      setSelectedCategory(category);
-    }
-  }, [categoryId, categories]);
-
-  if (status === "loading") return <CircularProgress />;
-  if (status === "failed") return <p>Error: {error}</p>;
 
   return (
-    <div className="categories-container">
-      <Button
-        onClick={() => navigate("/dashboard/category/add")}
-        sx={{
-          width: "100%",
-          height: "100px",
-          border: "4px dashed #fff",
-          fontSize: "20px",
-        }}
-      >
-        Add Category +
-      </Button>
-
+    <Stack gap={3}>
       {categoryId ? (
-        <AddCategoryForm
-          isEdit={!!categoryId}
-          initialData={selectedCategory || {}}
-        />
+        <AddCategoryForm isEdit={!!categoryId} categoryId={categoryId} />
       ) : (
         <>
-          <h3>Categories</h3>
-          <CategoryList categories={categories} status={status} error={error} />
+          <Button
+            onClick={() => navigate("/dashboard/category/add")}
+            sx={{
+              width: "100%",
+              height: "100px",
+              border: "4px dashed #fff",
+              fontSize: "20px",
+            }}
+          >
+            Add Category +
+          </Button>
+          <CategoryList />
         </>
       )}
-    </div>
+    </Stack>
   );
 };
 

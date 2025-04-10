@@ -1,59 +1,139 @@
-import React, { useState, useEffect } from "react";
-import { Stack, Typography, TextField, InputAdornment } from "@mui/material";
+import React, { useEffect, useState, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  Grid,
+  Typography,
+  TextField,
+  InputAdornment,
+  Alert,
+  Skeleton,
+  Button,
+  Box,
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import CategoryCard from "../../components/common/CategoryCard";
+import { fetchCategories } from "./categorySlice";
 
-const CategoryList = ({ categories, status, error }) => {
+const CategoryList = () => {
+  const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchDebounced, setSearchDebounced] = useState("");
 
+  // Get state with proper defaults and backward compatibility
+  const {
+    data: categories = [],
+    loading,
+    error,
+    lastFetched,
+    status,
+  } = useSelector((state) => ({
+    data: state.categories.data || state.categories.categories || [],
+    loading: state.categories.status === "loading",
+    error: state.categories.error,
+    lastFetched: state.categories.lastFetched,
+    status: state.categories.status,
+  }));
+
+  // Debounce search input
   useEffect(() => {
-    console.log("Categories received:", categories);
-  }, [categories]);
+    const timer = setTimeout(() => setSearchDebounced(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  if (status === "loading") {
-    return <Typography variant="body1">Loading categories...</Typography>;
-  }
+  // Fetch data only when needed
+  useEffect(() => {
+    if (!lastFetched || Date.now() - lastFetched > 300000) {
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, lastFetched]);
 
-  if (status === "failed") {
+  // Filter categories with multilingual support
+  const filteredCategories = useMemo(() => {
+    if (!searchDebounced) return categories;
+
+    const searchLower = searchDebounced.toLowerCase();
+    return categories.filter((category) => {
+      const name =
+        typeof category.name === "string"
+          ? category.name.toLowerCase()
+          : category.name?.en?.toLowerCase() ||
+            category.name?.ar?.toLowerCase() ||
+            "";
+      return name.includes(searchLower);
+    });
+  }, [categories, searchDebounced]);
+
+  // Skeleton loading array
+  const loadingSkeletons = Array(6).fill(0);
+
+  // Show skeletons only on initial load when no data exists
+  if (status === "loading" && (!lastFetched || categories.length === 0)) {
     return (
-      <Typography variant="body1" color="error">
-        Error: {typeof error === "string" ? error : JSON.stringify(error)}
-      </Typography>
+      <Box sx={{ p: 3 }}>
+        <Skeleton
+          variant="rounded"
+          width="100%"
+          height={56}
+          sx={{ mb: 3, borderRadius: "25px" }}
+        />
+        <Grid container spacing={3}>
+          {loadingSkeletons.map((_, index) => (
+            <Grid item xs={12} sm={6} md={4} key={`skeleton-${index}`}>
+              <Skeleton
+                variant="rounded"
+                width="100%"
+                height={200}
+                sx={{ borderRadius: "16px" }}
+              />
+              <Box sx={{ pt: 1.5 }}>
+                <Skeleton width="80%" height={28} />
+                <Skeleton width="60%" height={20} />
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
     );
   }
 
-  if (!Array.isArray(categories) || categories.length === 0) {
-    return <Typography variant="body1">No categories available.</Typography>;
+  // Error state
+  if (error) {
+    return (
+      <Box sx={{ p: 3, textAlign: "center" }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load: {error}
+        </Alert>
+        <Button
+          variant="contained"
+          onClick={() => dispatch(fetchCategories())}
+          startIcon={<RefreshIcon />}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
   }
 
-  const filteredCategories = categories.filter((category) => {
-    const categoryName =
-      typeof category.name === "string"
-        ? category.name
-        : category.name?.en || category.name?.ar || "";
-    return categoryName.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
+  // Main render
   return (
-    <Stack
-      spacing={3}
-      sx={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}
-    >
+    <Box sx={{ p: 3 }}>
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Search for Category"
+        placeholder="Search categories..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
+          mb: 3,
           backgroundColor: "#333",
           borderRadius: "25px",
-          input: { color: "#fff", padding: "12px" },
           "& .MuiOutlinedInput-root": {
             borderRadius: "25px",
-            "& fieldset": { border: "1px solid #555" },
+            "& fieldset": { borderColor: "#555" },
             "&:hover fieldset": { borderColor: "#888" },
           },
+          input: { color: "#fff", padding: "12px" },
         }}
         InputProps={{
           startAdornment: (
@@ -64,24 +144,41 @@ const CategoryList = ({ categories, status, error }) => {
         }}
       />
 
-      <Stack
-        direction="row"
-        flexWrap="wrap"
-        justifyContent="center"
-        alignItems="stretch"
-        gap={2}
-      >
+      <Grid container spacing={3}>
         {filteredCategories.length > 0 ? (
-          filteredCategories.map((category, index) => (
-            <CategoryCard key={index} category={category} />
+          filteredCategories.map((category) => (
+            <Grid item key={category.id}>
+              <CategoryCard category={category} />
+            </Grid>
           ))
         ) : (
-          <Typography variant="body1" color="warning">
-            No matching categories found.
-          </Typography>
+          <Grid item xs={12}>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              minHeight="200px"
+            >
+              <Typography variant="h6" color="textSecondary">
+                {searchDebounced
+                  ? "No matching categories found"
+                  : "No categories available"}
+              </Typography>
+              {searchDebounced && (
+                <Button
+                  variant="outlined"
+                  onClick={() => setSearchQuery("")}
+                  sx={{ mt: 2 }}
+                >
+                  Clear Search
+                </Button>
+              )}
+            </Box>
+          </Grid>
         )}
-      </Stack>
-    </Stack>
+      </Grid>
+    </Box>
   );
 };
 
