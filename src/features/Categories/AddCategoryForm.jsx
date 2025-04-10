@@ -1,4 +1,4 @@
-import { fetchShops } from "../Shops/shopSlice"; // Adjust import path as necessary
+import { fetchShops } from "../Shops/shopSlice";
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -11,39 +11,50 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  CircularProgress,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { createCategory } from "./categorySlice"; // Adjust import path as necessary
-
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { createCategory } from "./categorySlice";
+import { useNavigate } from "react-router-dom";
 
 const AddCategoryForm = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // Use the navigate function
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: { en: "", ar: "" },
     image: null,
     is_interested: "1",
-    shop_id: "", // Required shop_id field
+    shop_id: "",
   });
 
   const [errorMessage, setErrorMessage] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
   const [preview, setPreview] = useState(null);
 
-  // Get shops from Redux store
+  // Get shops and category status from Redux
   const {
     shops,
     status: shopsStatus,
     error: shopsError,
   } = useSelector((state) => state.shops);
+  const { status: categoryStatus } = useSelector((state) => state.categories);
 
+  // Fetch shops on mount
   useEffect(() => {
     if (shopsStatus === "idle") {
-      dispatch(fetchShops()); // Fetch shops if not already done
+      dispatch(fetchShops());
     }
   }, [dispatch, shopsStatus]);
+
+  // Handle image preview
+  useEffect(() => {
+    if (formData.image) {
+      const objectUrl = URL.createObjectURL(formData.image);
+      setPreview(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  }, [formData.image]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,7 +76,10 @@ const AddCategoryForm = () => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+    }
   };
 
   const handleSubmit = (e) => {
@@ -73,26 +87,40 @@ const AddCategoryForm = () => {
     setErrorMessage("");
     setValidationErrors({});
 
-    // Simple validation to check if shop_id is provided
-    if (!formData.shop_id) {
-      setValidationErrors((prev) => ({
-        ...prev,
-        shop_id: "Shop ID is required",
-      }));
+    // Validation
+    const errors = {};
+    if (!formData.shop_id) errors.shop_id = "Shop is required";
+    if (!formData.name.en)
+      errors.name = { ...errors.name, en: "English name is required" };
+    if (!formData.name.ar)
+      errors.name = { ...errors.name, ar: "Arabic name is required" };
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
-    // Dispatch the action to create the category
     dispatch(createCategory(formData))
       .unwrap()
       .then(() => {
-        // Navigate back to the categories page after success
         navigate("/dashboard/category");
       })
       .catch((err) => {
-        console.error("Failed to create category:", err);
-        setErrorMessage(err.message || "An unexpected error occurred.");
+        setErrorMessage(
+          err.message ||
+            err.response?.data?.message ||
+            "Failed to create category"
+        );
+        if (err.response?.data?.errors) {
+          setValidationErrors(err.response.data.errors);
+        }
       });
+  };
+
+  const getShopName = (shop) => {
+    return typeof shop.name === "string"
+      ? shop.name
+      : shop.name?.en || shop.name?.ar || "Untitled Shop";
   };
 
   return (
@@ -107,11 +135,13 @@ const AddCategoryForm = () => {
       <Typography variant="h5" gutterBottom>
         Add New Category
       </Typography>
+
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{ mt: 2, width: "400px" }}
       >
+        {/* English Name */}
         <TextField
           label="Category Name (English)"
           name="en"
@@ -123,6 +153,8 @@ const AddCategoryForm = () => {
           error={!!validationErrors.name?.en}
           helperText={validationErrors.name?.en}
         />
+
+        {/* Arabic Name */}
         <TextField
           label="Category Name (Arabic)"
           name="ar"
@@ -135,6 +167,7 @@ const AddCategoryForm = () => {
           helperText={validationErrors.name?.ar}
         />
 
+        {/* Shop Selection */}
         <FormControl
           fullWidth
           margin="normal"
@@ -147,11 +180,14 @@ const AddCategoryForm = () => {
             name="shop_id"
             value={formData.shop_id}
             onChange={handleChange}
+            disabled={shopsStatus === "loading"}
           >
-            {shops.data && shops.data.length > 0 ? (
+            {shopsStatus === "loading" ? (
+              <MenuItem disabled>Loading shops...</MenuItem>
+            ) : shops?.data?.length > 0 ? (
               shops.data.map((shop) => (
                 <MenuItem key={shop.id} value={shop.id}>
-                  {shop.name} {/* Display shop name */}
+                  {getShopName(shop)}
                 </MenuItem>
               ))
             ) : (
@@ -163,36 +199,53 @@ const AddCategoryForm = () => {
           )}
         </FormControl>
 
+        {/* Image Upload */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
           Upload Image
-          <input type="file" hidden onChange={handleFileChange} />
+          <input
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleFileChange}
+          />
         </Button>
 
-        {formData.image && (
+        {/* Image Preview */}
+        {preview && (
           <Box mt={2}>
             <Typography variant="body2">Image Preview:</Typography>
             <img
-              src={preview || URL.createObjectURL(formData.image)}
-              alt="Category"
-              style={{ width: "100%", maxHeight: "150px" }}
+              src={preview}
+              alt="Preview"
+              style={{
+                width: "100%",
+                maxHeight: "200px",
+                objectFit: "contain",
+              }}
             />
           </Box>
         )}
 
+        {/* Error Message */}
         {errorMessage && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {errorMessage}
           </Alert>
         )}
 
+        {/* Submit Button */}
         <Button
           type="submit"
           variant="contained"
           color="primary"
           fullWidth
           sx={{ mt: 2 }}
+          disabled={categoryStatus === "loading"}
+          startIcon={
+            categoryStatus === "loading" ? <CircularProgress size={20} /> : null
+          }
         >
-          Create Category
+          {categoryStatus === "loading" ? "Creating..." : "Create Category"}
         </Button>
       </Box>
     </Box>

@@ -5,7 +5,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_URL = `${BASE_URL}/dashboard/product`;
 const API_URL2 = `${BASE_URL}/products`;
 
-// Enhanced token getter with error handling
+// Helper functions
 const getToken = () => {
   try {
     return localStorage.getItem("token") || null;
@@ -15,7 +15,6 @@ const getToken = () => {
   }
 };
 
-// Helper function for API calls with auth
 const authApiCall = async (config, { rejectWithValue }) => {
   try {
     const token = getToken();
@@ -32,7 +31,6 @@ const authApiCall = async (config, { rejectWithValue }) => {
     });
     return response.data;
   } catch (error) {
-    // Handle 401 Unauthorized specifically
     if (error.response?.status === 401) {
       return rejectWithValue("Session expired - please login again");
     }
@@ -42,17 +40,14 @@ const authApiCall = async (config, { rejectWithValue }) => {
   }
 };
 
-// Fetch all products with enhanced error handling
+// Thunks
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (_, { getState, rejectWithValue }) => {
     const { products } = getState();
-
-    // Return cached data if recent (5 minute cache)
     if (products.lastFetched && Date.now() - products.lastFetched < 300000) {
       return products.data;
     }
-
     return authApiCall(
       {
         method: "get",
@@ -64,7 +59,6 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
-// Fetch product by ID
 export const fetchProductById = createAsyncThunk(
   "products/fetchProductById",
   async (productId, { rejectWithValue }) => {
@@ -79,39 +73,105 @@ export const fetchProductById = createAsyncThunk(
   }
 );
 
-// Create product
 export const createProduct = createAsyncThunk(
   "products/createProduct",
-  async (productData, { rejectWithValue }) => {
-    return authApiCall(
-      {
-        method: "post",
-        url: `${API_URL2}/create`,
-        data: productData,
-        headers: { "Content-Type": "multipart/form-data" },
-      },
-      { rejectWithValue }
-    );
+  async (formData, { rejectWithValue }) => {
+    try {
+      // Debug: Log incoming formData
+      console.log("Received formData in createProduct:");
+      if (formData instanceof FormData) {
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value);
+        }
+      } else {
+        console.log("Regular Object:", formData);
+      }
+
+      const response = await axios.post(`${API_URL2}/create`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("API Error:", error.response?.data || error.message);
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Product creation failed"
+      );
+    }
   }
 );
 
-// Update product
 export const updateProduct = createAsyncThunk(
   "products/updateProduct",
   async ({ productId, updatedData }, { rejectWithValue }) => {
-    return authApiCall(
-      {
-        method: "post",
-        url: `${API_URL2}/update/${productId}`,
-        data: updatedData,
-        headers: { "Content-Type": "multipart/form-data" },
-      },
-      { rejectWithValue }
-    );
+    try {
+      const formData = new FormData();
+
+      // Append all fields consistently with Postman example
+      formData.append("name[en]", updatedData.get("name[en]") || "");
+      formData.append("name[ar]", updatedData.get("name[ar]") || "");
+
+      // Handle image if it exists in the FormData
+      const imageFile = updatedData.get("image");
+      if (imageFile instanceof File) {
+        formData.append("image", imageFile);
+      }
+
+      // Append other required fields
+      formData.append("is_hot", updatedData.get("is_hot") || "0");
+      formData.append("category_id", updatedData.get("category_id") || "");
+      formData.append(
+        "profit_percentage",
+        updatedData.get("profit_percentage") || ""
+      );
+      formData.append("price", updatedData.get("price") || "");
+
+      // Append descriptions if they exist
+      if (updatedData.get("description[en]")) {
+        formData.append("description[en]", updatedData.get("description[en]"));
+      }
+      if (updatedData.get("description[ar]")) {
+        formData.append("description[ar]", updatedData.get("description[ar]"));
+      }
+
+      // Debug: Log the FormData before sending
+      console.log("FormData contents for update:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+
+      const response = await axios.post(
+        `${API_URL2}/update/${productId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Update product error:",
+        error.response?.data || error.message
+      );
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.response?.data?.errors ||
+          "Failed to update product"
+      );
+    }
   }
 );
 
-// Delete product
 export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
   async (productId, { rejectWithValue }) => {
@@ -125,6 +185,7 @@ export const deleteProduct = createAsyncThunk(
   }
 );
 
+// Initial state
 const initialState = {
   data: [],
   selectedProduct: null,
@@ -133,6 +194,7 @@ const initialState = {
   lastFetched: null,
 };
 
+// Slice
 const productsSlice = createSlice({
   name: "products",
   initialState,
@@ -141,13 +203,11 @@ const productsSlice = createSlice({
       state.selectedProduct = null;
     },
     resetProductsState: () => initialState,
-    // Add this to handle auth errors globally
     clearProductsError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-    // First handle all specific cases
     builder
       .addCase(fetchProducts.pending, (state) => {
         state.status = "loading";
@@ -162,7 +222,6 @@ const productsSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-
       .addCase(fetchProductById.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -175,7 +234,6 @@ const productsSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-
       .addCase(createProduct.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -188,7 +246,6 @@ const productsSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-
       .addCase(updateProduct.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -202,7 +259,6 @@ const productsSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-
       .addCase(deleteProduct.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -215,19 +271,19 @@ const productsSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       });
-
-    // Then add auto-clear error functionality for all rejected actions
-    builder.addMatcher(
-      (action) => action.type.endsWith("/rejected"),
-      (state) => {
-        setTimeout(() => {
-          state.error = null;
-        }, 5000);
-      }
-    );
   },
 });
 
-export const { clearSelectedProduct, resetProductsState, clearProductsError } =
-  productsSlice.actions;
+// Named exports for all action creators and thunks
+// export const { clearSelectedProduct, resetProductsState, clearProductsError } =
+//   productsSlice.actions;
+
+// export {
+//   fetchProducts,
+//   fetchProductById,
+//   createProduct,
+//   updateProduct,
+//   deleteProduct,
+// };
+
 export default productsSlice.reducer;

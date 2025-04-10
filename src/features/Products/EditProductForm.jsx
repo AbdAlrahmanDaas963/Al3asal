@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { createSelector } from "reselect";
 import { updateProduct, fetchProductById } from "./productsSlice";
 import { fetchShops } from "../../features/Shops/shopSlice";
 import { fetchCategories } from "../../features/Categories/categorySlice";
@@ -21,53 +20,31 @@ import {
   Snackbar,
   Alert,
   Box,
+  Grid,
 } from "@mui/material";
 
-// Memoized selectors (same as AddProductForm)
-const selectShops = createSelector(
-  (state) => state.shops,
-  (shops) => ({
-    data: shops.data?.data || [],
-    status: shops.status,
-  })
-);
-
-const selectCategories = createSelector(
-  (state) => state.categories,
-  (categories) => ({
-    data: categories.data || [],
-    status: categories.status,
-  })
-);
-
-const selectProducts = createSelector(
-  (state) => state.products,
-  (products) => ({
-    status: products.status,
-    error: products.error,
-    selectedProduct: products.selectedProduct,
-  })
-);
-
-const MAX_IMAGE_SIZE = 100 * 1024; // 100kB limit
+// Constants
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB (more realistic limit)
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
 
-const EditProductForm = ({ onSuccess }) => {
+const EditProductForm = () => {
   const { id } = useParams();
   const { state } = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Using memoized selectors (same as AddProductForm)
-  const { data: shops, status: shopsStatus } = useSelector(selectShops);
-  const { data: categories, status: categoriesStatus } =
-    useSelector(selectCategories);
-  const { status, error, selectedProduct } = useSelector(selectProducts);
+  // Redux state
+  const { data: shops = [], status: shopsStatus } = useSelector(
+    (state) => state.shops
+  );
+  const { data: categories = [], status: categoriesStatus } = useSelector(
+    (state) => state.categories
+  );
+  const { status, error, selectedProduct } = useSelector(
+    (state) => state.products
+  );
 
-  // Current product from either location state or Redux
-  const currentProduct = state?.product || selectedProduct;
-
-  // Form state (same structure as AddProductForm)
+  // Local state
   const [formData, setFormData] = useState({
     name: { en: "", ar: "" },
     description: { en: "", ar: "" },
@@ -82,62 +59,78 @@ const EditProductForm = ({ onSuccess }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  // Fetch data on mount (same as AddProductForm)
+  // Current product from either location state or Redux
+  const currentProduct = state?.product || selectedProduct;
+
+  // Fetch data on mount
   useEffect(() => {
     if (shopsStatus === "idle") dispatch(fetchShops());
     if (categoriesStatus === "idle") dispatch(fetchCategories());
     if (id && !currentProduct) dispatch(fetchProductById(id));
-  }, [dispatch, shopsStatus, categoriesStatus, id, currentProduct]);
+  }, [dispatch, id, currentProduct, shopsStatus, categoriesStatus]);
 
   // Initialize form when data is ready
   useEffect(() => {
-    if (currentProduct && shops.length > 0 && categories.length > 0) {
-      const shopId = currentProduct.shop?.id?.toString() || "";
-      const categoryId = currentProduct.category?.id?.toString() || "";
+    if (currentProduct) {
+      const initializeForm = () => {
+        const nameValue =
+          typeof currentProduct.name === "string"
+            ? { en: "", ar: currentProduct.name }
+            : currentProduct.name || { en: "", ar: "" };
 
-      setFormData({
-        name: {
-          en: currentProduct.name?.en || "",
-          ar: currentProduct.name?.ar || currentProduct.name || "",
-        },
-        description: {
-          en: currentProduct.description?.en || "",
-          ar: currentProduct.description?.ar || "",
-        },
-        price: currentProduct.price?.toString() || "",
-        profit_percentage: currentProduct.profit_percentage?.toString() || "",
-        is_hot: Boolean(currentProduct.is_hot),
-        image: null, // Keep as null to avoid overwriting existing image
-        shop_id: shopId,
-        category_id: categoryId,
-      });
-      setImagePreview(currentProduct.image || null);
+        const descriptionValue =
+          typeof currentProduct.description === "string"
+            ? { en: "", ar: currentProduct.description }
+            : currentProduct.description || { en: "", ar: "" };
+
+        setFormData({
+          name: nameValue,
+          description: descriptionValue,
+          price: currentProduct.price?.toString() || "",
+          profit_percentage: currentProduct.profit_percentage?.toString() || "",
+          is_hot: Boolean(currentProduct.is_hot),
+          image: null,
+          shop_id: currentProduct.shop?.id?.toString() || "",
+          category_id: currentProduct.category?.id?.toString() || "",
+        });
+
+        if (currentProduct.image) {
+          setImagePreview(currentProduct.image);
+        }
+      };
+
+      // Wait for shops and categories if needed
+      if (shops.length > 0 && categories.length > 0) {
+        initializeForm();
+      } else {
+        const timer = setTimeout(initializeForm, 500);
+        return () => clearTimeout(timer);
+      }
     }
   }, [currentProduct, shops, categories]);
 
-  // Category filtering (same as AddProductForm)
-  const getCategoriesForShop = useMemo(() => {
-    if (!formData.shop_id) return []; // Return empty array if no shop selected
-    return categories.filter(
-      (category) =>
-        // For each category, check if it has shops that match the selected shop_id
-        category.shops?.some(
-          (shop) => String(shop.id) === String(formData.shop_id) // Compare as strings
-        ) // <-- This was the missing parenthesis
+  // Filter categories based on selected shop
+  const filteredCategories = useMemo(() => {
+    if (!formData.shop_id) return [];
+    return categories.filter((category) =>
+      category.shops?.some(
+        (shop) => String(shop.id) === String(formData.shop_id)
+      )
     );
-  }, [formData.shop_id, categories]); // Only recompute when these values change
+  }, [formData.shop_id, categories]);
 
-  // Handle change (same as AddProductForm)
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
     if (type === "checkbox") {
       setFormData((prev) => ({ ...prev, [name]: checked }));
-    } else if (name === "image") {
+      return;
+    }
+
+    if (name === "image") {
       const file = files[0];
       if (!file) return;
 
-      // Validate image
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         setErrors((prev) => ({
           ...prev,
@@ -146,34 +139,36 @@ const EditProductForm = ({ onSuccess }) => {
         return;
       }
       if (file.size > MAX_IMAGE_SIZE) {
-        setErrors((prev) => ({ ...prev, image: "Image must be <100KB" }));
+        setErrors((prev) => ({ ...prev, image: "Image must be <2MB" }));
         return;
       }
 
       setErrors((prev) => ({ ...prev, image: "" }));
       setFormData((prev) => ({ ...prev, image: file }));
       setImagePreview(URL.createObjectURL(file));
-    } else if (name.includes(".")) {
+      return;
+    }
+
+    if (name.includes(".")) {
       const [field, subfield] = name.split(".");
       setFormData((prev) => ({
         ...prev,
-        [field]: { ...prev[field], [subfield]: value },
+        [field]: { ...(prev[field] || {}), [subfield]: value },
       }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: name.endsWith("_id") ? String(value) : value,
-        ...(name === "shop_id" && { category_id: "" }), // Reset category when shop changes
-      }));
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name.endsWith("_id") ? String(value) : value,
+      ...(name === "shop_id" && { category_id: "" }), // Reset category on shop change
+    }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Validate required fields (same as AddProductForm)
+  const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.ar) newErrors.name_ar = "Arabic name is required";
+    if (!formData.name?.ar?.trim())
+      newErrors.name_ar = "Arabic name is required";
     if (!formData.price) newErrors.price = "Price is required";
     if (!formData.shop_id) newErrors.shop = "Shop is required";
     if (!formData.category_id) newErrors.category = "Category is required";
@@ -181,25 +176,33 @@ const EditProductForm = ({ onSuccess }) => {
       newErrors.profit_percentage = "Must be ≤ 100";
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    const form = new FormData();
+
+    // Append all fields consistently
+    form.append("name[en]", formData.name.en || "");
+    form.append("name[ar]", formData.name.ar || "");
+
+    // Only append image if it's a new file
+    if (formData.image instanceof File) {
+      form.append("image", formData.image);
     }
 
-    // Prepare FormData (same as AddProductForm with update endpoint)
-    const form = new FormData();
-    form.append("name[en]", formData.name.en);
-    form.append("name[ar]", formData.name.ar);
-    if (formData.image) form.append("image", formData.image);
     form.append("is_hot", formData.is_hot ? "1" : "0");
     form.append("category_id", formData.category_id);
     form.append("profit_percentage", formData.profit_percentage);
     form.append("price", formData.price);
-    form.append("shop_id", formData.shop_id);
-    if (formData.description.en)
-      form.append("description[en]", formData.description.en);
-    if (formData.description.ar)
-      form.append("description[ar]", formData.description.ar);
+
+    // Append descriptions
+    form.append("description[en]", formData.description.en || "");
+    form.append("description[ar]", formData.description.ar || "");
 
     try {
       const result = await dispatch(
@@ -207,24 +210,29 @@ const EditProductForm = ({ onSuccess }) => {
           productId: id || currentProduct?.id,
           updatedData: form,
         })
-      );
+      ).unwrap();
 
-      if (result.meta.requestStatus === "fulfilled") {
-        setSnackbarOpen(true);
-        onSuccess?.();
-        navigate("/dashboard/products", { state: { success: true } });
-      }
+      setSnackbarOpen(true);
+      setTimeout(() => navigate("/dashboard/products"), 1500);
     } catch (error) {
-      setErrors({ submit: error.message });
+      // Handle validation errors from server
+      if (error.errors) {
+        const serverErrors = {};
+        Object.entries(error.errors).forEach(([field, messages]) => {
+          serverErrors[field] = Array.isArray(messages)
+            ? messages.join(", ")
+            : messages;
+        });
+        setErrors(serverErrors);
+      } else {
+        setErrors({ submit: error.message || "Failed to update product" });
+      }
     }
   };
 
   if (status === "loading" && !currentProduct) {
     return (
-      <Container
-        maxWidth="sm"
-        sx={{ display: "flex", justifyContent: "center", mt: 4 }}
-      >
+      <Container sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
       </Container>
     );
@@ -232,213 +240,245 @@ const EditProductForm = ({ onSuccess }) => {
 
   if (!currentProduct && status === "succeeded") {
     return (
-      <Container maxWidth="sm">
-        <Alert severity="error">Product not found</Alert>
+      <Container>
+        <Alert severity="error">
+          Product not found
+          <Button
+            onClick={() => navigate("/dashboard/products")}
+            sx={{ ml: 2 }}
+          >
+            Back to Products
+          </Button>
+        </Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h5" gutterBottom>
+    <Container maxWidth="md">
+      <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
         Edit Product
       </Typography>
 
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-      >
-        {/* Name Fields (same as AddProductForm) */}
-        <TextField
-          label="Name (English)"
-          name="name.en"
-          value={formData.name.en}
-          onChange={handleChange}
-          fullWidth
-        />
-        <TextField
-          label="Name (Arabic)"
-          name="name.ar"
-          value={formData.name.ar}
-          onChange={handleChange}
-          fullWidth
-          required
-          error={!!errors.name_ar}
-          helperText={errors.name_ar}
-        />
+      <Box component="form" onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          {/* Name Fields */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Name (English)"
+              name="name.en"
+              value={formData.name.en}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Name (Arabic)"
+              name="name.ar"
+              value={formData.name.ar}
+              onChange={handleChange}
+              fullWidth
+              required
+              error={!!errors.name_ar}
+              helperText={errors.name_ar}
+            />
+          </Grid>
 
-        {/* Shop Selection (same as AddProductForm) */}
-        <FormControl fullWidth required error={!!errors.shop}>
-          <InputLabel id="shop-select-label">Shop</InputLabel>
-          <Select
-            labelId="shop-select-label"
-            name="shop_id"
-            value={formData.shop_id}
-            onChange={handleChange}
-            label="Shop"
-            disabled={shopsStatus === "loading"}
-          >
-            <MenuItem value="" disabled>
-              Select a shop
-            </MenuItem>
-            {shops.map((shop) => (
-              <MenuItem key={shop.id} value={String(shop.id)}>
-                {shop.name}
-              </MenuItem>
-            ))}
-          </Select>
-          {errors.shop && <FormHelperText error>{errors.shop}</FormHelperText>}
-        </FormControl>
-
-        {/* Category Selection (same as AddProductForm) */}
-        <FormControl fullWidth required error={!!errors.category}>
-          <InputLabel id="category-select-label">Category</InputLabel>
-          <Select
-            labelId="category-select-label"
-            name="category_id"
-            value={formData.category_id}
-            onChange={handleChange}
-            label="Category"
-            disabled={!formData.shop_id || categoriesStatus === "loading"}
-          >
-            {!formData.shop_id ? (
-              <MenuItem disabled value="">
-                Select a shop first
-              </MenuItem>
-            ) : getCategoriesForShop.length === 0 ? (
-              <MenuItem disabled value="">
-                No categories available for this shop
-              </MenuItem>
-            ) : (
-              getCategoriesForShop.map((category) => (
-                <MenuItem key={category.id} value={String(category.id)}>
-                  {category.name.ar || category.name.en || category.name}
+          {/* Shop and Category Selection */}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth required error={!!errors.shop}>
+              <InputLabel>Shop</InputLabel>
+              <Select
+                name="shop_id"
+                value={formData.shop_id}
+                onChange={handleChange}
+                label="Shop"
+                disabled={shopsStatus === "loading"}
+              >
+                <MenuItem value="" disabled>
+                  Select a shop
                 </MenuItem>
-              ))
-            )}
-          </Select>
-          {errors.category && (
-            <FormHelperText error>{errors.category}</FormHelperText>
-          )}
-        </FormControl>
+                {shops.map((shop) => (
+                  <MenuItem key={shop.id} value={String(shop.id)}>
+                    {shop.name?.ar || shop.name?.en || shop.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.shop && (
+                <FormHelperText error>{errors.shop}</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth required error={!!errors.category}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleChange}
+                label="Category"
+                disabled={!formData.shop_id || categoriesStatus === "loading"}
+              >
+                {!formData.shop_id ? (
+                  <MenuItem value="" disabled>
+                    Select a shop first
+                  </MenuItem>
+                ) : filteredCategories.length === 0 ? (
+                  <MenuItem value="" disabled>
+                    No categories available
+                  </MenuItem>
+                ) : (
+                  filteredCategories.map((category) => (
+                    <MenuItem key={category.id} value={String(category.id)}>
+                      {category.name?.ar || category.name?.en || category.name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+              {errors.category && (
+                <FormHelperText error>{errors.category}</FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
 
-        {/* Price and Profit (same as AddProductForm) */}
-        <TextField
-          label="Price"
-          name="price"
-          type="number"
-          value={formData.price}
-          onChange={handleChange}
-          required
-          fullWidth
-          error={!!errors.price}
-          helperText={errors.price}
-          InputProps={{ inputProps: { min: 0 } }}
-        />
-        <TextField
-          label="Profit Percentage"
-          name="profit_percentage"
-          type="number"
-          value={formData.profit_percentage}
-          onChange={handleChange}
-          fullWidth
-          error={!!errors.profit_percentage}
-          helperText={errors.profit_percentage}
-          InputProps={{ inputProps: { min: 0, max: 100, step: 0.01 } }}
-        />
-
-        {/* Descriptions (same as AddProductForm) */}
-        <TextField
-          label="Description (English)"
-          name="description.en"
-          value={formData.description.en}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={3}
-        />
-        <TextField
-          label="Description (Arabic)"
-          name="description.ar"
-          value={formData.description.ar}
-          onChange={handleChange}
-          fullWidth
-          multiline
-          rows={3}
-        />
-
-        {/* Hot Product Checkbox (same as AddProductForm) */}
-        <FormControlLabel
-          control={
-            <Checkbox
-              name="is_hot"
-              checked={formData.is_hot}
+          {/* Price and Profit Percentage */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Price"
+              name="price"
+              type="number"
+              value={formData.price}
               onChange={handleChange}
+              required
+              fullWidth
+              error={!!errors.price}
+              helperText={errors.price}
+              InputProps={{ inputProps: { min: 0 } }}
             />
-          }
-          label="Hot Product"
-        />
-
-        {/* Image Upload (same as AddProductForm) */}
-        <Box>
-          <Button variant="contained" component="label">
-            {imagePreview ? "Change Image" : "Upload Image"} (max 100KB)
-            <input
-              type="file"
-              name="image"
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Profit Percentage"
+              name="profit_percentage"
+              type="number"
+              value={formData.profit_percentage}
               onChange={handleChange}
-              accept="image/jpeg, image/png, image/jpg"
-              hidden
+              fullWidth
+              error={!!errors.profit_percentage}
+              helperText={errors.profit_percentage}
+              InputProps={{ inputProps: { min: 0, max: 100, step: 0.01 } }}
             />
-          </Button>
-          {errors.image && (
-            <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-              {errors.image}
-            </Typography>
-          )}
-          {imagePreview && (
-            <Box sx={{ mt: 2 }}>
-              <img
-                src={imagePreview}
-                alt="Preview"
-                style={{
-                  maxWidth: "100%",
-                  maxHeight: "200px",
-                  borderRadius: "4px",
-                }}
-              />
+          </Grid>
+
+          {/* Descriptions */}
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Description (English)"
+              name="description.en"
+              value={formData.description.en}
+              onChange={handleChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label="Description (Arabic)"
+              name="description.ar"
+              value={formData.description.ar}
+              onChange={handleChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
+          </Grid>
+
+          {/* Image Upload and Hot Product */}
+          <Grid item xs={12} md={6}>
+            <Box>
+              <Button variant="contained" component="label" fullWidth>
+                {imagePreview ? "Change Image" : "Upload Image"} (max 2MB)
+                <input
+                  type="file"
+                  name="image"
+                  onChange={handleChange}
+                  accept="image/jpeg, image/png, image/jpg"
+                  hidden
+                />
+              </Button>
+              {errors.image && (
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                  {errors.image}
+                </Typography>
+              )}
+              {imagePreview && (
+                <Box sx={{ mt: 2, textAlign: "center" }}>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    style={{
+                      maxHeight: 200,
+                      maxWidth: "100%",
+                      borderRadius: 4,
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
-          )}
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            md={6}
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="is_hot"
+                  checked={formData.is_hot}
+                  onChange={handleChange}
+                  color="primary"
+                />
+              }
+              label="Mark as Hot Product"
+            />
+          </Grid>
+        </Grid>
+
+        <Box
+          sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}
+        >
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/dashboard/products")}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={status === "loading"}
+            sx={{ minWidth: 120 }}
+          >
+            {status === "loading" ? (
+              <CircularProgress size={24} />
+            ) : (
+              "Update Product"
+            )}
+          </Button>
         </Box>
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          size="large"
-          disabled={status === "loading"}
-          sx={{ mt: 2 }}
-        >
-          {status === "loading" ? (
-            <>
-              <CircularProgress size={24} sx={{ mr: 1 }} />
-              Updating Product...
-            </>
-          ) : (
-            "Update Product"
-          )}
-        </Button>
-
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mt: 3 }}>
             {error.message || "Failed to update product"}
           </Alert>
         )}
       </Box>
 
-      {/* Success Notification */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

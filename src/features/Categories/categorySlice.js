@@ -5,53 +5,52 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const API_URL = `${BASE_URL}/categories`;
 
+const logFormData = (formData) => {
+  console.log("--- FormData Contents ---");
+  if (formData instanceof FormData) {
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+  } else {
+    console.log("Regular Object:", formData);
+  }
+  console.log("-------------------------");
+};
+
+const getToken = () => {
+  try {
+    return localStorage.getItem("token") || null;
+  } catch (error) {
+    console.error("LocalStorage access error:", error);
+    return null;
+  }
+};
+
 // Update Category
 export const updateCategory = createAsyncThunk(
   "categories/updateCategory",
-  async ({ id, categoryData }, { getState, rejectWithValue }) => {
-    const { auth } = getState(); // Get authentication token from state
+  async ({ id, formData }, { getState, rejectWithValue }) => {
+    // Changed parameter name
+    const { auth } = getState();
 
     try {
-      const formData = new FormData();
-
-      // Debugging: Log categoryData before appending
-      console.log("categoryData received:", categoryData);
-
-      // Ensure name exists and is an object
-      if (categoryData.name && typeof categoryData.name === "object") {
-        if (categoryData.name.en)
-          formData.append("name[en]", categoryData.name.en);
-        if (categoryData.name.ar)
-          formData.append("name[ar]", categoryData.name.ar);
-      } else {
-        console.error(
-          "categoryData.name is missing or incorrect:",
-          categoryData.name
-        );
+      // Debug: Verify received FormData
+      console.log("Received FormData in slice:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
-
-      // Append image only if it's a File object
-      if (categoryData.image instanceof File) {
-        formData.append("image", categoryData.image);
-      }
-
-      // Debugging: Log FormData values
-      console.log("FormData being sent:", Object.fromEntries(formData));
 
       const response = await axios.post(`${API_URL}/update/${id}`, formData, {
         headers: {
-          Authorization: `Bearer ${auth.token}`, // Attach the token
+          Authorization: `Bearer ${auth.token}`,
           "Content-Type": "multipart/form-data",
-          Accept: "application/json",
         },
       });
 
       return response.data;
     } catch (error) {
-      console.error("Error response:", error.response?.data);
-      return rejectWithValue(
-        error.response?.data || { message: "Failed to update category" }
-      );
+      console.error("API Error:", error);
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
@@ -60,6 +59,7 @@ export const updateCategory = createAsyncThunk(
 export const fetchCategories = createAsyncThunk(
   "categories/fetchAll",
   async (_, { getState, rejectWithValue }) => {
+    const { auth } = getState(); // Get auth state
     try {
       const { categories } = getState();
 
@@ -71,13 +71,16 @@ export const fetchCategories = createAsyncThunk(
         return categories.data || categories.categories;
       }
 
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Failed to fetch categories");
+      const response = await axios.get(API_URL, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`, // Add authorization
+          Accept: "application/json",
+        },
+      });
 
-      const data = await response.json();
-      return data.data || data; // Handle both response formats
+      return response.data.data || response.data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -138,7 +141,7 @@ export const createCategory = createAsyncThunk(
 
       const response = await axios.post(`${API_URL}/create`, formData, {
         headers: {
-          Authorization: `Bearer ${auth.token}`,
+          Authorization: `Bearer ${auth.token || getToken()}`, // Fallback to localStorage
           "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
@@ -161,7 +164,8 @@ export const deleteCategory = createAsyncThunk(
     try {
       await axios.delete(`${API_URL}/destroy/${id}`, {
         headers: {
-          Authorization: `Bearer ${auth.token}`,
+          Authorization: `Bearer ${auth.token || getToken()}`, // Fallback to localStorage
+          "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
       });

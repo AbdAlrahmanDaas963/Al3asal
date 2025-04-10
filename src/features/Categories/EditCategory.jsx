@@ -6,351 +6,298 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  useMediaQuery,
-  useTheme,
   Paper,
-  Avatar,
-  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchCategoryById,
-  updateCategory,
-  resetStatus,
-} from "./categorySlice";
-import CloseIcon from "@mui/icons-material/Close";
+import { fetchCategoryById, updateCategory } from "./categorySlice";
+import { fetchShops } from "../Shops/shopSlice";
 
-const EditCategoryForm = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+const EditCategory = () => {
   const { categoryId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const categoryFromState = location.state?.item;
-  const { status, error, selectedCategory } = useSelector(
-    (state) => state.categories
-  );
+  const { selectedCategory, status } = useSelector((state) => state.categories);
+  const { shops, status: shopsStatus } = useSelector((state) => state.shops);
 
   const [formData, setFormData] = useState({
     name: { en: "", ar: "" },
+    is_interested: "1",
+    shop_ids: [],
     image: null,
+    previewImage: null,
   });
 
-  const [validationErrors, setValidationErrors] = useState({});
-  const [preview, setPreview] = useState(null);
-  const [fileError, setFileError] = useState("");
+  const [errors, setErrors] = useState({});
 
-  // Fetch category data on mount if not present in state
+  // Fetch data on mount
   useEffect(() => {
-    if (!categoryFromState && !selectedCategory?.data) {
-      dispatch(fetchCategoryById(categoryId));
+    dispatch(fetchCategoryById(categoryId));
+    if (shopsStatus === "idle") {
+      dispatch(fetchShops());
     }
-  }, [dispatch, categoryId, categoryFromState, selectedCategory?.data]);
+  }, [dispatch, categoryId, shopsStatus]);
 
-  // Set form data when category data is available
+  // Initialize form data when category loads
   useEffect(() => {
-    const categoryData = categoryFromState || selectedCategory?.data;
-    if (categoryData) {
+    if (selectedCategory?.data) {
+      const category = selectedCategory.data;
+
       setFormData({
         name: {
-          en: categoryData.name?.en || "",
-          ar: categoryData.name?.ar || "",
+          en: typeof category.name === "object" ? category.name.en : "",
+          ar:
+            typeof category.name === "object"
+              ? category.name.ar
+              : category.name || "",
         },
-        image: categoryData.image || null,
+        is_interested: category.is_interested?.toString() || "1",
+        shop_ids: category.shops?.map((shop) => shop.id.toString()) || [],
+        image: null, // Don't preload existing image to avoid FormData issues
+        previewImage: category.image || null, // Store URL for preview only
       });
     }
-  }, [categoryFromState, selectedCategory]);
+  }, [selectedCategory]);
 
-  // Reset status and clean up preview URLs
+  // Handle image preview cleanup
   useEffect(() => {
-    dispatch(resetStatus());
-    return () => {
-      if (preview) URL.revokeObjectURL(preview);
-    };
-  }, [dispatch, preview]);
-
-  // Handle image preview
-  useEffect(() => {
-    if (formData.image && typeof formData.image !== "string") {
+    if (formData.image instanceof File) {
       const objectUrl = URL.createObjectURL(formData.image);
-      setPreview(objectUrl);
+      setFormData((prev) => ({ ...prev, previewImage: objectUrl }));
       return () => URL.revokeObjectURL(objectUrl);
     }
   }, [formData.image]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => {
-      if (name.startsWith("name.")) {
-        const lang = name.split(".")[1];
-        return {
-          ...prev,
-          name: { ...prev.name, [lang]: value },
-        };
-      }
-      return { ...prev, [name]: value };
-    });
+  const getShopName = (shop) => {
+    return typeof shop.name === "string"
+      ? shop.name
+      : shop.name?.en || shop.name?.ar || "Untitled Shop";
+  };
 
-    // Clear validation error when user types
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    if (name.startsWith("name.")) {
+      const lang = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        name: { ...prev.name, [lang]: value },
+      }));
+    } else if (name === "is_interested") {
+      setFormData((prev) => ({ ...prev, [name]: checked ? "1" : "0" }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleShopSelection = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      shop_ids: e.target.value,
+    }));
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type and size
-    if (!file.type.match("image.*")) {
-      setFileError("Please select an image file");
-      return;
+    if (e.target.files[0]) {
+      setFormData((prev) => ({
+        ...prev,
+        image: e.target.files[0],
+      }));
     }
-    if (file.size > 2 * 1024 * 1024) {
-      // 2MB limit
-      setFileError("Image size should be less than 2MB");
-      return;
-    }
-
-    setFileError("");
-    setFormData({ ...formData, image: file });
   };
 
-  const removeImage = () => {
-    setFormData({ ...formData, image: null });
-    setPreview(null);
-    setFileError("");
-  };
-
-  const validateForm = () => {
-    const errors = {};
-    if (!formData.name.en.trim())
-      errors["name.en"] = "English name is required";
-    if (!formData.name.ar.trim()) errors["name.ar"] = "Arabic name is required";
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const isFormUnchanged = () => {
-    const originalData = categoryFromState || selectedCategory?.data;
-    if (!originalData) return true;
-
-    return (
-      formData.name.en === originalData.name?.en &&
-      formData.name.ar === originalData.name?.ar &&
-      (formData.image === originalData.image ||
-        (typeof formData.image === "string" &&
-          formData.image === originalData.image))
-    );
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    if (isFormUnchanged()) {
-      setValidationErrors({ form: "No changes detected" });
+    setErrors({});
+
+    // Basic validation
+    const newErrors = {};
+    if (!formData.name.en) newErrors["name.en"] = "English name required";
+    if (!formData.name.ar) newErrors["name.ar"] = "Arabic name required";
+    if (formData.shop_ids.length === 0)
+      newErrors.shop_ids = "At least one shop required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     const formDataToSend = new FormData();
     formDataToSend.append("name[en]", formData.name.en);
     formDataToSend.append("name[ar]", formData.name.ar);
-    if (formData.image && typeof formData.image !== "string") {
+    formDataToSend.append("is_interested", formData.is_interested);
+
+    formData.shop_ids.forEach((id) => {
+      formDataToSend.append("shop_ids[]", id);
+    });
+
+    if (formData.image instanceof File) {
       formDataToSend.append("image", formData.image);
     }
 
-    dispatch(updateCategory({ id: categoryId, categoryData: formDataToSend }))
-      .unwrap()
-      .then(() => {
-        setTimeout(() => navigate("/dashboard/category"), 1500); // Delay to show success message
-      })
-      .catch((err) => {
-        if (err.response?.data?.errors) {
-          setValidationErrors(err.response.data.errors);
-        }
+    try {
+      await dispatch(
+        updateCategory({
+          id: categoryId,
+          formData: formDataToSend,
+        })
+      ).unwrap();
+
+      navigate("/dashboard/category");
+    } catch (error) {
+      console.error("Update error:", error);
+      setErrors({
+        form:
+          error.message ||
+          error.response?.data?.message ||
+          "Failed to update category",
       });
+    }
   };
 
-  if (status === "loading" && !selectedCategory?.data && !categoryFromState) {
+  if (!selectedCategory?.data || shopsStatus === "loading") {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="200px"
-      >
+      <Box display="flex" justifyContent="center" mt={4}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        p: isMobile ? 2 : 4,
-        width: "100%",
-      }}
-    >
-      <Paper
-        elevation={3}
-        sx={{
-          p: isMobile ? 2 : 4,
-          width: "100%",
-          maxWidth: "600px",
-          borderRadius: "12px",
-        }}
-      >
-        <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
-          Edit Category
-        </Typography>
+    <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
+      <Typography variant="h5" gutterBottom>
+        Edit Category
+      </Typography>
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-          <TextField
-            label="Category Name (English)"
-            name="name.en"
-            value={formData.name.en}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!validationErrors["name.en"]}
-            helperText={validationErrors["name.en"]}
-            sx={{ mb: 2 }}
-          />
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        {/* English Name */}
+        <TextField
+          label="English Name"
+          name="name.en"
+          value={formData.name.en}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+          error={!!errors["name.en"]}
+          helperText={errors["name.en"]}
+        />
 
-          <TextField
-            label="Category Name (Arabic)"
-            name="name.ar"
-            value={formData.name.ar}
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-            required
-            error={!!validationErrors["name.ar"]}
-            helperText={validationErrors["name.ar"]}
-            sx={{ mb: 3 }}
-            dir="rtl"
-          />
+        {/* Arabic Name */}
+        <TextField
+          label="Arabic Name"
+          name="name.ar"
+          value={formData.name.ar}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+          dir="rtl"
+          error={!!errors["name.ar"]}
+          helperText={errors["name.ar"]}
+        />
 
-          <Box sx={{ mb: 2 }}>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-              sx={{ py: 1.5 }}
-            >
-              {formData.image ? "Change Image" : "Upload Image"}
-              <input
-                type="file"
-                hidden
-                onChange={handleFileChange}
-                accept="image/*"
-              />
-            </Button>
-            {fileError && (
-              <Typography
-                color="error"
-                variant="caption"
-                sx={{ mt: 0.5, display: "block" }}
-              >
-                {fileError}
-              </Typography>
-            )}
-          </Box>
+        {/* Interested Checkbox */}
+        <FormControlLabel
+          control={
+            <Checkbox
+              name="is_interested"
+              checked={formData.is_interested === "1"}
+              onChange={handleChange}
+            />
+          }
+          label="Is Interested"
+        />
 
-          {(formData.image || preview) && (
-            <Box
-              sx={{
-                position: "relative",
-                mb: 3,
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 1,
-                p: 1,
-              }}
-            >
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                {typeof formData.image === "string"
-                  ? "Current Image"
-                  : "New Image Preview"}
-              </Typography>
-              <IconButton
-                onClick={removeImage}
-                sx={{
-                  position: "absolute",
-                  right: 8,
-                  top: 8,
-                  backgroundColor: "background.paper",
-                  "&:hover": { backgroundColor: "action.hover" },
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
-              <Box
-                component="img"
-                src={
-                  typeof formData.image === "string" ? formData.image : preview
-                }
-                alt="Category preview"
-                sx={{
-                  width: "100%",
-                  maxHeight: "300px",
-                  objectFit: "contain",
-                  borderRadius: 1,
-                }}
-              />
-            </Box>
-          )}
-
-          {validationErrors.form && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {validationErrors.form}
-            </Alert>
-          )}
-
-          {status === "succeeded" && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Category updated successfully!
-            </Alert>
-          )}
-
-          {status === "failed" && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error?.message || "Failed to update category"}
-            </Alert>
-          )}
-
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            fullWidth
-            size={isMobile ? "medium" : "large"}
-            disabled={status === "loading" || isFormUnchanged()}
-            sx={{
-              py: isMobile ? 1 : 1.5,
-              borderRadius: "8px",
-            }}
+        {/* Shops Multi-select */}
+        <FormControl fullWidth margin="normal" error={!!errors.shop_ids}>
+          <InputLabel>Shops *</InputLabel>
+          <Select
+            multiple
+            name="shop_ids"
+            value={formData.shop_ids}
+            onChange={handleShopSelection}
+            label="Shops *"
+            renderValue={(selected) =>
+              selected
+                .map((id) => {
+                  const shop = shops.data.find((s) => s.id.toString() === id);
+                  return shop ? getShopName(shop) : "";
+                })
+                .join(", ")
+            }
           >
-            {status === "loading" ? (
-              <Box display="flex" alignItems="center">
-                <CircularProgress size={24} color="inherit" sx={{ mr: 1.5 }} />
-                Updating...
-              </Box>
-            ) : (
-              "Update Category"
-            )}
-          </Button>
-        </Box>
-      </Paper>
-    </Box>
+            {shops.data.map((shop) => (
+              <MenuItem key={shop.id} value={shop.id.toString()}>
+                {getShopName(shop)}
+              </MenuItem>
+            ))}
+          </Select>
+          {errors.shop_ids && (
+            <Typography color="error" variant="caption">
+              {errors.shop_ids}
+            </Typography>
+          )}
+        </FormControl>
+
+        {/* Image Upload */}
+        <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
+          Upload Image
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            accept="image/*"
+          />
+        </Button>
+
+        {/* Image Preview */}
+        {formData.previewImage && (
+          <Box mt={2}>
+            <Typography variant="body2">Current Image:</Typography>
+            <img
+              src={formData.previewImage}
+              alt="Preview"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "200px",
+                marginTop: "8px",
+              }}
+            />
+          </Box>
+        )}
+
+        {/* Error Message */}
+        {errors.form && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {errors.form}
+          </Alert>
+        )}
+
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 3 }}
+          disabled={status === "loading"}
+          startIcon={
+            status === "loading" ? <CircularProgress size={20} /> : null
+          }
+        >
+          {status === "loading" ? "Updating..." : "Update Category"}
+        </Button>
+      </Box>
+    </Paper>
   );
 };
 
-export default EditCategoryForm;
+export default EditCategory;

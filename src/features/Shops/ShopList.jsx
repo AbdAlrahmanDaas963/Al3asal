@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
-import ProductCard from "../../components/common/ProdcutCard";
+import ShopCard from "../../components/common/ShopCard";
 import { fetchShops } from "./shopSlice";
 
 const ShopList = () => {
@@ -150,8 +150,8 @@ const ShopList = () => {
         {filteredShops.length > 0 ? (
           filteredShops.map((shop) => (
             <Grid item key={shop.id}>
-              <ProductCard
-                item={shop}
+              <ShopCard
+                shop={shop}
                 onError={(e) => {
                   if (!e.target.dataset.error) {
                     e.target.dataset.error = "true";

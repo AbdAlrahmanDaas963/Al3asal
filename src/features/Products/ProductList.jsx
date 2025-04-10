@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, deleteProduct } from "./productsSlice";
 import {
@@ -19,39 +19,18 @@ import {
   DialogContent,
   DialogContentText,
   TablePagination,
-  Skeleton,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { createSelector } from "@reduxjs/toolkit";
-import { shallowEqual } from "react-redux";
-
-// Memoized selector for products data
-const selectProductsData = (state) => state.products.data || [];
-
-// Memoized selector for products state
-const selectProductsState = createSelector(
-  [selectProductsData, (state) => state.products],
-  (data, products) => ({
-    data,
-    status: products.status,
-    error: products.error,
-    lastFetched: products.lastFetched,
-  })
-);
 
 const ProductList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const products = useSelector((state) => state.products.data || []);
+  const status = useSelector((state) => state.products.status);
+  const error = useSelector((state) => state.products.error);
 
-  // Using memoized selector
-  const {
-    data: products,
-    status,
-    error,
-    lastFetched,
-  } = useSelector(selectProductsState, shallowEqual);
-
-  // Delete confirmation dialog state
+  // Delete confirmation state
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
@@ -59,20 +38,17 @@ const ProductList = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Fetch products on component mount
   useEffect(() => {
-    if (!lastFetched || Date.now() - lastFetched > 300000) {
+    if (status === "idle") {
       dispatch(fetchProducts());
     }
-  }, [dispatch, lastFetched]);
+  }, [status, dispatch]);
 
-  // Handle delete confirmation
   const handleDeleteClick = (id) => {
     setProductToDelete(id);
     setOpenDeleteDialog(true);
   };
 
-  // Handle confirmed deletion
   const handleDelete = async () => {
     try {
       await dispatch(deleteProduct(productToDelete)).unwrap();
@@ -82,78 +58,16 @@ const ProductList = () => {
     }
   };
 
-  // Memoized paginated products
-  const visibleProducts = useMemo(() => {
-    return products.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [products, page, rowsPerPage]);
+  const handleEditClick = (product) => {
+    navigate(`/dashboard/products/edit/${product.id}`, { state: { product } });
+  };
 
-  // Loading skeleton rows
-  const skeletonRows = Array(rowsPerPage).fill(0);
-
-  // Loading state with skeleton
-  if (status === "loading" && (!lastFetched || products.length === 0)) {
+  // Loading state - only show when there are no products yet
+  if (status === "loading" && products.length === 0) {
     return (
-      <TableContainer
-        component={Paper}
-        sx={{ maxWidth: "100%", overflowX: "auto" }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Description (EN)</TableCell>
-              <TableCell>Description (AR)</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Shop Name</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {skeletonRows.map((_, index) => (
-              <TableRow key={`skeleton-${index}`}>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" width={60} />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton variant="text" />
-                </TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    <Skeleton variant="rounded" width={60} height={30} />
-                    <Skeleton variant="rounded" width={60} height={30} />
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={0}
-          rowsPerPage={rowsPerPage}
-          page={0}
-          onPageChange={() => {}}
-          onRowsPerPageChange={() => {}}
-        />
-      </TableContainer>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -180,7 +94,7 @@ const ProductList = () => {
         <Alert severity="info">No products found</Alert>
         <Button
           variant="contained"
-          onClick={() => navigate("/dashboard/products/create")}
+          onClick={() => navigate("/dashboard/products/add")}
         >
           Create New Product
         </Button>
@@ -190,7 +104,6 @@ const ProductList = () => {
 
   return (
     <>
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
@@ -210,62 +123,71 @@ const ProductList = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Products Table */}
-      <TableContainer
-        component={Paper}
-        sx={{ maxWidth: "100%", overflowX: "auto" }}
-      >
+      <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
               <TableCell>Name</TableCell>
-              <TableCell>Description (EN)</TableCell>
               <TableCell>Description (AR)</TableCell>
               <TableCell>Price</TableCell>
-              <TableCell>Shop Name</TableCell>
+              <TableCell>Shop</TableCell>
               <TableCell>Category</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleProducts.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.description?.en || "N/A"}</TableCell>
-                <TableCell>{product.description?.ar || "N/A"}</TableCell>
-                <TableCell>{product.price}</TableCell>
-                <TableCell>
-                  {product.category?.shops[0]?.name || "N/A"}
-                </TableCell>
-                <TableCell>{product.category?.name || "N/A"}</TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="small"
-                      onClick={() =>
-                        navigate(`/dashboard/products/edit/${product.id}`, {
-                          state: { product },
-                        })
-                      }
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="error"
-                      size="small"
-                      onClick={() => handleDeleteClick(product.id)}
-                    >
-                      Delete
-                    </Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
+            {products
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((product, index) => (
+                <TableRow key={index}>
+                  <TableCell>{product.id}</TableCell>
+                  <TableCell>
+                    {product.name?.ar ||
+                      product.name?.en ||
+                      product.name ||
+                      "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {product.description?.ar ||
+                      product.description?.en ||
+                      "N/A"}
+                  </TableCell>
+                  <TableCell>{product.price || "N/A"}</TableCell>
+                  <TableCell>
+                    {product.shop?.name?.ar ||
+                      product.shop?.name?.en ||
+                      product.shop?.name ||
+                      "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {product.category?.name?.ar ||
+                      product.category?.name?.en ||
+                      product.category?.name ||
+                      "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => handleEditClick(product)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        onClick={() => handleDeleteClick(product.id)}
+                      >
+                        Delete
+                      </Button>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
         <TablePagination

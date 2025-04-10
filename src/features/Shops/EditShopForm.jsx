@@ -22,10 +22,10 @@ const EditShopForm = () => {
   const { status, error, selectedShop } = useSelector((state) => state.shops);
 
   const [formData, setFormData] = useState({
-    name: "",
-    is_interested: "1",
+    name: { en: "", ar: "" }, // Initialize as object
+    is_interested: 1,
     image: null,
-    originalImage: null,
+    previewImage: null,
   });
 
   const [fileName, setFileName] = useState("");
@@ -34,32 +34,38 @@ const EditShopForm = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [localStatus, setLocalStatus] = useState("idle");
 
-  // Fetch shop data
   useEffect(() => {
-    dispatch(resetStatus()); // Reset status on mount
-    if (!shopFromState) {
-      dispatch(fetchShopById(shopId));
-    }
-  }, [dispatch, shopId, shopFromState]);
+    dispatch(fetchShopById(shopId));
+    return () => dispatch(resetStatus());
+  }, [shopId, dispatch]);
+
+  // Fetch shop data
+  // useEffect(() => {
+  //   dispatch(resetStatus()); // Reset status on mount
+  //   if (!shopFromState) {
+  //     dispatch(fetchShopById(shopId));
+  //   }
+  // }, [dispatch, shopId, shopFromState]);
 
   // Sync Redux status with local status
   useEffect(() => {
     setLocalStatus(status);
   }, [status]);
 
-  // Initialize form
+  // Update form when shop data loads
   useEffect(() => {
-    const shopData = shopFromState || selectedShop?.data;
-    if (shopData && !isInitialized) {
+    if (selectedShop) {
       setFormData({
-        name: shopData.name || "",
-        is_interested: shopData.is_interested?.toString() || "1",
-        image: shopData.image || null,
-        originalImage: shopData.image || null,
+        name: {
+          en: selectedShop.name?.en || "",
+          ar: selectedShop.name?.ar || "",
+        },
+        is_interested: selectedShop.is_interested || 1,
+        image: null,
+        previewImage: selectedShop.image || null,
       });
-      setIsInitialized(true);
     }
-  }, [shopFromState, selectedShop, isInitialized]);
+  }, [selectedShop]);
 
   // Handle image preview
   useEffect(() => {
@@ -71,14 +77,14 @@ const EditShopForm = () => {
   }, [formData.image]);
 
   // Handle navigation after success
-  useEffect(() => {
-    if (localStatus === "succeeded") {
-      const timer = setTimeout(() => {
-        navigate("/dashboard/shops");
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [localStatus, navigate]);
+  // useEffect(() => {
+  //   if (localStatus === "succeeded") {
+  //     const timer = setTimeout(() => {
+  //       navigate("/dashboard/shops");
+  //     }, 1500);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [localStatus, navigate]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -89,9 +95,22 @@ const EditShopForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
+
+    // Handle nested name fields
+    if (name.startsWith("name.")) {
+      const [_, lang] = name.split("."); // _ ignores the first part
+      setFormData((prev) => ({
+        ...prev,
+        name: {
+          ...prev.name,
+          [lang]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: name === "is_interested" ? parseInt(value) : value,
+      }));
     }
   };
 
@@ -118,44 +137,29 @@ const EditShopForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setValidationErrors({});
-    setLocalStatus("loading");
-
-    if (isFormUnchanged()) return;
-
-    const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.name);
-    formDataToSend.append("is_interested", formData.is_interested);
-
-    // Only append image if it's a new file (not the existing URL string)
-    if (formData.image && typeof formData.image !== "string") {
-      formDataToSend.append("image", formData.image);
-    }
-
     try {
-      await dispatch(
+      const result = await dispatch(
         updateShop({
           shop_id: shopId,
-          formData: formDataToSend,
+          formData,
         })
-      ).unwrap();
-      setLocalStatus("succeeded");
-    } catch (err) {
-      setLocalStatus("failed");
-      if (err.errors) {
-        setValidationErrors(err.errors);
+      );
+
+      if (updateShop.fulfilled.match(result)) {
+        setTimeout(() => navigate("/dashboard/shops"), 1500);
       }
-      console.error("Update error:", err);
+    } catch (err) {
+      console.error("Update failed:", err);
     }
   };
 
-  if (!isInitialized) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // if (!isInitialized) {
+  //   return (
+  //     <Box display="flex" justifyContent="center" mt={4}>
+  //       <CircularProgress />
+  //     </Box>
+  //   );
+  // }
 
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
@@ -164,7 +168,28 @@ const EditShopForm = () => {
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
+        {/* Arabic Name */}
         <TextField
+          label="Shop Name (Arabic)"
+          name="name.ar"
+          value={formData.name.ar || ""}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+        />
+
+        {/* English Name */}
+        <TextField
+          label="Shop Name (English)"
+          name="name.en"
+          value={formData.name.en || ""}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          required
+        />
+        {/* <TextField
           label="Shop Name"
           name="name"
           value={formData.name}
@@ -175,7 +200,7 @@ const EditShopForm = () => {
           error={!!validationErrors.name}
           helperText={validationErrors.name}
           autoFocus
-        />
+        /> */}
 
         <TextField
           select
@@ -221,12 +246,6 @@ const EditShopForm = () => {
         {localStatus === "failed" && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error || "Failed to update shop"}
-          </Alert>
-        )}
-
-        {localStatus === "succeeded" && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Shop updated successfully!
           </Alert>
         )}
 

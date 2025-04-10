@@ -2,9 +2,17 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-
 const API_BASE_URL = `${BASE_URL}/shops`;
-const getToken = () => localStorage.getItem("token"); // Retrieve token dynamically
+const getToken = () => localStorage.getItem("token");
+
+// Helper function to transform shop data
+const transformShopData = (shop) => ({
+  ...shop,
+  name: {
+    en: typeof shop.name === "string" ? shop.name : shop.name?.en || "",
+    ar: typeof shop.name === "string" ? shop.name : shop.name?.ar || "",
+  },
+});
 
 // Fetch all shops
 export const fetchShops = createAsyncThunk(
@@ -13,13 +21,19 @@ export const fetchShops = createAsyncThunk(
     try {
       const { shops } = getState();
 
-      // Return cached data if recent (5 minute cache)
       if (shops.lastFetched && Date.now() - shops.lastFetched < 300000) {
         return shops.data || shops.shops.data;
       }
 
       const response = await axios.get(API_BASE_URL);
-      return response.data;
+      console.log("Shops API response:", response.data); // Add this line
+
+      const transformedData = response.data.data.map(transformShopData);
+
+      return {
+        ...response.data,
+        data: transformedData,
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch shops");
     }
@@ -31,13 +45,25 @@ export const createShop = createAsyncThunk(
   "shops/createShop",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/create`, formData, {
+      const data = new FormData();
+
+      // Handle multilingual name
+      data.append("name[en]", formData.name.en);
+      data.append("name[ar]", formData.name.ar);
+      data.append("is_interested", formData.is_interested);
+
+      if (formData.image) {
+        data.append("image", formData.image);
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/create`, data, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           "Content-Type": "multipart/form-data",
         },
       });
-      return response.data;
+
+      return transformShopData(response.data.data);
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to create shop");
     }
@@ -49,9 +75,25 @@ export const updateShop = createAsyncThunk(
   "shops/updateShop",
   async ({ shop_id, formData }, { rejectWithValue }) => {
     try {
+      const data = new FormData();
+
+      // Handle multilingual name
+      data.append("name[en]", formData.name.en);
+      data.append("name[ar]", formData.name.ar);
+      data.append("is_interested", formData.is_interested);
+
+      if (formData.image) {
+        if (formData.image instanceof File) {
+          data.append("image", formData.image);
+        } else if (typeof formData.image === "string") {
+          // If it's a string (existing image URL), we might not need to send it
+          // Or you can add logic to handle image updates differently
+        }
+      }
+
       const response = await axios.post(
-        `${API_BASE_URL}/update/${shop_id}`, // ✅ Updated to shop_id
-        formData,
+        `${API_BASE_URL}/update/${shop_id}`,
+        data,
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,
@@ -59,7 +101,8 @@ export const updateShop = createAsyncThunk(
           },
         }
       );
-      return response.data;
+
+      return transformShopData(response.data.data);
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to update shop");
     }
@@ -89,33 +132,18 @@ export const fetchShopById = createAsyncThunk(
   async (shopId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/${shopId}`);
-      return response.data;
+      return transformShopData(response.data.data);
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch shop");
     }
   }
 );
 
-// Initial state
-// const initialState = {
-//   shops: {
-//     data: [],
-//     status: true,
-//     error: null,
-//     statusCode: 200,
-//   },
-//   status: "idle",
-//   error: null,
-//   selectedShop: null,
-// };
-
-// Create shop slice
 const shopSlice = createSlice({
   name: "shops",
   initialState: {
-    data: [], // Primary data field
+    data: [],
     shops: {
-      // Legacy field structure
       data: [],
       status: true,
       error: null,
@@ -124,7 +152,7 @@ const shopSlice = createSlice({
     status: "idle",
     error: null,
     selectedShop: null,
-    lastFetched: null, // Track when data was last fetched
+    lastFetched: null,
   },
   reducers: {
     resetStatus: (state) => {
@@ -142,41 +170,57 @@ const shopSlice = createSlice({
       })
       .addCase(fetchShops.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data = action.payload.data || action.payload;
-        state.shops.data = action.payload.data || action.payload; // Maintain both
+        state.data = action.payload.data;
+        state.shops.data = action.payload.data;
         state.lastFetched = Date.now();
       })
       .addCase(fetchShops.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-
-      // Create a shop
-      .addCase(createShop.fulfilled, (state, action) => {
-        state.shops.data.push(action.payload);
-        state.status = "idle"; // Reset status
+      .addCase(createShop.pending, (state) => {
+        state.status = "loading";
       })
-
-      // Update a shop
+      .addCase(createShop.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.data.unshift(action.payload);
+        state.shops.data.unshift(action.payload);
+      })
+      .addCase(createShop.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateShop.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(updateShop.fulfilled, (state, action) => {
-        const index = state.shops.data.findIndex(
+        state.status = "succeeded";
+        const index = state.data.findIndex(
           (shop) => shop.id === action.payload.id
         );
         if (index !== -1) {
+          state.data[index] = action.payload;
           state.shops.data[index] = action.payload;
         }
-        state.status = "idle"; // Reset status
       })
-
-      // Delete a shop
+      .addCase(updateShop.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(deleteShop.pending, (state) => {
+        state.status = "loading";
+      })
       .addCase(deleteShop.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.data = state.data.filter((shop) => shop.id !== action.payload);
         state.shops.data = state.shops.data.filter(
           (shop) => shop.id !== action.payload
         );
-        state.status = "idle"; // Reset status
       })
-
-      // Fetch shop by ID
+      .addCase(deleteShop.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
       .addCase(fetchShopById.pending, (state) => {
         state.status = "loading";
       })
