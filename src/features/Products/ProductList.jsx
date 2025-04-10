@@ -22,21 +22,34 @@ import {
   Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { createSelector } from "@reduxjs/toolkit";
+import { shallowEqual } from "react-redux";
+
+// Memoized selector for products data
+const selectProductsData = (state) => state.products.data || [];
+
+// Memoized selector for products state
+const selectProductsState = createSelector(
+  [selectProductsData, (state) => state.products],
+  (data, products) => ({
+    data,
+    status: products.status,
+    error: products.error,
+    lastFetched: products.lastFetched,
+  })
+);
 
 const ProductList = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Using memoized selector
   const {
     data: products,
     status,
     error,
     lastFetched,
-  } = useSelector((state) => ({
-    data: state.products.data || [],
-    status: state.products.status,
-    error: state.products.error,
-    lastFetched: state.products.lastFetched,
-  }));
+  } = useSelector(selectProductsState, shallowEqual);
 
   // Delete confirmation dialog state
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
