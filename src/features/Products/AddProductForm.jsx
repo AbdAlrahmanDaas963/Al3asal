@@ -24,11 +24,16 @@ import {
 } from "@mui/material";
 
 // Constants
-const MAX_IMAGE_SIZE = 100 * 1024; // 100KB
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB (increased from 100KB)
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "image/webp",
+];
 const INITIAL_FORM_STATE = {
-  name: { en: "", ar: "" }, // Ensure name is always an object
-  description: { en: "", ar: "" }, // Ensure description is always an object
+  name: { en: "", ar: "" },
+  description: { en: "", ar: "" },
   price: "",
   profit_percentage: "",
   is_hot: false,
@@ -37,13 +42,11 @@ const INITIAL_FORM_STATE = {
   category_id: "",
 };
 
-// Memoized selectors
+// Memoized selectors (unchanged)
 const selectShops = createSelector(
   (state) => state.shops,
   (shops) => {
-    // Try these different paths to find where your shops actually are
     const shopsData = shops.data?.data || shops.data || shops.shops?.data || [];
-    console.log("Processed shops data:", shopsData);
     return {
       shops: shopsData,
       shopsLoading: shops.status === "loading",
@@ -78,38 +81,19 @@ const AddProductForm = ({ onSuccess }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Fetch data on mount
+  // Fetch data on mount (unchanged)
   useEffect(() => {
-    console.log("Checking if we need to fetch data...");
-    console.log("Current shops:", shops);
-    console.log("Current categories:", categories);
-
-    // Always try to fetch shops if array is empty
     if (shops.length === 0) {
-      console.log("Fetching shops...");
       dispatch(fetchShops());
     }
-
-    // Only fetch categories if they're empty
     if (categories.length === 0) {
-      console.log("Fetching categories...");
       dispatch(fetchCategories());
     }
   }, [dispatch, shops.length, categories.length]);
 
   // Get filtered categories based on selected shop
   const filteredCategories = useMemo(() => {
-    console.log("ALL CATEGORIES (unfiltered):", categories);
-
-    // For debugging - show all categories regardless of shop
-    return categories;
-
-    /* Original filtering logic - enable after shops work
-    if (!formData.shop_id) return [];
-    return categories.filter((category) => 
-      category.shops?.some(shop => String(shop.id) === String(formData.shop_id))
-    );
-    */
+    return categories; // Temporarily showing all categories
   }, [formData.shop_id, categories]);
 
   const handleChange = (e) => {
@@ -125,13 +109,12 @@ const AddProductForm = ({ onSuccess }) => {
       return;
     }
 
-    // Safely handle nested fields
     if (name.includes(".")) {
       const [field, subfield] = name.split(".");
       setFormData((prev) => ({
         ...prev,
         [field]: {
-          ...(prev[field] || {}), // Fallback to empty object if field is undefined
+          ...(prev[field] || {}),
           [subfield]: value,
         },
       }));
@@ -141,40 +124,44 @@ const AddProductForm = ({ onSuccess }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: name.endsWith("_id") ? String(value) : value,
-      ...(name === "shop_id" && { category_id: "" }), // Reset category on shop change
+      ...(name === "shop_id" && { category_id: "" }),
     }));
   };
 
   const handleImageChange = (file) => {
     if (!file) return;
 
+    // Clear previous errors
+    setErrors((prev) => ({ ...prev, image: null }));
+
+    // Validate file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setErrors((prev) => ({ ...prev, image: "Only JPG/PNG images allowed" }));
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG, PNG, or WEBP images are allowed",
+      }));
       return;
     }
 
+    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
-      setErrors((prev) => ({ ...prev, image: "Image must be <100KB" }));
+      setErrors((prev) => ({
+        ...prev,
+        image: `Image must be less than ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      }));
       return;
     }
 
-    setErrors((prev) => ({ ...prev, image: "" }));
+    // If validation passes
     setFormData((prev) => ({ ...prev, image: file }));
     setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleNestedFieldChange = (fieldPath, value) => {
-    const [field, subfield] = fieldPath.split(".");
-    setFormData((prev) => ({
-      ...prev,
-      [field]: { ...prev[field], [subfield]: value },
-    }));
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name.ar) newErrors.name_ar = "Arabic name is required";
+    if (!formData.name?.ar?.trim())
+      newErrors.name_ar = "Arabic name is required";
     if (!formData.price) newErrors.price = "Price is required";
     if (!formData.shop_id) newErrors.shop = "Shop is required";
     if (!formData.category_id) newErrors.category = "Category is required";
@@ -190,37 +177,14 @@ const AddProductForm = ({ onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields with safe checks
-    const newErrors = {};
-    if (!formData.name?.ar) newErrors.name_ar = "Arabic name is required";
-    if (!formData.price) newErrors.price = "Price is required";
-    if (!formData.shop_id) newErrors.shop = "Shop is required";
-    if (!formData.category_id) newErrors.category = "Category is required";
-    if (formData.profit_percentage > 100) {
-      newErrors.profit_percentage = "Must be ≤ 100";
-    }
-    if (!formData.image) {
-      newErrors.image = "Image is required";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
-      // Safely prepare FormData with fallbacks
       const form = new FormData();
-
-      // Handle name with fallbacks
       form.append("name[en]", formData.name?.en || "");
       form.append("name[ar]", formData.name?.ar || "");
-
-      // Handle description with fallbacks
       form.append("description[en]", formData.description?.en || "");
       form.append("description[ar]", formData.description?.ar || "");
-
-      // Append other required fields
       form.append("image", formData.image);
       form.append("is_hot", formData.is_hot ? "1" : "0");
       form.append("category_id", formData.category_id);
@@ -228,28 +192,13 @@ const AddProductForm = ({ onSuccess }) => {
       form.append("price", formData.price);
       form.append("shop_id", formData.shop_id);
 
-      // Debug: Log formData before submission
-      console.log("Submitting product with data:", {
-        name: formData.name,
-        description: formData.description,
-        price: formData.price,
-        profit_percentage: formData.profit_percentage,
-        is_hot: formData.is_hot,
-        shop_id: formData.shop_id,
-        category_id: formData.category_id,
-        image: formData.image ? formData.image.name : "No image",
-      });
-
       const result = await dispatch(createProduct(form));
       if (result.meta.requestStatus === "fulfilled") {
-        setSnackbarOpen(true);
-        setFormData(INITIAL_FORM_STATE);
-        setImagePreview(null);
-        onSuccess?.();
+        handleSuccess();
       }
     } catch (error) {
       console.error("Product submission error:", error);
-      setErrors({ submit: error.message });
+      setErrors({ submit: error.message || "Failed to add product" });
     }
   };
 
@@ -371,6 +320,7 @@ const AddProductForm = ({ onSuccess }) => {
               onChange={handleChange}
               preview={imagePreview}
               error={errors.image}
+              maxSize={MAX_IMAGE_SIZE}
             />
           </Grid>
           <Grid
@@ -420,35 +370,29 @@ const AddProductForm = ({ onSuccess }) => {
   );
 };
 
-// Extracted Components
-const ShopSelect = ({ shops, loading, value, onChange, error }) => {
-  console.log("Rendering ShopSelect with shops:", shops);
-  return (
-    <FormControl fullWidth required error={!!error}>
-      <InputLabel>Shop</InputLabel>
-      <Select
-        name="shop_id"
-        value={value}
-        onChange={onChange}
-        label="Shop"
-        disabled={loading}
-      >
-        <MenuItem value="" disabled>
-          Select a shop
+// Extracted Components with improvements
+const ShopSelect = ({ shops, loading, value, onChange, error }) => (
+  <FormControl fullWidth required error={!!error}>
+    <InputLabel>Shop</InputLabel>
+    <Select
+      name="shop_id"
+      value={value}
+      onChange={onChange}
+      label="Shop"
+      disabled={loading}
+    >
+      <MenuItem value="" disabled>
+        Select a shop
+      </MenuItem>
+      {shops.map((shop) => (
+        <MenuItem key={shop.id} value={String(shop.id)}>
+          {shop.name?.ar || shop.name?.en || shop.name || `Shop ${shop.id}`}
         </MenuItem>
-        {shops.map((shop) => {
-          console.log("Shop item:", shop);
-          return (
-            <MenuItem key={shop.id} value={String(shop.id)}>
-              {shop.name.ar || shop.name.en || shop.name}
-            </MenuItem>
-          );
-        })}
-      </Select>
-      {error && <FormHelperText error>{error}</FormHelperText>}
-    </FormControl>
-  );
-};
+      ))}
+    </Select>
+    {error && <FormHelperText error>{error}</FormHelperText>}
+  </FormControl>
+);
 
 const CategorySelect = ({
   categories,
@@ -457,47 +401,44 @@ const CategorySelect = ({
   value,
   onChange,
   error,
-}) => {
-  console.log("Rendering CategorySelect with categories:", categories);
-  return (
-    <FormControl fullWidth required error={!!error} disabled={disabled}>
-      <InputLabel>Category</InputLabel>
-      <Select
-        name="category_id"
-        value={value}
-        onChange={onChange}
-        label="Category"
-        disabled={disabled || loading}
-      >
-        {disabled ? (
-          <MenuItem value="">Select a shop first</MenuItem>
-        ) : categories.length === 0 ? (
-          <MenuItem value="">No categories available</MenuItem>
-        ) : (
-          categories.map((category) => {
-            console.log("Category item:", category);
-            return (
-              <MenuItem key={category.id} value={String(category.id)}>
-                {category.name.ar || category.name.en || category.name}
-              </MenuItem>
-            );
-          })
-        )}
-      </Select>
-      {error && <FormHelperText error>{error}</FormHelperText>}
-    </FormControl>
-  );
-};
+}) => (
+  <FormControl fullWidth required error={!!error} disabled={disabled}>
+    <InputLabel>Category</InputLabel>
+    <Select
+      name="category_id"
+      value={value}
+      onChange={onChange}
+      label="Category"
+      disabled={disabled || loading}
+    >
+      {disabled ? (
+        <MenuItem value="">Select a shop first</MenuItem>
+      ) : categories.length === 0 ? (
+        <MenuItem value="">No categories available</MenuItem>
+      ) : (
+        categories.map((category) => (
+          <MenuItem key={category.id} value={String(category.id)}>
+            {category.name?.ar ||
+              category.name?.en ||
+              category.name ||
+              `Category ${category.id}`}
+          </MenuItem>
+        ))
+      )}
+    </Select>
+    {error && <FormHelperText error>{error}</FormHelperText>}
+  </FormControl>
+);
 
-const ImageUpload = ({ onChange, preview, error }) => (
+const ImageUpload = ({ onChange, preview, error, maxSize }) => (
   <Box>
     <Button variant="contained" component="label" fullWidth>
-      Upload Image (max 100KB)
+      Upload Image (max {maxSize / 1024 / 1024}MB)
       <input
         type="file"
         name="image"
         onChange={onChange}
-        accept="image/jpeg, image/png, image/jpg"
+        accept="image/jpeg, image/png, image/jpg, image/webp"
         hidden
       />
     </Button>
@@ -511,7 +452,7 @@ const ImageUpload = ({ onChange, preview, error }) => (
         <img
           src={preview}
           alt="Preview"
-          style={{ maxHeight: 150, borderRadius: 4 }}
+          style={{ maxHeight: 150, maxWidth: "100%", borderRadius: 4 }}
         />
       </Box>
     )}
@@ -520,7 +461,7 @@ const ImageUpload = ({ onChange, preview, error }) => (
 
 const SuccessSnackbar = ({ open, onClose }) => (
   <Snackbar open={open} autoHideDuration={6000} onClose={onClose}>
-    <Alert onClose={onClose} severity="success">
+    <Alert onClose={onClose} severity="success" sx={{ width: "100%" }}>
       Product added successfully!
     </Alert>
   </Snackbar>

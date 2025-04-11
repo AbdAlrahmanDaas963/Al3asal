@@ -1,47 +1,53 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+// Constants
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+const API_BASE_URL = `${BASE_URL}/orders`;
 const getToken = () => localStorage.getItem("token");
-const BASE_URL = "https://api.asool-gifts.com/api";
 
-// Status normalization mapping
+// Helper function to normalize status values
 const normalizeStatus = (status) => {
   const statusMap = {
-    prepering: "preparing",
-    rejected: "rejected",
-    done: "done",
+    prepering: "preparing", // Backend typo -> frontend correct
+    fail: "rejected", // Backend 'fail' -> frontend 'rejected'
     stripe_pending: "pending",
+    preparing: "preparing", // Just in case backend fixes the typo
+    done: "done",
+    pending: "pending", // For consistency
   };
   return statusMap[status] || status;
 };
 
-// Fetch orders (unchanged from your working version)
+// Helper function to create headers
+const getHeaders = (contentType = "application/json") => ({
+  Authorization: `Bearer ${getToken()}`,
+  Accept: "application/json",
+  ...(contentType && { "Content-Type": contentType }),
+});
+
+// Fetch orders with filters
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
   async (filters = {}, { rejectWithValue }) => {
     try {
-      const queryParams = new URLSearchParams(
-        Object.entries(filters).filter(([_, value]) => value !== "")
-      ).toString();
-
-      const response = await axios.get(
-        `${BASE_URL}/orders/filter?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            Accept: "application/json",
-          },
-        }
+      // Clean filters - remove empty values
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(
+          ([_, value]) => value !== "" && value !== null
+        )
       );
 
-      // Normalize statuses in response
-      const normalizedOrders =
-        response.data?.data?.map((order) => ({
-          ...order,
-          status: normalizeStatus(order.status),
-        })) || [];
+      const response = await axios.get(`${API_BASE_URL}/filter`, {
+        params: cleanFilters,
+        headers: getHeaders(),
+      });
 
-      return normalizedOrders;
+      // Normalize statuses in response
+      return (response.data?.data || []).map((order) => ({
+        ...order,
+        status: normalizeStatus(order.status),
+      }));
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Error fetching orders"
@@ -50,53 +56,70 @@ export const fetchOrders = createAsyncThunk(
   }
 );
 
-// Update order status - MATCHING YOUR POSTMAN ENDPOINTS EXACTLY
+// Update the updateOrderStatus thunk
 export const updateOrderStatus = createAsyncThunk(
   "orders/updateStatus",
-  async ({ orderId, status, rejectReason = null }, { rejectWithValue }) => {
+  async (
+    { orderId, newStatus, currentStatus, rejectReason = null },
+    { getState, rejectWithValue }
+  ) => {
     try {
-      let url, body, contentType;
+      // Frontend and backend now use same status names in URLs
+      const urlStatusMap = {
+        preparing: "preparing",
+        rejected: "rejected", // Now using 'rejected' in URL
+        pending: "preparing",
+        done: "done",
+      };
 
-      // Match exactly what your Postman collection shows
-      switch (status) {
-        case "preparing":
-          url = `${BASE_URL}/orders/${orderId}/status/preparing`;
-          body = null;
-          contentType = "application/json";
-          break;
+      const urlStatus = urlStatusMap[newStatus] || newStatus;
 
-        case "done":
-          url = `${BASE_URL}/orders/${orderId}/status/done`;
-          body = null;
-          contentType = "application/json";
-          break;
+      // Validate status transitions
+      const validTransitions = {
+        pending: ["preparing", "rejected"],
+        preparing: ["done"],
+        rejected: ["done"],
+      };
 
-        case "rejected":
-          url = `${BASE_URL}/orders/${orderId}/status/rejected`;
-          body = new FormData();
-          body.append("reject_reason", rejectReason);
-          contentType = "multipart/form-data";
-          break;
-
-        default:
-          throw new Error(`Invalid status: ${status}`);
+      if (!validTransitions[currentStatus]?.includes(newStatus)) {
+        return rejectWithValue(
+          `Invalid status transition from ${currentStatus} to ${newStatus}`
+        );
       }
 
-      const response = await axios.post(url, body, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: "application/json",
-          "Content-Type": contentType,
-        },
-      });
+      // Handle rejection specifically
+      if (newStatus === "rejected") {
+        if (!rejectReason || rejectReason.trim() === "") {
+          return rejectWithValue("Rejection reason is required");
+        }
+
+        const url = `${API_BASE_URL}/${orderId}/status/rejected`; // Now using 'rejected'
+        const formData = new FormData();
+        formData.append("reject_reason", rejectReason);
+
+        const response = await axios.post(url, formData, {
+          headers: getHeaders("multipart/form-data"),
+        });
+
+        return {
+          ...response.data,
+          status: "rejected", // Keep as 'rejected' in frontend
+        };
+      }
+
+      // Handle other status changes
+      const url = `${API_BASE_URL}/${orderId}/status/${urlStatus}`;
+      const response = await axios.post(url, {}, { headers: getHeaders() });
 
       return {
         ...response.data,
-        status: normalizeStatus(response.data.status),
+        status: newStatus === "pending" ? "preparing" : newStatus,
       };
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || error.message || "Status update failed"
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Status update failed"
       );
     }
   }
@@ -110,15 +133,32 @@ const ordersSlice = createSlice({
     error: null,
     statusUpdating: false,
     statusError: null,
+    filters: {
+      min_price: "",
+      max_price: "",
+      date_from: "",
+      date_to: "",
+      status: "",
+      reciver_name: "",
+      per_page: "",
+      category_id: "",
+    },
   },
   reducers: {
     resetStatusUpdate: (state) => {
       state.statusUpdating = false;
       state.statusError = null;
     },
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    resetFilters: (state) => {
+      state.filters = ordersSlice.getInitialState().filters;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch orders cases
       .addCase(fetchOrders.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -131,15 +171,16 @@ const ordersSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // Update status cases
       .addCase(updateOrderStatus.pending, (state) => {
         state.statusUpdating = true;
         state.statusError = null;
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.statusUpdating = false;
-        const updatedOrder = action.payload;
         state.orders = state.orders.map((order) =>
-          order.id === updatedOrder.id ? updatedOrder : order
+          order.id === action.payload.id ? action.payload : order
         );
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
@@ -149,5 +190,6 @@ const ordersSlice = createSlice({
   },
 });
 
-export const { resetStatusUpdate } = ordersSlice.actions;
+export const { resetStatusUpdate, setFilters, resetFilters } =
+  ordersSlice.actions;
 export default ordersSlice.reducer;

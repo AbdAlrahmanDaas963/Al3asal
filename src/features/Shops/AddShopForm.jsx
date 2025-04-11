@@ -12,17 +12,28 @@ import {
 } from "@mui/material";
 import { resetStatus, createShop } from "./shopSlice";
 
+// Constants
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "image/webp",
+];
+
 const AddShopForm = () => {
   const [formData, setFormData] = useState({
     name: {
       en: "",
       ar: "",
     },
-    is_interested: 1, // Changed to number to match API
+    is_interested: 1,
     image: null,
   });
   const [localStatus, setLocalStatus] = useState("idle");
   const [fileName, setFileName] = useState("");
+  const [errors, setErrors] = useState({});
+  const [imagePreview, setImagePreview] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -35,6 +46,13 @@ const AddShopForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Clear errors when field changes
+    if (name.startsWith("name.")) {
+      setErrors((prev) => ({ ...prev, name: undefined }));
+    } else {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
 
     // Handle nested name fields
     if (name.startsWith("name.")) {
@@ -56,12 +74,51 @@ const AddShopForm = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    // Clear previous errors
+    setErrors((prev) => ({ ...prev, image: undefined }));
+
+    // Validate file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG, PNG or WEBP images allowed",
+      }));
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      setErrors((prev) => ({
+        ...prev,
+        image: `Image must be less than ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      }));
+      return;
+    }
+
+    // If validation passes
     setFormData((prev) => ({ ...prev, image: file }));
-    setFileName(file ? file.name : "");
+    setFileName(file.name);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.ar.trim()) newErrors.name_ar = "Arabic name is required";
+    if (!formData.name.en.trim())
+      newErrors.name_en = "English name is required";
+    if (!formData.image) newErrors.image = "Image is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     setLocalStatus("loading");
 
     try {
@@ -103,6 +160,8 @@ const AddShopForm = () => {
           fullWidth
           margin="normal"
           required
+          error={!!errors.name_ar}
+          helperText={errors.name_ar}
         />
         <TextField
           label="Shop Name (English)"
@@ -112,6 +171,8 @@ const AddShopForm = () => {
           fullWidth
           margin="normal"
           required
+          error={!!errors.name_en}
+          helperText={errors.name_en}
         />
         <TextField
           select
@@ -128,14 +189,37 @@ const AddShopForm = () => {
         </TextField>
 
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload Image"}
+          {fileName || "Upload Image (max 2MB)"}
           <input
             type="file"
             hidden
             onChange={handleFileChange}
-            accept="image/*"
+            accept="image/jpeg, image/png, image/jpg, image/webp"
           />
         </Button>
+        {errors.image && (
+          <Typography
+            color="error"
+            variant="caption"
+            display="block"
+            sx={{ mt: 1 }}
+          >
+            {errors.image}
+          </Typography>
+        )}
+        {imagePreview && (
+          <Box mt={2} textAlign="center">
+            <img
+              src={imagePreview}
+              alt="Preview"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "200px",
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        )}
 
         {localStatus === "failed" && (
           <Alert severity="error" sx={{ mt: 2 }}>

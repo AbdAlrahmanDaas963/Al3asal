@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const API_BASE_URL = `${BASE_URL}/shops`;
+const API_BASE_URL = `${BASE_URL}/dashboard/shops`;
+const API_BASE_URL2 = `${BASE_URL}/shops`;
 const getToken = () => localStorage.getItem("token");
 
 // Helper function to transform shop data
@@ -25,8 +26,12 @@ export const fetchShops = createAsyncThunk(
         return shops.data || shops.shops.data;
       }
 
-      const response = await axios.get(API_BASE_URL);
-      console.log("Shops API response:", response.data); // Add this line
+      const response = await axios.get(API_BASE_URL, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+      console.log("Shops API response:", response.data);
 
       const transformedData = response.data.data.map(transformShopData);
 
@@ -56,7 +61,7 @@ export const createShop = createAsyncThunk(
         data.append("image", formData.image);
       }
 
-      const response = await axios.post(`${API_BASE_URL}/create`, data, {
+      const response = await axios.post(`${API_BASE_URL2}/create`, data, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           "Content-Type": "multipart/form-data",
@@ -92,7 +97,7 @@ export const updateShop = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${API_BASE_URL}/update/${shop_id}`,
+        `${API_BASE_URL2}/update/${shop_id}`,
         data,
         {
           headers: {
@@ -114,7 +119,7 @@ export const deleteShop = createAsyncThunk(
   "shops/deleteShop",
   async (shopId, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_BASE_URL}/destroy/${shopId}`, {
+      await axios.delete(`${API_BASE_URL2}/destroy/${shopId}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
@@ -131,7 +136,7 @@ export const fetchShopById = createAsyncThunk(
   "shops/fetchShopById",
   async (shopId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/${shopId}`);
+      const response = await axios.get(`${API_BASE_URL2}/${shopId}`);
       return transformShopData(response.data.data);
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch shop");

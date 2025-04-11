@@ -105,12 +105,49 @@ const EditCategory = () => {
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files[0]) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file size (2MB limit)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      setErrors({
+        ...errors,
+        image: "Image size must be less than 2MB",
+      });
+      e.target.value = ""; // Clear the file input
       setFormData((prev) => ({
         ...prev,
-        image: e.target.files[0],
+        image: null,
+        previewImage: prev.previewImage, // Keep existing preview if any
       }));
+      return;
     }
+
+    // Check file type
+    if (!file.type.match("image.*")) {
+      setErrors({
+        ...errors,
+        image: "Please select an image file (JPEG, PNG, etc.)",
+      });
+      e.target.value = ""; // Clear the file input
+      setFormData((prev) => ({
+        ...prev,
+        image: null,
+        previewImage: prev.previewImage, // Keep existing preview if any
+      }));
+      return;
+    }
+
+    // If validation passes
+    setErrors({
+      ...errors,
+      image: undefined, // Clear any previous image errors
+    });
+    setFormData((prev) => ({
+      ...prev,
+      image: file,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -249,7 +286,7 @@ const EditCategory = () => {
 
         {/* Image Upload */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload Image
+          Upload Image (Max 2MB)
           <input
             type="file"
             hidden
@@ -257,6 +294,13 @@ const EditCategory = () => {
             accept="image/*"
           />
         </Button>
+
+        {/* Image Error */}
+        {errors.image && (
+          <Typography color="error" variant="caption" display="block">
+            {errors.image}
+          </Typography>
+        )}
 
         {/* Image Preview */}
         {formData.previewImage && (

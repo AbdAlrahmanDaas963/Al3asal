@@ -24,8 +24,13 @@ import {
 } from "@mui/material";
 
 // Constants
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB (more realistic limit)
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "image/webp",
+];
 
 const EditProductForm = () => {
   const { id } = useParams();
@@ -99,7 +104,6 @@ const EditProductForm = () => {
         }
       };
 
-      // Wait for shops and categories if needed
       if (shops.length > 0 && categories.length > 0) {
         initializeForm();
       } else {
@@ -128,24 +132,7 @@ const EditProductForm = () => {
     }
 
     if (name === "image") {
-      const file = files[0];
-      if (!file) return;
-
-      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        setErrors((prev) => ({
-          ...prev,
-          image: "Only JPG/PNG images allowed",
-        }));
-        return;
-      }
-      if (file.size > MAX_IMAGE_SIZE) {
-        setErrors((prev) => ({ ...prev, image: "Image must be <2MB" }));
-        return;
-      }
-
-      setErrors((prev) => ({ ...prev, image: "" }));
-      setFormData((prev) => ({ ...prev, image: file }));
-      setImagePreview(URL.createObjectURL(file));
+      handleImageChange(files[0]);
       return;
     }
 
@@ -163,6 +150,35 @@ const EditProductForm = () => {
       [name]: name.endsWith("_id") ? String(value) : value,
       ...(name === "shop_id" && { category_id: "" }), // Reset category on shop change
     }));
+  };
+
+  const handleImageChange = (file) => {
+    if (!file) return;
+
+    // Clear previous errors
+    setErrors((prev) => ({ ...prev, image: null }));
+
+    // Validate file type
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only JPG, PNG, or WEBP images are allowed",
+      }));
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_IMAGE_SIZE) {
+      setErrors((prev) => ({
+        ...prev,
+        image: `Image must be less than ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      }));
+      return;
+    }
+
+    // If validation passes
+    setFormData((prev) => ({ ...prev, image: file }));
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const validateForm = () => {
@@ -189,20 +205,18 @@ const EditProductForm = () => {
     // Append all fields consistently
     form.append("name[en]", formData.name.en || "");
     form.append("name[ar]", formData.name.ar || "");
+    form.append("description[en]", formData.description.en || "");
+    form.append("description[ar]", formData.description.ar || "");
+    form.append("is_hot", formData.is_hot ? "1" : "0");
+    form.append("category_id", formData.category_id);
+    form.append("profit_percentage", formData.profit_percentage);
+    form.append("price", formData.price);
+    form.append("shop_id", formData.shop_id);
 
     // Only append image if it's a new file
     if (formData.image instanceof File) {
       form.append("image", formData.image);
     }
-
-    form.append("is_hot", formData.is_hot ? "1" : "0");
-    form.append("category_id", formData.category_id);
-    form.append("profit_percentage", formData.profit_percentage);
-    form.append("price", formData.price);
-
-    // Append descriptions
-    form.append("description[en]", formData.description.en || "");
-    form.append("description[ar]", formData.description.ar || "");
 
     try {
       const result = await dispatch(
@@ -215,7 +229,6 @@ const EditProductForm = () => {
       setSnackbarOpen(true);
       setTimeout(() => navigate("/dashboard/products"), 1500);
     } catch (error) {
-      // Handle validation errors from server
       if (error.errors) {
         const serverErrors = {};
         Object.entries(error.errors).forEach(([field, messages]) => {
@@ -404,7 +417,7 @@ const EditProductForm = () => {
                   type="file"
                   name="image"
                   onChange={handleChange}
-                  accept="image/jpeg, image/png, image/jpg"
+                  accept="image/jpeg, image/png, image/jpg, image/webp"
                   hidden
                 />
               </Button>

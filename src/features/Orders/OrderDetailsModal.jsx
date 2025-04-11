@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +18,9 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { updateOrderStatus } from "./ordersSlice";
+
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CrownIcon from "@mui/icons-material/EmojiEvents";
@@ -28,22 +31,28 @@ import FileCopyIcon from "@mui/icons-material/FileCopy";
 const statusColors = {
   done: "#A1FCB6",
   pending: "#6B56E0",
-  rejected: "#E05656",
+  rejected: "#E05656", // Changed back to 'rejected' for frontend consistency
   preparing: "#FFDA85",
   default: "#9E9E9E",
 };
 
 const statusDisplayMap = {
   preparing: "Preparing",
-  rejected: "Rejected",
+  rejected: "Rejected", // Frontend uses 'rejected'
   pending: "Pending",
   done: "Completed",
+
+  prepering: "Preparing",
+  fail: "Rejected",
 };
 
 const getAvailableStatuses = (currentStatus) => {
-  if (currentStatus === "pending") return ["preparing", "rejected"];
-  if (currentStatus === "preparing") return ["done"];
-  return [];
+  const transitions = {
+    pending: ["preparing"], // pending can only become preparing
+    preparing: ["done"], // preparing can only become done
+    rejected: ["done"], // rejected can only become done
+  };
+  return transitions[currentStatus] || []; // Return empty array for invalid/unknown statuses
 };
 
 const CopyableLocation = ({ location }) => {
@@ -68,46 +77,98 @@ const CopyableLocation = ({ location }) => {
   );
 };
 
-// Helper function to handle multilingual objects
 const renderMultilingualText = (text) => {
   if (!text) return null;
   if (typeof text === "string") return text;
   if (typeof text === "object" && text.en && text.ar) {
-    return text.en; // or text.ar based on your language preference
+    return text.en;
   }
-  return JSON.stringify(text); // fallback for other cases
+  return JSON.stringify(text);
 };
 
-const OrderDetailsModal = ({
-  open,
-  order,
-  onClose,
-  onStatusChange,
-  isUpdating,
-}) => {
+const DetailItem = ({ label, value }) => (
+  <Box mb={2}>
+    <Typography variant="subtitle2" color="#aaa">
+      {label}
+    </Typography>
+    {React.isValidElement(value) ? (
+      <Box mt={0.5}>{value}</Box>
+    ) : (
+      <Typography variant="body1" mt={0.5}>
+        {value}
+      </Typography>
+    )}
+  </Box>
+);
+
+const OrderDetailsModal = ({ open, order, onClose }) => {
+  const dispatch = useDispatch();
   const [selectedStatus, setSelectedStatus] = useState(
     order?.status || "pending"
   );
   const [anchorEl, setAnchorEl] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (order) {
+      setSelectedStatus(order.status);
+      setRejectReason("");
+      setHasChanges(false);
+    }
+  }, [order]);
 
   if (!order) return null;
 
   const availableStatuses = getAvailableStatuses(order.status);
-  const showRejectReason = selectedStatus === "rejected";
+  const showRejectReason = selectedStatus === "rejected"; // Frontend uses 'rejected'
 
   const handleStatusSelect = (status) => {
     setSelectedStatus(status);
     setAnchorEl(null);
+    setHasChanges(true);
+    if (status !== "rejected") {
+      // Frontend uses 'rejected'
+      setRejectReason("");
+    }
   };
 
+  // In your handleSaveStatus function, ensure you're using the correct status values
   const handleSaveStatus = async () => {
-    await onStatusChange(
-      order.id,
-      selectedStatus,
-      showRejectReason ? rejectReason : null
-    );
+    if (selectedStatus === "rejected" && !rejectReason.trim()) {
+      // Frontend uses 'rejected'
+      setError("Please provide a rejection reason");
+      return;
+    }
+
+    try {
+      setStatusUpdating(true);
+      setError(null);
+
+      await dispatch(
+        updateOrderStatus({
+          orderId: order.id,
+          newStatus: selectedStatus, // The thunk will handle conversion to backend names
+          currentStatus: order.status,
+          rejectReason:
+            selectedStatus === "rejected" ? rejectReason.trim() : null, // Frontend uses 'rejected'
+        })
+      ).unwrap();
+
+      onClose();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setStatusUpdating(false);
+    }
   };
+
+  const hasValidChanges =
+    hasChanges &&
+    selectedStatus !== order.status &&
+    (!showRejectReason || (showRejectReason && rejectReason));
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -136,6 +197,7 @@ const OrderDetailsModal = ({
         dividers
         sx={{ backgroundColor: "#121212", color: "white" }}
       >
+        {/* Products List */}
         <Typography variant="h6" gutterBottom>
           Products ({order.items.length})
         </Typography>
@@ -165,6 +227,7 @@ const OrderDetailsModal = ({
           ))}
         </Grid>
 
+        {/* Order Details */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Order Details
@@ -215,6 +278,7 @@ const OrderDetailsModal = ({
           </Box>
         </Box>
 
+        {/* Premium Info */}
         {order.user?.is_premium && (
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
@@ -257,6 +321,7 @@ const OrderDetailsModal = ({
           </Box>
         )}
 
+        {/* Status Change Section */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Update Order Status
@@ -272,7 +337,7 @@ const OrderDetailsModal = ({
                     variant="outlined"
                     onClick={(e) => setAnchorEl(e.currentTarget)}
                     endIcon={<ExpandMoreIcon />}
-                    disabled={!availableStatuses.length}
+                    disabled={availableStatuses.length === 0}
                   >
                     <Box
                       sx={{
@@ -318,7 +383,10 @@ const OrderDetailsModal = ({
                     fullWidth
                     label="Rejection Reason"
                     value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
+                    onChange={(e) => {
+                      setRejectReason(e.target.value);
+                      setHasChanges(true);
+                    }}
                     required
                     sx={{
                       "& .MuiInputBase-root": { color: "white" },
@@ -347,12 +415,10 @@ const OrderDetailsModal = ({
         <Button
           variant="contained"
           onClick={handleSaveStatus}
-          startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
-          disabled={
-            (showRejectReason && !rejectReason) ||
-            isUpdating ||
-            !availableStatuses.length
+          startIcon={
+            statusUpdating ? <CircularProgress size={20} /> : <SaveIcon />
           }
+          disabled={!hasValidChanges || statusUpdating}
           sx={{
             backgroundColor: "#4CAF50",
             color: "white",
@@ -365,20 +431,5 @@ const OrderDetailsModal = ({
     </Dialog>
   );
 };
-
-const DetailItem = ({ label, value }) => (
-  <Box mb={2}>
-    <Typography variant="subtitle2" color="#aaa">
-      {label}
-    </Typography>
-    {React.isValidElement(value) ? (
-      <Box mt={0.5}>{value}</Box>
-    ) : (
-      <Typography variant="body1" mt={0.5}>
-        {value}
-      </Typography>
-    )}
-  </Box>
-);
 
 export default OrderDetailsModal;

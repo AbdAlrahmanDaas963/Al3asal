@@ -4,25 +4,31 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
-// Helper for consistent error handling
+// Enhanced error handling
 const handleAsyncError = (error, thunkAPI) => {
-  return thunkAPI.rejectWithValue({
-    message: error.response?.data?.message || "An error occurred",
+  const errorData = {
+    message:
+      error.response?.data?.message || error.message || "An error occurred",
     status: error.response?.status,
     data: error.response?.data,
-  });
+  };
+  console.error("API Error:", errorData); // For debugging
+  return thunkAPI.rejectWithValue(errorData);
 };
 
-// Thunks with enhanced error handling
+// Helper to create headers
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${getToken()}`,
+  Accept: "application/json",
+});
+
+// Thunks
 export const fetchOffers = createAsyncThunk(
   "offers/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${BASE_URL}/offers`, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: "application/json",
-        },
+      const response = await axios.get(`${BASE_URL}/dashboard/offers`, {
+        headers: getAuthHeaders(),
       });
       return response.data;
     } catch (error) {
@@ -35,51 +41,23 @@ export const fetchOfferById = createAsyncThunk(
   "offers/fetchOne",
   async (id, thunkAPI) => {
     try {
-      console.log(`Fetching offer with ID: ${id}`); // Debug log
-      const response = await axios.get(`${BASE_URL}/offers/${id}`, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-          Accept: "application/json",
-        },
+      const response = await axios.get(`${BASE_URL}/dashboard/offers/${id}`, {
+        headers: getAuthHeaders(),
       });
-
-      console.log("API Response:", response.data); // Debug log
-
-      if (!response.data) {
-        throw new Error("Received empty response");
-      }
-
-      // Handle both response.data and response.data.data
-      const offerData = response.data.data || response.data;
-
-      if (!offerData) {
-        throw new Error("Offer data not found in response");
-      }
-
-      return offerData;
+      return response.data.data || response.data;
     } catch (error) {
-      console.error("Error fetching offer:", error); // Debug log
-      if (error.response?.status === 404) {
-        return thunkAPI.rejectWithValue({
-          message: "Offer not found",
-          status: 404,
-        });
-      }
-      return thunkAPI.rejectWithValue({
-        message: error.message,
-        status: error.response?.status,
-      });
+      return handleAsyncError(error, thunkAPI);
     }
   }
 );
 
 export const createOffer = createAsyncThunk(
   "offers/create",
-  async (offerData, thunkAPI) => {
+  async (formData, thunkAPI) => {
     try {
-      const response = await axios.post(`${BASE_URL}/offers`, offerData, {
+      const response = await axios.post(`${BASE_URL}/offers`, formData, {
         headers: {
-          Authorization: `Bearer ${getToken()}`,
+          ...getAuthHeaders(),
           "Content-Type": "multipart/form-data",
         },
       });
@@ -92,18 +70,14 @@ export const createOffer = createAsyncThunk(
 
 export const updateOffer = createAsyncThunk(
   "offers/update",
-  async ({ id, updateData }, thunkAPI) => {
+  async ({ id, formData }, thunkAPI) => {
     try {
-      const response = await axios.post(
-        `${BASE_URL}/offers/${id}`,
-        updateData,
-        {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axios.post(`${BASE_URL}/offers/${id}`, formData, {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return response.data;
     } catch (error) {
       return handleAsyncError(error, thunkAPI);
@@ -116,9 +90,7 @@ export const deleteOffer = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       await axios.delete(`${BASE_URL}/offers/${id}`, {
-        headers: {
-          Authorization: `Bearer ${getToken()}`,
-        },
+        headers: getAuthHeaders(),
       });
       return id;
     } catch (error) {
@@ -132,7 +104,8 @@ const initialState = {
     data: [],
     loading: false,
     error: null,
-    status: "idle",
+    status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+    lastUpdated: null,
   },
   currentOffer: {
     data: null,
@@ -140,7 +113,11 @@ const initialState = {
     error: null,
     status: "idle",
   },
-  operationStatus: "idle",
+  operation: {
+    status: "idle", // For create/update/delete operations
+    error: null,
+    type: null, // 'create' | 'update' | 'delete'
+  },
 };
 
 const offersSlice = createSlice({
@@ -148,7 +125,7 @@ const offersSlice = createSlice({
   initialState,
   reducers: {
     resetOperationStatus: (state) => {
-      state.operationStatus = "idle";
+      state.operation = initialState.operation;
     },
     clearCurrentOffer: (state) => {
       state.currentOffer = initialState.currentOffer;
@@ -164,10 +141,9 @@ const offersSlice = createSlice({
       })
       .addCase(fetchOffers.fulfilled, (state, action) => {
         state.offers.loading = false;
-        state.offers.data = action.payload.data || [];
-        state.offers.pagination = action.payload.pagination || null;
-        state.offers.lastFetched = Date.now();
+        state.offers.data = action.payload.data || action.payload || [];
         state.offers.status = "succeeded";
+        state.offers.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchOffers.rejected, (state, action) => {
         state.offers.loading = false;
@@ -177,77 +153,75 @@ const offersSlice = createSlice({
 
       // Fetch Single Offer
       .addCase(fetchOfferById.pending, (state) => {
-        state.currentOffer = {
-          data: null,
-          loading: true,
-          error: null,
-          status: "loading",
-        };
+        state.currentOffer.loading = true;
+        state.currentOffer.error = null;
+        state.currentOffer.status = "loading";
       })
       .addCase(fetchOfferById.fulfilled, (state, action) => {
-        state.currentOffer = {
-          data: action.payload,
-          loading: false,
-          error: null,
-          status: "succeeded",
-        };
+        state.currentOffer.loading = false;
+        state.currentOffer.data = action.payload;
+        state.currentOffer.status = "succeeded";
       })
       .addCase(fetchOfferById.rejected, (state, action) => {
-        state.currentOffer = {
-          data: null,
-          loading: false,
-          error: action.payload,
-          status: "failed",
-        };
+        state.currentOffer.loading = false;
+        state.currentOffer.error = action.payload;
+        state.currentOffer.status = "failed";
       })
 
       // Create Offer
       .addCase(createOffer.pending, (state) => {
-        state.operationStatus = "loading";
+        state.operation.status = "loading";
+        state.operation.type = "create";
+        state.operation.error = null;
       })
       .addCase(createOffer.fulfilled, (state, action) => {
-        state.operationStatus = "succeeded";
-        state.offers.data.unshift(action.payload); // Add new offer at beginning
+        state.operation.status = "succeeded";
+        state.offers.data.unshift(action.payload.data || action.payload);
       })
       .addCase(createOffer.rejected, (state, action) => {
-        state.operationStatus = "failed";
-        state.offers.error = action.payload;
+        state.operation.status = "failed";
+        state.operation.error = action.payload;
       })
 
       // Update Offer
       .addCase(updateOffer.pending, (state) => {
-        state.operationStatus = "loading";
+        state.operation.status = "loading";
+        state.operation.type = "update";
+        state.operation.error = null;
       })
       .addCase(updateOffer.fulfilled, (state, action) => {
-        state.operationStatus = "succeeded";
+        state.operation.status = "succeeded";
+        const updatedOffer = action.payload.data || action.payload;
         const index = state.offers.data.findIndex(
-          (offer) => offer.id === action.payload.id
+          (offer) => offer.id === updatedOffer.id
         );
         if (index !== -1) {
-          state.offers.data[index] = action.payload;
+          state.offers.data[index] = updatedOffer;
         }
-        if (state.currentOffer.data?.id === action.payload.id) {
-          state.currentOffer.data = action.payload;
+        if (state.currentOffer.data?.id === updatedOffer.id) {
+          state.currentOffer.data = updatedOffer;
         }
       })
       .addCase(updateOffer.rejected, (state, action) => {
-        state.operationStatus = "failed";
-        state.offers.error = action.payload;
+        state.operation.status = "failed";
+        state.operation.error = action.payload;
       })
 
       // Delete Offer
       .addCase(deleteOffer.pending, (state) => {
-        state.operationStatus = "loading";
+        state.operation.status = "loading";
+        state.operation.type = "delete";
+        state.operation.error = null;
       })
       .addCase(deleteOffer.fulfilled, (state, action) => {
-        state.operationStatus = "succeeded";
+        state.operation.status = "succeeded";
         state.offers.data = state.offers.data.filter(
           (offer) => offer.id !== action.payload
         );
       })
       .addCase(deleteOffer.rejected, (state, action) => {
-        state.operationStatus = "failed";
-        state.offers.error = action.payload;
+        state.operation.status = "failed";
+        state.operation.error = action.payload;
       });
   },
 });

@@ -77,9 +77,30 @@ const AddCategoryForm = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, image: file });
+    if (!file) return;
+
+    // Check file size (2MB limit)
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMessage("Image size must be less than 2MB");
+      e.target.value = ""; // Clear the file input
+      setFormData((prev) => ({ ...prev, image: null }));
+      setPreview(null);
+      return;
     }
+
+    // Check file type
+    if (!file.type.match("image.*")) {
+      setErrorMessage("Please select an image file");
+      e.target.value = ""; // Clear the file input
+      setFormData((prev) => ({ ...prev, image: null }));
+      setPreview(null);
+      return;
+    }
+
+    // If validation passes
+    setErrorMessage("");
+    setFormData({ ...formData, image: file });
   };
 
   const handleSubmit = (e) => {
@@ -201,7 +222,7 @@ const AddCategoryForm = () => {
 
         {/* Image Upload */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload Image
+          Upload Image (Max 2MB)
           <input
             type="file"
             hidden

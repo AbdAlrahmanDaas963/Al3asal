@@ -5,7 +5,6 @@ import {
   MenuItem,
   TextField,
   Typography,
-  Alert,
   CircularProgress,
 } from "@mui/material";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -22,7 +21,7 @@ const EditShopForm = () => {
   const { status, error, selectedShop } = useSelector((state) => state.shops);
 
   const [formData, setFormData] = useState({
-    name: { en: "", ar: "" }, // Initialize as object
+    name: { en: "", ar: "" },
     is_interested: 1,
     image: null,
     previewImage: null,
@@ -31,28 +30,12 @@ const EditShopForm = () => {
   const [fileName, setFileName] = useState("");
   const [preview, setPreview] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [localStatus, setLocalStatus] = useState("idle");
 
   useEffect(() => {
     dispatch(fetchShopById(shopId));
     return () => dispatch(resetStatus());
   }, [shopId, dispatch]);
 
-  // Fetch shop data
-  // useEffect(() => {
-  //   dispatch(resetStatus()); // Reset status on mount
-  //   if (!shopFromState) {
-  //     dispatch(fetchShopById(shopId));
-  //   }
-  // }, [dispatch, shopId, shopFromState]);
-
-  // Sync Redux status with local status
-  useEffect(() => {
-    setLocalStatus(status);
-  }, [status]);
-
-  // Update form when shop data loads
   useEffect(() => {
     if (selectedShop) {
       setFormData({
@@ -67,7 +50,6 @@ const EditShopForm = () => {
     }
   }, [selectedShop]);
 
-  // Handle image preview
   useEffect(() => {
     if (formData.image && typeof formData.image !== "string") {
       const objectUrl = URL.createObjectURL(formData.image);
@@ -76,29 +58,11 @@ const EditShopForm = () => {
     }
   }, [formData.image]);
 
-  // Handle navigation after success
-  // useEffect(() => {
-  //   if (localStatus === "succeeded") {
-  //     const timer = setTimeout(() => {
-  //       navigate("/dashboard/shops");
-  //     }, 1500);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [localStatus, navigate]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      dispatch(resetStatus());
-    };
-  }, [dispatch]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Handle nested name fields
     if (name.startsWith("name.")) {
-      const [_, lang] = name.split("."); // _ ignores the first part
+      const [_, lang] = name.split(".");
       setFormData((prev) => ({
         ...prev,
         name: {
@@ -122,21 +86,18 @@ const EditShopForm = () => {
     }
   };
 
-  const isFormUnchanged = () => {
-    const { originalImage, ...compareData } = formData;
-    const shopData = shopFromState || selectedShop?.data;
-    return (
-      compareData.name === (shopData?.name || "") &&
-      compareData.is_interested ===
-        (shopData?.is_interested?.toString() || "1") &&
-      (originalImage === compareData.image ||
-        (typeof compareData.image === "string" &&
-          compareData.image === originalImage))
-    );
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.ar?.trim()) errors.name_ar = "Arabic name is required";
+    if (!formData.name.en?.trim()) errors.name_en = "English name is required";
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     try {
       const result = await dispatch(
         updateShop({
@@ -146,20 +107,12 @@ const EditShopForm = () => {
       );
 
       if (updateShop.fulfilled.match(result)) {
-        setTimeout(() => navigate("/dashboard/shops"), 1500);
+        navigate("/dashboard/shops"); // Immediately navigate back on success
       }
     } catch (err) {
       console.error("Update failed:", err);
     }
   };
-
-  // if (!isInitialized) {
-  //   return (
-  //     <Box display="flex" justifyContent="center" mt={4}>
-  //       <CircularProgress />
-  //     </Box>
-  //   );
-  // }
 
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
@@ -177,6 +130,8 @@ const EditShopForm = () => {
           fullWidth
           margin="normal"
           required
+          error={!!validationErrors.name_ar}
+          helperText={validationErrors.name_ar}
         />
 
         {/* English Name */}
@@ -188,19 +143,9 @@ const EditShopForm = () => {
           fullWidth
           margin="normal"
           required
+          error={!!validationErrors.name_en}
+          helperText={validationErrors.name_en}
         />
-        {/* <TextField
-          label="Shop Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-          error={!!validationErrors.name}
-          helperText={validationErrors.name}
-          autoFocus
-        /> */}
 
         <TextField
           select
@@ -212,12 +157,12 @@ const EditShopForm = () => {
           margin="normal"
           required
         >
-          <MenuItem value="1">Yes</MenuItem>
-          <MenuItem value="0">No</MenuItem>
+          <MenuItem value={1}>Yes</MenuItem>
+          <MenuItem value={0}>No</MenuItem>
         </TextField>
 
         <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload New Image"}
+          {fileName || "Upload New Image (max 2MB)"}
           <input
             type="file"
             hidden
@@ -226,13 +171,13 @@ const EditShopForm = () => {
           />
         </Button>
 
-        {(formData.originalImage || preview) && (
+        {(formData.previewImage || preview) && (
           <Box mt={2}>
             <Typography variant="subtitle2" gutterBottom>
-              {fileName ? "New Preview" : "Current Image"}
+              {preview ? "New Preview" : "Current Image"}
             </Typography>
             <img
-              src={preview || formData.originalImage}
+              src={preview || formData.previewImage}
               alt="Shop preview"
               style={{
                 maxWidth: "100%",
@@ -241,12 +186,6 @@ const EditShopForm = () => {
               }}
             />
           </Box>
-        )}
-
-        {localStatus === "failed" && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error || "Failed to update shop"}
-          </Alert>
         )}
 
         <Box display="flex" gap={2} mt={3}>
@@ -263,12 +202,12 @@ const EditShopForm = () => {
             variant="contained"
             color="primary"
             fullWidth
-            disabled={localStatus === "loading" || isFormUnchanged()}
+            disabled={status === "loading"}
             startIcon={
-              localStatus === "loading" ? <CircularProgress size={20} /> : null
+              status === "loading" ? <CircularProgress size={20} /> : null
             }
           >
-            {localStatus === "loading" ? "Updating..." : "Update Shop"}
+            {status === "loading" ? "Updating..." : "Update Shop"}
           </Button>
         </Box>
       </Box>
