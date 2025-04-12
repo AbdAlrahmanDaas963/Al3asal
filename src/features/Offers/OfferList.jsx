@@ -126,18 +126,20 @@ const OfferList = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{
-            backgroundColor: "background.paper",
+            mb: 3,
+            backgroundColor: "#333",
             borderRadius: "25px",
             "& .MuiOutlinedInput-root": {
               borderRadius: "25px",
-              "& fieldset": { borderColor: "divider" },
-              "&:hover fieldset": { borderColor: "primary.light" },
+              "& fieldset": { borderColor: "#555" },
+              "&:hover fieldset": { borderColor: "#888" },
             },
+            input: { color: "#fff", padding: "12px" },
           }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon color="action" />
+                <SearchIcon color="action" sx={{ color: "gray" }} />
               </InputAdornment>
             ),
           }}

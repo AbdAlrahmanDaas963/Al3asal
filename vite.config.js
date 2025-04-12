@@ -2,10 +2,17 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  base: "./",
+  base: "/", // Absolute base path
   plugins: [react()],
-  server: {
-    host: true, // or '0.0.0.0'
-    port: 5173, // optional - you can change this if needed
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        assetFileNames: "static/[name]-[hash][extname]",
+        chunkFileNames: "static/[name]-[hash].js",
+        entryFileNames: "static/[name]-[hash].js",
+      },
+    },
   },
 });

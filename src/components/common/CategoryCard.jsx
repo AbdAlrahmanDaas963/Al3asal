@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { deleteCategory } from "../../features/Categories/categorySlice";
 
 function CategoryCard({ category }) {
-  const { id, name, image, is_featured } = category;
+  const { id, name, image, is_featured, is_interested } = category;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -20,7 +20,6 @@ function CategoryCard({ category }) {
     <Stack
       sx={{
         width: "300px",
-        // border: "1px solid grey",
         backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
@@ -42,14 +41,32 @@ function CategoryCard({ category }) {
         }}
       />
 
-      {is_featured ? (
+      {/* Featured and Interested Badges */}
+      {/* {is_featured && (
         <Chip
           label="Featured"
           color="primary"
           size="small"
           sx={{ position: "absolute", top: 10, right: 10 }}
         />
-      ) : null}
+      )} */}
+
+      {is_interested && (
+        <Typography
+          sx={{
+            position: "absolute",
+            top: 15,
+            right: 15,
+            backgroundColor: "primary.main",
+            color: "white",
+            px: 1,
+            borderRadius: 1,
+            fontSize: 12,
+          }}
+        >
+          Interested
+        </Typography>
+      )}
 
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">

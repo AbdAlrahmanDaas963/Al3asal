@@ -49,7 +49,7 @@ const AddShopForm = () => {
 
     // Clear errors when field changes
     if (name.startsWith("name.")) {
-      setErrors((prev) => ({ ...prev, name: undefined }));
+      setErrors((prev) => ({ ...prev, [name.split(".")[1]]: undefined }));
     } else {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -76,10 +76,8 @@ const AddShopForm = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Clear previous errors
     setErrors((prev) => ({ ...prev, image: undefined }));
 
-    // Validate file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
@@ -88,7 +86,6 @@ const AddShopForm = () => {
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
       setErrors((prev) => ({
         ...prev,
@@ -97,7 +94,6 @@ const AddShopForm = () => {
       return;
     }
 
-    // If validation passes
     setFormData((prev) => ({ ...prev, image: file }));
     setFileName(file.name);
     setImagePreview(URL.createObjectURL(file));
@@ -105,9 +101,8 @@ const AddShopForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.ar.trim()) newErrors.name_ar = "Arabic name is required";
-    if (!formData.name.en.trim())
-      newErrors.name_en = "English name is required";
+    if (!formData.name.ar.trim()) newErrors.ar = "Arabic name is required";
+    if (!formData.name.en.trim()) newErrors.en = "English name is required";
     if (!formData.image) newErrors.image = "Image is required";
 
     setErrors(newErrors);
@@ -116,17 +111,18 @@ const AddShopForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submitting:", formData); // Debug log
 
     if (!validateForm()) return;
-
     setLocalStatus("loading");
 
     try {
       const resultAction = await dispatch(createShop(formData));
       if (createShop.fulfilled.match(resultAction)) {
+        console.log("Created shop:", resultAction.payload); // Debug log
         setLocalStatus("succeeded");
         setTimeout(() => navigate("/dashboard/shops"), 1500);
-      } else if (createShop.rejected.match(resultAction)) {
+      } else {
         setLocalStatus("failed");
       }
     } catch (err) {
@@ -134,7 +130,6 @@ const AddShopForm = () => {
       setLocalStatus("failed");
     }
   };
-
   return (
     <Box
       sx={{
@@ -160,8 +155,8 @@ const AddShopForm = () => {
           fullWidth
           margin="normal"
           required
-          error={!!errors.name_ar}
-          helperText={errors.name_ar}
+          error={!!errors.ar}
+          helperText={errors.ar}
         />
         <TextField
           label="Shop Name (English)"
@@ -171,8 +166,8 @@ const AddShopForm = () => {
           fullWidth
           margin="normal"
           required
-          error={!!errors.name_en}
-          helperText={errors.name_en}
+          error={!!errors.en}
+          helperText={errors.en}
         />
         <TextField
           select
@@ -188,15 +183,6 @@ const AddShopForm = () => {
           <MenuItem value={0}>No</MenuItem>
         </TextField>
 
-        <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload Image (max 2MB)"}
-          <input
-            type="file"
-            hidden
-            onChange={handleFileChange}
-            accept="image/jpeg, image/png, image/jpg, image/webp"
-          />
-        </Button>
         {errors.image && (
           <Typography
             color="error"
@@ -231,7 +217,15 @@ const AddShopForm = () => {
             Shop added successfully!
           </Alert>
         )}
-
+        <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
+          {fileName || "Upload Image (max 2MB)"}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            accept="image/jpeg, image/png, image/jpg, image/webp"
+          />
+        </Button>
         <Button
           type="submit"
           variant="contained"

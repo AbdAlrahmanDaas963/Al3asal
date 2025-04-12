@@ -55,8 +55,8 @@ function ShopCard({ shop }) {
         <Typography
           sx={{
             position: "absolute",
-            top: 10,
-            right: 10,
+            top: 15,
+            right: 15,
             backgroundColor: "primary.main",
             color: "white",
             px: 1,

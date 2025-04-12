@@ -161,16 +161,6 @@ const EditShopForm = () => {
           <MenuItem value={0}>No</MenuItem>
         </TextField>
 
-        <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload New Image (max 2MB)"}
-          <input
-            type="file"
-            hidden
-            onChange={handleFileChange}
-            accept="image/*"
-          />
-        </Button>
-
         {(formData.previewImage || preview) && (
           <Box mt={2}>
             <Typography variant="subtitle2" gutterBottom>
@@ -187,7 +177,15 @@ const EditShopForm = () => {
             />
           </Box>
         )}
-
+        <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
+          {fileName || "Upload New Image (max 2MB)"}
+          <input
+            type="file"
+            hidden
+            onChange={handleFileChange}
+            accept="image/*"
+          />
+        </Button>
         <Box display="flex" gap={2} mt={3}>
           <Button
             variant="outlined"

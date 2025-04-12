@@ -31,28 +31,27 @@ import FileCopyIcon from "@mui/icons-material/FileCopy";
 const statusColors = {
   done: "#A1FCB6",
   pending: "#6B56E0",
-  rejected: "#E05656", // Changed back to 'rejected' for frontend consistency
+  rejected: "#E05656",
   preparing: "#FFDA85",
   default: "#9E9E9E",
 };
 
 const statusDisplayMap = {
   preparing: "Preparing",
-  rejected: "Rejected", // Frontend uses 'rejected'
+  rejected: "Rejected",
   pending: "Pending",
   done: "Completed",
-
   prepering: "Preparing",
   fail: "Rejected",
 };
 
 const getAvailableStatuses = (currentStatus) => {
   const transitions = {
-    pending: ["preparing"], // pending can only become preparing
-    preparing: ["done"], // preparing can only become done
-    rejected: ["done"], // rejected can only become done
+    pending: ["preparing"],
+    preparing: ["done"],
+    rejected: ["done"],
   };
-  return transitions[currentStatus] || []; // Return empty array for invalid/unknown statuses
+  return transitions[currentStatus] || [];
 };
 
 const CopyableLocation = ({ location }) => {
@@ -79,11 +78,11 @@ const CopyableLocation = ({ location }) => {
 
 const renderMultilingualText = (text) => {
   if (!text) return null;
-  if (typeof text === "string") return text;
+  if (typeof text === "string") return <>{text}</>;
   if (typeof text === "object" && text.en && text.ar) {
-    return text.en;
+    return <>{text.en}</>;
   }
-  return JSON.stringify(text);
+  return <>{JSON.stringify(text)}</>;
 };
 
 const DetailItem = ({ label, value }) => (
@@ -101,7 +100,7 @@ const DetailItem = ({ label, value }) => (
   </Box>
 );
 
-const OrderDetailsModal = ({ open, order, onClose }) => {
+const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
   const dispatch = useDispatch();
   const [selectedStatus, setSelectedStatus] = useState(
     order?.status || "pending"
@@ -123,22 +122,19 @@ const OrderDetailsModal = ({ open, order, onClose }) => {
   if (!order) return null;
 
   const availableStatuses = getAvailableStatuses(order.status);
-  const showRejectReason = selectedStatus === "rejected"; // Frontend uses 'rejected'
+  const showRejectReason = selectedStatus === "rejected";
 
   const handleStatusSelect = (status) => {
     setSelectedStatus(status);
     setAnchorEl(null);
     setHasChanges(true);
     if (status !== "rejected") {
-      // Frontend uses 'rejected'
       setRejectReason("");
     }
   };
 
-  // In your handleSaveStatus function, ensure you're using the correct status values
   const handleSaveStatus = async () => {
     if (selectedStatus === "rejected" && !rejectReason.trim()) {
-      // Frontend uses 'rejected'
       setError("Please provide a rejection reason");
       return;
     }
@@ -150,12 +146,16 @@ const OrderDetailsModal = ({ open, order, onClose }) => {
       await dispatch(
         updateOrderStatus({
           orderId: order.id,
-          newStatus: selectedStatus, // The thunk will handle conversion to backend names
+          newStatus: selectedStatus,
           currentStatus: order.status,
           rejectReason:
-            selectedStatus === "rejected" ? rejectReason.trim() : null, // Frontend uses 'rejected'
+            selectedStatus === "rejected" ? rejectReason.trim() : null,
         })
       ).unwrap();
+
+      if (typeof onStatusUpdated === "function") {
+        onStatusUpdated();
+      }
 
       onClose();
     } catch (err) {
@@ -197,37 +197,39 @@ const OrderDetailsModal = ({ open, order, onClose }) => {
         dividers
         sx={{ backgroundColor: "#121212", color: "white" }}
       >
-        {/* Products List */}
-        <Typography variant="h6" gutterBottom>
-          Products ({order.items.length})
-        </Typography>
-        <Grid container spacing={2}>
-          {order.items.map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card sx={{ backgroundColor: "#292929", color: "white" }}>
-                <CardContent>
-                  <Typography fontWeight="medium">
-                    {renderMultilingualText(item.product_name)}
-                  </Typography>
-                  <Typography color="#ccc" mt={0.5}>
-                    {item.quantity} × ${item.product_final_price || item.price}
-                  </Typography>
-                  <Box display="flex" justifyContent="space-between" mt={1.5}>
-                    <Typography color="#aaa">Subtotal</Typography>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Products ({order.items.length})
+          </Typography>
+          <Grid container spacing={2}>
+            {order.items.map((item, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Card sx={{ backgroundColor: "#292929", color: "white" }}>
+                  <CardContent>
                     <Typography fontWeight="medium">
-                      $
-                      {(
-                        item.quantity * (item.product_final_price || item.price)
-                      ).toFixed(2)}
+                      {renderMultilingualText(item.product_name)}
                     </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <Typography color="#ccc" mt={0.5}>
+                      {item.quantity} × $
+                      {item.product_final_price || item.price}
+                    </Typography>
+                    <Box display="flex" justifyContent="space-between" mt={1.5}>
+                      <Typography color="#aaa">Subtotal</Typography>
+                      <Typography fontWeight="medium">
+                        $
+                        {(
+                          item.quantity *
+                          (item.product_final_price || item.price)
+                        ).toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
 
-        {/* Order Details */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Order Details
@@ -278,7 +280,6 @@ const OrderDetailsModal = ({ open, order, onClose }) => {
           </Box>
         </Box>
 
-        {/* Premium Info */}
         {order.user?.is_premium && (
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
@@ -321,7 +322,6 @@ const OrderDetailsModal = ({ open, order, onClose }) => {
           </Box>
         )}
 
-        {/* Status Change Section */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Update Order Status

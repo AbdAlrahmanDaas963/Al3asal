@@ -7,13 +7,32 @@ const API_BASE_URL2 = `${BASE_URL}/shops`;
 const getToken = () => localStorage.getItem("token");
 
 // Helper function to transform shop data
-const transformShopData = (shop) => ({
-  ...shop,
-  name: {
-    en: typeof shop.name === "string" ? shop.name : shop.name?.en || "",
-    ar: typeof shop.name === "string" ? shop.name : shop.name?.ar || "",
-  },
-});
+const transformShopData = (shop) => {
+  // If name is already properly formatted
+  if (
+    shop.name &&
+    typeof shop.name === "object" &&
+    "en" in shop.name &&
+    "ar" in shop.name
+  ) {
+    return {
+      ...shop,
+      name: {
+        en: shop.name.en || "",
+        ar: shop.name.ar || "",
+      },
+    };
+  }
+
+  // Handle legacy or malformed data
+  return {
+    ...shop,
+    name: {
+      en: typeof shop.name === "string" ? shop.name : "",
+      ar: typeof shop.name === "string" ? shop.name : "",
+    },
+  };
+};
 
 // Fetch all shops
 export const fetchShops = createAsyncThunk(
@@ -52,14 +71,25 @@ export const createShop = createAsyncThunk(
     try {
       const data = new FormData();
 
-      // Handle multilingual name
-      data.append("name[en]", formData.name.en);
-      data.append("name[ar]", formData.name.ar);
+      // Validate names before sending
+      if (!formData.name.en || !formData.name.ar) {
+        throw new Error("Both English and Arabic names are required");
+      }
+
+      data.append("name[en]", formData.name.en.trim());
+      data.append("name[ar]", formData.name.ar.trim());
       data.append("is_interested", formData.is_interested);
 
       if (formData.image) {
         data.append("image", formData.image);
       }
+
+      console.log("Sending to API:", {
+        // Debug log
+        en: formData.name.en,
+        ar: formData.name.ar,
+        hasImage: !!formData.image,
+      });
 
       const response = await axios.post(`${API_BASE_URL2}/create`, data, {
         headers: {
@@ -68,9 +98,14 @@ export const createShop = createAsyncThunk(
         },
       });
 
+      console.log("API Response:", response.data); // Debug log
       return transformShopData(response.data.data);
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Failed to create shop");
+      console.error(
+        "Create shop error:",
+        error.response?.data || error.message
+      );
+      return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
@@ -189,7 +224,6 @@ const shopSlice = createSlice({
       .addCase(createShop.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.data.unshift(action.payload);
-        state.shops.data.unshift(action.payload);
       })
       .addCase(createShop.rejected, (state, action) => {
         state.status = "failed";
