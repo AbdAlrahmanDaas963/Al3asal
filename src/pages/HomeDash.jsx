@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "../features/Orders/ordersSlice";
 import OrdersTable2 from "../features/Orders/OrdersTable2";
 import {
-  fetchTotalUsers,
   fetchTopSales,
   fetchEarnings,
 } from "../features/Statistics/statisticsSlice";
@@ -73,43 +72,61 @@ const TinyCard = ({ children, title, value, subValue }) => {
   );
 };
 
+// Helper function to handle translation objects
+function getTranslatedText(text, lang = "en") {
+  if (!text) return "";
+  if (typeof text === "string") {
+    try {
+      // Handle case where name might be a JSON string
+      const parsed = JSON.parse(text);
+      return parsed[lang] || parsed.en || "";
+    } catch {
+      return text;
+    }
+  }
+  if (typeof text === "object") return text[lang] || text.en || "";
+  return String(text);
+}
+
 function HomeDash() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useDispatch();
 
   const [range, setRange] = useState("monthly");
+  const [language] = useState("en");
 
   const { orders } = useSelector((state) => state.orders);
-  const { totalUsers, topSales, earnings, loading, error } = useSelector(
+  const { topSales, earnings, loading, error } = useSelector(
     (state) => state.statistics
   );
 
   useEffect(() => {
     dispatch(fetchOrders({ min_price: 0, per_page: 50 }));
-    dispatch(fetchTotalUsers());
     dispatch(fetchEarnings(range));
-
-    // Only fetch top sales if the endpoint exists
-    try {
-      dispatch(fetchTopSales(range));
-    } catch (err) {
-      console.error("Top sales endpoint not available:", err);
-    }
+    dispatch(fetchTopSales(range));
   }, [dispatch, range]);
 
   const handleRangeChange = (e) => {
     setRange(e.target.value);
   };
 
+  // Process earnings data for chart
   const earningsData =
-    earnings?.map((item) => ({
+    earnings?.data?.map((item) => ({
       period: item.period?.toString(),
       profit: item.profit,
     })) || [];
 
-  // Safely get top product name
-  const topProductName = topSales?.[0]?.product?.name || "No sales data";
+  // Get top product info from topSales
+  const topProduct = topSales?.data?.most_sold_product;
+  const usersCount = topSales?.usersCount || 0;
+
+  const topProductName = topProduct
+    ? getTranslatedText(topProduct.name, language)
+    : "No sales data";
+
+  const topSalesCount = topProduct ? parseInt(topProduct.quantity) || 0 : 0;
 
   return (
     <Box
@@ -180,15 +197,9 @@ function HomeDash() {
                 ]}
                 grid={{ vertical: true, horizontal: true }}
                 sx={{
-                  "& .MuiChartsAxis-tickLabel": {
-                    fill: "white",
-                  },
-                  "& .MuiChartsAxis-line": {
-                    stroke: "white",
-                  },
-                  "& .MuiChartsAxis-label": {
-                    fill: "white",
-                  },
+                  "& .MuiChartsAxis-tickLabel": { fill: "white" },
+                  "& .MuiChartsAxis-line": { stroke: "white" },
+                  "& .MuiChartsAxis-label": { fill: "white" },
                 }}
               />
             ) : (
@@ -215,15 +226,16 @@ function HomeDash() {
         >
           <TinyCard
             title="Total Users"
-            value={totalUsers?.toLocaleString() || "0"}
+            value={usersCount.toLocaleString()}
             subValue="All time"
           >
             <PersonIcon />
           </TinyCard>
+
           <TinyCard
             title="Top Selling Product"
             value={topProductName}
-            subValue={topSales ? `From ${topSales.length} sales` : "No data"}
+            subValue={topSalesCount > 0 ? `${topSalesCount} sales` : "No data"}
           >
             <LocalAtmIcon sx={{ color: "#000000" }} />
           </TinyCard>

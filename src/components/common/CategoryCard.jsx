@@ -1,4 +1,4 @@
-import { Button, Stack, Typography, Chip } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { deleteCategory } from "../../features/Categories/categorySlice";
@@ -14,6 +14,13 @@ function CategoryCard({ category }) {
     ) {
       dispatch(deleteCategory(id));
     }
+  };
+
+  // Safely get the display name (handles both string and {en, ar} object cases)
+  const getDisplayName = () => {
+    if (typeof name === "string") return name;
+    if (name && name.en) return name.en; // Default to English
+    return "Unnamed Category"; // Fallback
   };
 
   return (
@@ -35,21 +42,11 @@ function CategoryCard({ category }) {
           borderRadius: "16px",
           backgroundColor: "grey",
         }}
-        alt={name}
+        alt={getDisplayName()}
         onError={(e) => {
           e.target.src = "https://via.placeholder.com/150";
         }}
       />
-
-      {/* Featured and Interested Badges */}
-      {/* {is_featured && (
-        <Chip
-          label="Featured"
-          color="primary"
-          size="small"
-          sx={{ position: "absolute", top: 10, right: 10 }}
-        />
-      )} */}
 
       {is_interested && (
         <Typography
@@ -73,7 +70,7 @@ function CategoryCard({ category }) {
           Category Name:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
-          {name}
+          {getDisplayName()}
         </Typography>
       </Stack>
 

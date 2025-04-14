@@ -8,6 +8,13 @@ const OfferCard = ({ offer }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Helper function to safely get display text from string or translation object
+  const getDisplayText = (text) => {
+    if (typeof text === "string") return text;
+    if (text && text.en) return text.en; // Default to English
+    return "N/A"; // Fallback
+  };
+
   const handleDelete = () => {
     if (window.confirm(`Are you sure you want to delete offer ${offer.id}?`)) {
       dispatch(deleteOffer(offer.id));
@@ -32,11 +39,9 @@ const OfferCard = ({ offer }) => {
     <Stack
       sx={{
         width: "250px",
-        // border: "1px solid grey",
         backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
-
         color: "#fff",
         position: "relative",
       }}
@@ -44,7 +49,7 @@ const OfferCard = ({ offer }) => {
       {/* Product Image */}
       <img
         src={offer.product?.image || "https://via.placeholder.com/150"}
-        alt={offer.product?.name}
+        alt={getDisplayText(offer.product?.name)}
         style={{
           width: "100%",
           height: "150px",
@@ -73,7 +78,7 @@ const OfferCard = ({ offer }) => {
           Product:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
-          {offer.product?.name || "N/A"}
+          {getDisplayText(offer.product?.name)}
         </Typography>
       </Stack>
 
@@ -104,7 +109,7 @@ const OfferCard = ({ offer }) => {
             Category:
           </Typography>
           <Typography variant="body1" fontWeight="bold">
-            {offer.product.category.name}
+            {getDisplayText(offer.product.category.name)}
           </Typography>
         </Stack>
       )}
