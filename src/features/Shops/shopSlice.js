@@ -4,7 +4,16 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 const API_BASE_URL = `${BASE_URL}/dashboard/shops`;
 const API_BASE_URL2 = `${BASE_URL}/shops`;
-const getToken = () => localStorage.getItem("token");
+
+//? const getToken = () => localStorage.getItem("token");
+const getToken = () => {
+  try {
+    return localStorage.getItem("token") || sessionStorage.getItem("token");
+  } catch (error) {
+    console.error("Token access error:", error);
+    return null;
+  }
+};
 
 // Helper function to transform shop data
 const transformShopData = (shop) => {

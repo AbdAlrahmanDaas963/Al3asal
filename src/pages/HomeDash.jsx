@@ -1,16 +1,26 @@
-import React, { useEffect } from "react";
-import { Box, Stack, useMediaQuery } from "@mui/material";
-import MyBarChart from "../components/MyBarChart";
-import MyGridChart from "../components/MyGridChart";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Stack,
+  useMediaQuery,
+  Typography,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import LocalAtmIcon from "@mui/icons-material/LocalAtm";
 import { useTheme } from "@mui/material/styles";
-import OrdersTable from "../features/Orders/OrdersTable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "../features/Orders/ordersSlice";
 import OrdersTable2 from "../features/Orders/OrdersTable2";
+import {
+  fetchTotalUsers,
+  fetchTopSales,
+  fetchEarnings,
+} from "../features/Statistics/statisticsSlice";
+import { LineChart } from "@mui/x-charts/LineChart";
 
-const TinyCard = ({ children, title, value }) => {
+const TinyCard = ({ children, title, value, subValue }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -53,6 +63,11 @@ const TinyCard = ({ children, title, value }) => {
         >
           {value}
         </Box>
+        {subValue && (
+          <Box color="white" fontSize={isMobile ? "0.7rem" : "0.8rem"}>
+            {subValue}
+          </Box>
+        )}
       </Stack>
     </Stack>
   );
@@ -61,13 +76,40 @@ const TinyCard = ({ children, title, value }) => {
 function HomeDash() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const dispatch = useDispatch();
+
+  const [range, setRange] = useState("monthly");
+
   const { orders } = useSelector((state) => state.orders);
+  const { totalUsers, topSales, earnings, loading, error } = useSelector(
+    (state) => state.statistics
+  );
 
   useEffect(() => {
     dispatch(fetchOrders({ min_price: 0, per_page: 50 }));
-  }, [dispatch]);
+    dispatch(fetchTotalUsers());
+    dispatch(fetchEarnings(range));
+
+    // Only fetch top sales if the endpoint exists
+    try {
+      dispatch(fetchTopSales(range));
+    } catch (err) {
+      console.error("Top sales endpoint not available:", err);
+    }
+  }, [dispatch, range]);
+
+  const handleRangeChange = (e) => {
+    setRange(e.target.value);
+  };
+
+  const earningsData =
+    earnings?.map((item) => ({
+      period: item.period?.toString(),
+      profit: item.profit,
+    })) || [];
+
+  // Safely get top product name
+  const topProductName = topSales?.[0]?.product?.name || "No sales data";
 
   return (
     <Box
@@ -76,6 +118,8 @@ function HomeDash() {
         height: "100%",
         padding: isMobile ? "10px" : "20px",
         overflowX: "hidden",
+        backgroundColor: "#121212",
+        color: "white",
       }}
     >
       <Stack
@@ -83,46 +127,109 @@ function HomeDash() {
         alignItems="flex-start"
         gap={isMobile ? "20px" : "30px"}
       >
-        <Stack
-          direction={isMobile ? "column" : "row"}
-          gap={isMobile ? "15px" : "30px"}
+        {/* Earnings Chart */}
+        <Box
           sx={{
-            flexWrap: "wrap",
-            justifyContent: "space-between",
             width: "100%",
+            height: 300,
+            backgroundColor: "#1e1e1e",
+            p: 2,
+            borderRadius: 2,
           }}
         >
-          <Box
-            sx={{
-              flex: 1,
-              minWidth: isMobile ? "100%" : "300px",
-              width: isMobile ? "100%" : "auto",
-            }}
-          >
-            <MyBarChart />
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+            <Typography variant="h6">Earnings</Typography>
+            <Select
+              value={range}
+              onChange={handleRangeChange}
+              variant="outlined"
+              size="small"
+              sx={{ minWidth: 120, color: "white" }}
+            >
+              <MenuItem value="weekly">Weekly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
+              <MenuItem value="yearly">Yearly</MenuItem>
+            </Select>
           </Box>
-          <Box
-            sx={{
-              flex: 1,
-              minWidth: isMobile ? "100%" : "300px",
-              width: isMobile ? "100%" : "auto",
-            }}
-          >
-            <MyGridChart />
+          <Box sx={{ height: "90%" }}>
+            {earningsData.length > 0 ? (
+              <LineChart
+                series={[
+                  {
+                    data: earningsData.map((item) => item.profit),
+                    label: "Profit",
+                    color: "#8884d8",
+                  },
+                ]}
+                xAxis={[
+                  {
+                    scaleType: "point",
+                    data: earningsData.map((item) => item.period),
+                    label:
+                      range === "yearly"
+                        ? "Year"
+                        : range === "monthly"
+                          ? "Month"
+                          : "Week",
+                  },
+                ]}
+                yAxis={[
+                  {
+                    label: "Amount ($)",
+                  },
+                ]}
+                grid={{ vertical: true, horizontal: true }}
+                sx={{
+                  "& .MuiChartsAxis-tickLabel": {
+                    fill: "white",
+                  },
+                  "& .MuiChartsAxis-line": {
+                    stroke: "white",
+                  },
+                  "& .MuiChartsAxis-label": {
+                    fill: "white",
+                  },
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "gray",
+                }}
+              >
+                {loading ? "Loading data..." : "No earnings data available"}
+              </Box>
+            )}
           </Box>
-          <Stack
-            direction={isMobile ? "column" : "row"}
-            gap={isMobile ? "10px" : "20px"}
-            sx={{ width: "100%" }}
+        </Box>
+
+        {/* Stats Cards Row */}
+        <Stack
+          direction={isMobile ? "column" : "row"}
+          gap={isMobile ? "10px" : "20px"}
+          sx={{ width: "100%" }}
+        >
+          <TinyCard
+            title="Total Users"
+            value={totalUsers?.toLocaleString() || "0"}
+            subValue="All time"
           >
-            <TinyCard title="Total Users" value="5000">
-              <PersonIcon />
-            </TinyCard>
-            <TinyCard title="Top #10 Sales" value="iPhone 15 Pro">
-              <LocalAtmIcon sx={{ color: "#000000" }} />
-            </TinyCard>
-          </Stack>
+            <PersonIcon />
+          </TinyCard>
+          <TinyCard
+            title="Top Selling Product"
+            value={topProductName}
+            subValue={topSales ? `From ${topSales.length} sales` : "No data"}
+          >
+            <LocalAtmIcon sx={{ color: "#000000" }} />
+          </TinyCard>
         </Stack>
+
+        {/* Orders Table */}
         <Box sx={{ width: "100%", overflowX: isMobile ? "auto" : "hidden" }}>
           <OrdersTable2 orders={orders} rows={isMobile ? 3 : 5} />
         </Box>

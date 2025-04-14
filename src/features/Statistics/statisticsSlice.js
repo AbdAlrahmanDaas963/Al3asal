@@ -12,6 +12,45 @@ const unwrapItems = (arr, key) =>
   }));
 
 // Thunks
+export const fetchTotalUsers = createAsyncThunk(
+  "statistics/fetchTotalUsers",
+  async (_, thunkAPI) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/total-users`, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      });
+      const data = await response.json();
+      return data.total; // Assuming API returns { total: number }
+    } catch (error) {
+      console.error("Error fetching total users:", error);
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
+export const fetchTopSales = createAsyncThunk(
+  "statistics/fetchTopSales",
+  async (range, thunkAPI) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/top-sales?range=${range}&limit=10`,
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        }
+      );
+      const data = await response.json();
+      return data.data; // Assuming API returns { data: array }
+    } catch (error) {
+      console.error("Error fetching top sales:", error);
+      return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
 export const fetchTopShops = createAsyncThunk(
   "statistics/fetchTopShops",
   async (range, thunkAPI) => {
@@ -100,6 +139,8 @@ const initialState = {
   topProducts: [],
   topCategories: [],
   earnings: [],
+  totalUsers: 0,
+  topSales: [],
   loading: false,
   error: null,
 };
@@ -159,6 +200,31 @@ const statisticsSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchEarnings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchTotalUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTotalUsers.fulfilled, (state, action) => {
+        state.totalUsers = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchTotalUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(fetchTopSales.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTopSales.fulfilled, (state, action) => {
+        state.topSales = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchTopSales.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

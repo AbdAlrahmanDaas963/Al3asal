@@ -21,6 +21,7 @@ import {
   Alert,
   Box,
   Grid,
+  Backdrop,
 } from "@mui/material";
 
 // Constants
@@ -63,12 +64,15 @@ const EditProductForm = () => {
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isFormLoading, setIsFormLoading] = useState(true);
 
   // Current product from either location state or Redux
   const currentProduct = state?.product || selectedProduct;
 
   // Fetch data on mount
   useEffect(() => {
+    setIsFormLoading(true);
     if (shopsStatus === "idle") dispatch(fetchShops());
     if (categoriesStatus === "idle") dispatch(fetchCategories());
     if (id && !currentProduct) dispatch(fetchProductById(id));
@@ -76,17 +80,45 @@ const EditProductForm = () => {
 
   // Initialize form when data is ready
   useEffect(() => {
-    if (currentProduct) {
+    if (
+      currentProduct &&
+      shops.length > 0 &&
+      categories.length > 0 &&
+      !isInitialized
+    ) {
       const initializeForm = () => {
+        setIsFormLoading(true);
+
+        // Handle name
         const nameValue =
           typeof currentProduct.name === "string"
-            ? { en: "", ar: currentProduct.name }
+            ? { en: currentProduct.name, ar: currentProduct.name }
             : currentProduct.name || { en: "", ar: "" };
 
+        // Handle description
         const descriptionValue =
           typeof currentProduct.description === "string"
-            ? { en: "", ar: currentProduct.description }
+            ? { en: currentProduct.description, ar: currentProduct.description }
             : currentProduct.description || { en: "", ar: "" };
+
+        // Find the current shop
+        const currentShop = shops.find(
+          (shop) => String(shop.id) === String(currentProduct.shop?.id)
+        );
+        const initialShopId = currentShop ? String(currentShop.id) : "";
+
+        // Find the current category - we need to check both direct category reference
+        // and through the shop's categories
+        let initialCategoryId = "";
+        if (currentProduct.category?.id) {
+          const categoryExists = categories.some(
+            (category) =>
+              String(category.id) === String(currentProduct.category.id)
+          );
+          if (categoryExists) {
+            initialCategoryId = String(currentProduct.category.id);
+          }
+        }
 
         setFormData({
           name: nameValue,
@@ -95,32 +127,36 @@ const EditProductForm = () => {
           profit_percentage: currentProduct.profit_percentage?.toString() || "",
           is_hot: Boolean(currentProduct.is_hot),
           image: null,
-          shop_id: currentProduct.shop?.id?.toString() || "",
-          category_id: currentProduct.category?.id?.toString() || "",
+          shop_id: initialShopId,
+          category_id: initialCategoryId, // This will now properly set the category
         });
 
         if (currentProduct.image) {
           setImagePreview(currentProduct.image);
         }
+
+        setIsInitialized(true);
+        setIsFormLoading(false);
       };
 
-      if (shops.length > 0 && categories.length > 0) {
-        initializeForm();
-      } else {
-        const timer = setTimeout(initializeForm, 500);
-        return () => clearTimeout(timer);
-      }
+      initializeForm();
     }
-  }, [currentProduct, shops, categories]);
+  }, [currentProduct, shops, categories, isInitialized]);
 
   // Filter categories based on selected shop
   const filteredCategories = useMemo(() => {
     if (!formData.shop_id) return [];
-    return categories.filter((category) =>
-      category.shops?.some(
-        (shop) => String(shop.id) === String(formData.shop_id)
-      )
-    );
+
+    return categories.filter((category) => {
+      // Some categories might have shops array, others might reference shop differently
+      if (category.shops) {
+        return category.shops.some(
+          (shop) => String(shop.id) === String(formData.shop_id)
+        );
+      }
+      // Add additional checks if your category-shop relationship is different
+      return true;
+    });
   }, [formData.shop_id, categories]);
 
   const handleChange = (e) => {
@@ -269,6 +305,13 @@ const EditProductForm = () => {
 
   return (
     <Container maxWidth="md">
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isFormLoading}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
       <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
         Edit Product
       </Typography>
@@ -283,6 +326,7 @@ const EditProductForm = () => {
               value={formData.name.en}
               onChange={handleChange}
               fullWidth
+              disabled={isFormLoading}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -295,22 +339,30 @@ const EditProductForm = () => {
               required
               error={!!errors.name_ar}
               helperText={errors.name_ar}
+              disabled={isFormLoading}
             />
           </Grid>
 
           {/* Shop and Category Selection */}
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth required error={!!errors.shop}>
+            <FormControl
+              fullWidth
+              required
+              error={!!errors.shop}
+              disabled={isFormLoading}
+            >
               <InputLabel>Shop</InputLabel>
               <Select
                 name="shop_id"
                 value={formData.shop_id}
                 onChange={handleChange}
                 label="Shop"
-                disabled={shopsStatus === "loading"}
+                disabled={shopsStatus === "loading" || isFormLoading}
               >
                 <MenuItem value="" disabled>
-                  Select a shop
+                  {shopsStatus === "loading"
+                    ? "Loading shops..."
+                    : "Select a shop"}
                 </MenuItem>
                 {shops.map((shop) => (
                   <MenuItem key={shop.id} value={String(shop.id)}>
@@ -324,14 +376,23 @@ const EditProductForm = () => {
             </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth required error={!!errors.category}>
+            <FormControl
+              fullWidth
+              required
+              error={!!errors.category}
+              disabled={isFormLoading}
+            >
               <InputLabel>Category</InputLabel>
               <Select
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleChange}
                 label="Category"
-                disabled={!formData.shop_id || categoriesStatus === "loading"}
+                disabled={
+                  !formData.shop_id ||
+                  categoriesStatus === "loading" ||
+                  isFormLoading
+                }
               >
                 {!formData.shop_id ? (
                   <MenuItem value="" disabled>
@@ -339,7 +400,7 @@ const EditProductForm = () => {
                   </MenuItem>
                 ) : filteredCategories.length === 0 ? (
                   <MenuItem value="" disabled>
-                    No categories available
+                    No categories available for this shop
                   </MenuItem>
                 ) : (
                   filteredCategories.map((category) => (
@@ -368,6 +429,7 @@ const EditProductForm = () => {
               error={!!errors.price}
               helperText={errors.price}
               InputProps={{ inputProps: { min: 0 } }}
+              disabled={isFormLoading}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -381,6 +443,7 @@ const EditProductForm = () => {
               error={!!errors.profit_percentage}
               helperText={errors.profit_percentage}
               InputProps={{ inputProps: { min: 0, max: 100, step: 0.01 } }}
+              disabled={isFormLoading}
             />
           </Grid>
 
@@ -394,6 +457,7 @@ const EditProductForm = () => {
               fullWidth
               multiline
               rows={4}
+              disabled={isFormLoading}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -405,13 +469,19 @@ const EditProductForm = () => {
               fullWidth
               multiline
               rows={4}
+              disabled={isFormLoading}
             />
           </Grid>
 
           {/* Image Upload and Hot Product */}
           <Grid item xs={12} md={6}>
             <Box>
-              <Button variant="contained" component="label" fullWidth>
+              <Button
+                variant="contained"
+                component="label"
+                fullWidth
+                disabled={isFormLoading}
+              >
                 {imagePreview ? "Change Image" : "Upload Image"} (max 2MB)
                 <input
                   type="file"
@@ -419,6 +489,7 @@ const EditProductForm = () => {
                   onChange={handleChange}
                   accept="image/jpeg, image/png, image/jpg, image/webp"
                   hidden
+                  disabled={isFormLoading}
                 />
               </Button>
               {errors.image && (
@@ -454,6 +525,7 @@ const EditProductForm = () => {
                   checked={formData.is_hot}
                   onChange={handleChange}
                   color="primary"
+                  disabled={isFormLoading}
                 />
               }
               label="Mark as Hot Product"
@@ -467,6 +539,7 @@ const EditProductForm = () => {
           <Button
             variant="outlined"
             onClick={() => navigate("/dashboard/products")}
+            disabled={isFormLoading}
           >
             Cancel
           </Button>
@@ -474,7 +547,7 @@ const EditProductForm = () => {
             type="submit"
             variant="contained"
             color="primary"
-            disabled={status === "loading"}
+            disabled={status === "loading" || isFormLoading}
             sx={{ minWidth: 120 }}
           >
             {status === "loading" ? (

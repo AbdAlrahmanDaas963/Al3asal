@@ -2,6 +2,29 @@ import React from "react";
 import { Stack, Typography, Chip, Box } from "@mui/material";
 
 const StoreCard = ({ image, name, revenue, rank }) => {
+  // Handle name (string or {ar, en} object)
+  const getName = () => {
+    if (!name) return "N/A";
+    if (typeof name === "string") return name;
+    if (name.ar && name.en)
+      return (
+        <>
+          <span style={{ direction: "rtl" }}>{name.ar}</span>
+          <span> / </span>
+          <span>{name.en}</span>
+        </>
+      );
+    return name.ar || name.en || "N/A";
+  };
+
+  // Format revenue
+  const getRevenue = () => {
+    if (revenue === undefined || revenue === null) return null;
+    const amount =
+      typeof revenue === "number" ? revenue.toLocaleString() : revenue;
+    return `$${amount}`;
+  };
+
   return (
     <Box
       sx={{
@@ -14,15 +37,22 @@ const StoreCard = ({ image, name, revenue, rank }) => {
         position: "relative",
         display: "flex",
         flexDirection: "column",
+        fontFamily: name?.ar ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
       }}
     >
       {/* Rank Badge */}
-      {rank && (
+      {typeof rank === "number" && (
         <Chip
           label={`#${rank}`}
           color="primary"
           size="small"
-          sx={{ position: "absolute", top: 10, left: 10, zIndex: 1 }}
+          sx={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            zIndex: 1,
+            fontFamily: "'Roboto', sans-serif",
+          }}
         />
       )}
 
@@ -40,7 +70,9 @@ const StoreCard = ({ image, name, revenue, rank }) => {
       >
         <img
           src={image || "https://via.placeholder.com/150"}
-          alt={name}
+          alt={
+            typeof name === "string" ? name : name?.ar || name?.en || "Store"
+          }
           style={{
             position: "absolute",
             top: 0,
@@ -57,22 +89,37 @@ const StoreCard = ({ image, name, revenue, rank }) => {
 
       {/* Store Info */}
       <Stack spacing={1}>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography variant="body2" color="textSecondary">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography variant="body2" color="text.secondary">
             Shop Name:
           </Typography>
-          <Typography variant="body1" fontWeight="bold">
-            {name || "N/A"}
+          <Typography
+            variant="body1"
+            fontWeight="bold"
+            sx={{
+              textAlign: name?.ar ? "right" : "left",
+              direction: name?.ar ? "rtl" : "ltr",
+            }}
+          >
+            {getName()}
           </Typography>
         </Stack>
 
-        {revenue && (
-          <Stack direction="row" justifyContent="space-between">
-            <Typography variant="body2" color="textSecondary">
+        {revenue !== undefined && revenue !== null && (
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="body2" color="text.secondary">
               Revenue:
             </Typography>
             <Typography variant="body1" fontWeight="bold">
-              ${revenue}
+              {getRevenue()}
             </Typography>
           </Stack>
         )}

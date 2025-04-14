@@ -49,6 +49,7 @@ const EditCategory = () => {
   useEffect(() => {
     if (selectedCategory?.data) {
       const category = selectedCategory.data;
+      const shopsArray = Array.isArray(category.shops) ? category.shops : [];
 
       setFormData({
         name: {
@@ -59,9 +60,10 @@ const EditCategory = () => {
               : category.name || "",
         },
         is_interested: category.is_interested?.toString() || "1",
-        shop_ids: category.shops?.map((shop) => shop.id.toString()) || [],
-        image: null, // Don't preload existing image to avoid FormData issues
-        previewImage: category.image || null, // Store URL for preview only
+        shop_ids:
+          shopsArray.map((shop) => shop?.id?.toString()).filter(Boolean) || [],
+        image: null,
+        previewImage: category.image || null,
       });
     }
   }, [selectedCategory]);
@@ -76,9 +78,9 @@ const EditCategory = () => {
   }, [formData.image]);
 
   const getShopName = (shop) => {
-    return typeof shop.name === "string"
-      ? shop.name
-      : shop.name?.en || shop.name?.ar || "Untitled Shop";
+    if (!shop) return "Untitled Shop";
+    if (typeof shop.name === "string") return shop.name;
+    return shop.name?.en || shop.name?.ar || "Untitled Shop";
   };
 
   const handleChange = (e) => {
@@ -100,26 +102,26 @@ const EditCategory = () => {
   const handleShopSelection = (e) => {
     setFormData((prev) => ({
       ...prev,
-      shop_ids: e.target.value,
+      shop_ids: Array.isArray(e.target.value) ? e.target.value : [],
     }));
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     // Check file size (2MB limit)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setErrors({
         ...errors,
         image: "Image size must be less than 2MB",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData((prev) => ({
         ...prev,
         image: null,
-        previewImage: prev.previewImage, // Keep existing preview if any
+        previewImage: prev.previewImage,
       }));
       return;
     }
@@ -130,19 +132,18 @@ const EditCategory = () => {
         ...errors,
         image: "Please select an image file (JPEG, PNG, etc.)",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData((prev) => ({
         ...prev,
         image: null,
-        previewImage: prev.previewImage, // Keep existing preview if any
+        previewImage: prev.previewImage,
       }));
       return;
     }
 
-    // If validation passes
     setErrors({
       ...errors,
-      image: undefined, // Clear any previous image errors
+      image: undefined,
     });
     setFormData((prev) => ({
       ...prev,
@@ -156,10 +157,13 @@ const EditCategory = () => {
 
     // Basic validation
     const newErrors = {};
-    if (!formData.name.en) newErrors["name.en"] = "English name required";
-    if (!formData.name.ar) newErrors["name.ar"] = "Arabic name required";
-    if (formData.shop_ids.length === 0)
+    if (!formData.name.en?.trim())
+      newErrors["name.en"] = "English name required";
+    if (!formData.name.ar?.trim())
+      newErrors["name.ar"] = "Arabic name required";
+    if (!Array.isArray(formData.shop_ids) || formData.shop_ids.length === 0) {
       newErrors.shop_ids = "At least one shop required";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -172,7 +176,7 @@ const EditCategory = () => {
     formDataToSend.append("is_interested", formData.is_interested);
 
     formData.shop_ids.forEach((id) => {
-      formDataToSend.append("shop_ids[]", id);
+      if (id) formDataToSend.append("shop_ids[]", id);
     });
 
     if (formData.image instanceof File) {
@@ -207,6 +211,9 @@ const EditCategory = () => {
     );
   }
 
+  // Safely get shops data
+  const shopsData = Array.isArray(shops?.data) ? shops.data : [];
+
   return (
     <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
       <Typography variant="h5" gutterBottom>
@@ -218,7 +225,7 @@ const EditCategory = () => {
         <TextField
           label="English Name"
           name="name.en"
-          value={formData.name.en}
+          value={formData.name.en || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
@@ -231,7 +238,7 @@ const EditCategory = () => {
         <TextField
           label="Arabic Name"
           name="name.ar"
-          value={formData.name.ar}
+          value={formData.name.ar || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
@@ -259,19 +266,20 @@ const EditCategory = () => {
           <Select
             multiple
             name="shop_ids"
-            value={formData.shop_ids}
+            value={Array.isArray(formData.shop_ids) ? formData.shop_ids : []}
             onChange={handleShopSelection}
             label="Shops *"
             renderValue={(selected) =>
               selected
                 .map((id) => {
-                  const shop = shops.data.find((s) => s.id.toString() === id);
+                  const shop = shopsData.find((s) => s?.id?.toString() === id);
                   return shop ? getShopName(shop) : "";
                 })
+                .filter(Boolean)
                 .join(", ")
             }
           >
-            {shops.data.map((shop) => (
+            {shopsData.map((shop) => (
               <MenuItem key={shop.id} value={shop.id.toString()}>
                 {getShopName(shop)}
               </MenuItem>
