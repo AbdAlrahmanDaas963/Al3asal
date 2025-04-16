@@ -180,7 +180,16 @@ export const fetchShopById = createAsyncThunk(
   "shops/fetchShopById",
   async (shopId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_BASE_URL2}/${shopId}`);
+      const token = getToken();
+      if (!token) {
+        return rejectWithValue("No authentication token found");
+      }
+
+      const response = await axios.get(`${API_BASE_URL2}/${shopId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return transformShopData(response.data.data);
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch shop");

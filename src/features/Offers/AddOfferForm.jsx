@@ -46,16 +46,17 @@ const AddOfferForm = ({ onSuccess }) => {
   });
   const [previewImage, setPreviewImage] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   useEffect(() => {
     if (productsStatus === "idle") {
-      dispatch(fetchProducts());
+      setIsLoadingProducts(true);
+      dispatch(fetchProducts()).finally(() => setIsLoadingProducts(false));
     }
   }, [dispatch, productsStatus]);
 
   useEffect(() => {
     return () => {
-      // Clean up when component unmounts
       dispatch(resetOperationStatus());
     };
   }, [dispatch]);
@@ -64,39 +65,35 @@ const AddOfferForm = ({ onSuccess }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (2MB limit)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setValidationErrors({
         ...validationErrors,
         poster_image: "Image size must be less than 2MB",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData({ ...formData, poster_image: null });
       setPreviewImage(null);
       return;
     }
 
-    // Check file type
     if (!file.type.match("image.*")) {
       setValidationErrors({
         ...validationErrors,
         poster_image: "Please select an image file (JPEG, PNG, etc.)",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData({ ...formData, poster_image: null });
       setPreviewImage(null);
       return;
     }
 
-    // If validation passes
     setValidationErrors({
       ...validationErrors,
-      poster_image: undefined, // Clear any previous image errors
+      poster_image: undefined,
     });
     setFormData({ ...formData, poster_image: file });
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewImage(reader.result);
@@ -127,7 +124,6 @@ const AddOfferForm = ({ onSuccess }) => {
     const result = await dispatch(createOffer(offerFormData));
 
     if (createOffer.fulfilled.match(result)) {
-      // Reset form on success
       setFormData({
         percentage: "",
         product_id: "",
@@ -135,8 +131,6 @@ const AddOfferForm = ({ onSuccess }) => {
       });
       setPreviewImage(null);
       setValidationErrors({});
-
-      // Optional callback for parent component
       if (onSuccess) onSuccess();
     }
   };
@@ -166,14 +160,19 @@ const AddOfferForm = ({ onSuccess }) => {
               onChange={(e) =>
                 setFormData({ ...formData, product_id: e.target.value })
               }
-              disabled={productsStatus === "loading"}
+              disabled={isLoadingProducts}
             >
-              {productsStatus === "loading" ? (
-                <MenuItem disabled>Loading products...</MenuItem>
+              {isLoadingProducts ? (
+                <MenuItem disabled>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <CircularProgress size={20} />
+                    <Typography variant="body2">Loading products...</Typography>
+                  </Box>
+                </MenuItem>
               ) : (
                 products.map((product) => (
                   <MenuItem key={product.id} value={product.id}>
-                    {product.name}
+                    {product.name.en}
                   </MenuItem>
                 ))
               )}

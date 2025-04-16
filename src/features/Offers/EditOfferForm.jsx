@@ -39,7 +39,7 @@ const EditOfferForm = () => {
     if (currentOffer) {
       setFormData({
         percentage: currentOffer.percentage || "",
-        poster_image: null, // Keep null to avoid overwriting existing image
+        poster_image: null,
       });
       setImagePreview(currentOffer.poster_image || null);
     }
@@ -49,39 +49,45 @@ const EditOfferForm = () => {
     };
   }, [currentOffer, dispatch]);
 
+  // Redirect on successful update
+  useEffect(() => {
+    if (operation.status === "succeeded") {
+      navigate("/dashboard/offers", {
+        state: { success: "Offer updated successfully" },
+      });
+    }
+  }, [operation.status, navigate]);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (2MB limit)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setValidationErrors({
         ...validationErrors,
         poster_image: "Image size must be less than 2MB",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData((prev) => ({ ...prev, poster_image: null }));
-      setImagePreview(currentOffer?.poster_image || null); // Revert to original image
+      setImagePreview(currentOffer?.poster_image || null);
       return;
     }
 
-    // Check file type
     if (!file.type.match("image.*")) {
       setValidationErrors({
         ...validationErrors,
         poster_image: "Please select an image file (JPEG, PNG, etc.)",
       });
-      e.target.value = ""; // Clear the file input
+      e.target.value = "";
       setFormData((prev) => ({ ...prev, poster_image: null }));
-      setImagePreview(currentOffer?.poster_image || null); // Revert to original image
+      setImagePreview(currentOffer?.poster_image || null);
       return;
     }
 
-    // If validation passes
     setValidationErrors({
       ...validationErrors,
-      poster_image: undefined, // Clear any previous image errors
+      poster_image: undefined,
     });
     setFormData((prev) => ({ ...prev, poster_image: file }));
     setImagePreview(URL.createObjectURL(file));
@@ -117,23 +123,23 @@ const EditOfferForm = () => {
     }
 
     try {
-      const result = await dispatch(
+      await dispatch(
         updateOffer({
           id: currentOffer.id,
           formData: form,
         })
-      ).unwrap();
-
-      if (updateOffer.fulfilled.match(result)) {
-        navigate("/dashboard/offers", {
-          state: { success: "Offer updated successfully" },
-        });
-      }
+      );
     } catch (error) {
       setValidationErrors({
         submit: error.message || "Failed to update offer",
       });
     }
+  };
+
+  const getDisplayName = (nameObj) => {
+    if (!nameObj) return "N/A";
+    if (typeof nameObj === "string") return nameObj;
+    return nameObj.en || nameObj.ar || "N/A";
   };
 
   if (!currentOffer) {
@@ -168,13 +174,13 @@ const EditOfferForm = () => {
             <Stack spacing={2} sx={{ mb: 3 }}>
               <TextField
                 label="Product Name"
-                value={currentOffer.product?.name || "N/A"}
+                value={getDisplayName(currentOffer.product?.name)}
                 fullWidth
                 disabled
               />
               <TextField
                 label="Shop"
-                value={currentOffer.product?.shop?.name || "N/A"}
+                value={getDisplayName(currentOffer.product?.shop?.name)}
                 fullWidth
                 disabled
               />

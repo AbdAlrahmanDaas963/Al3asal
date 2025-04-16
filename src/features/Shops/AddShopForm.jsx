@@ -40,9 +40,34 @@ const AddShopForm = () => {
   const { status: reduxStatus, error } = useSelector((state) => state.shops);
 
   useEffect(() => {
-    setLocalStatus(reduxStatus);
-    return () => dispatch(resetStatus());
-  }, [reduxStatus, dispatch]);
+    // Reset status when component mounts
+    dispatch(resetStatus());
+    setLocalStatus("idle");
+
+    return () => {
+      // Cleanup on unmount
+      dispatch(resetStatus());
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Only update local status if redux status changes to something meaningful
+    if (reduxStatus !== "idle") {
+      setLocalStatus(reduxStatus);
+
+      // Redirect on success
+      if (reduxStatus === "succeeded") {
+        const timer = setTimeout(() => {
+          navigate("/dashboard/shops");
+        }, 1500);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [reduxStatus, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,6 +119,11 @@ const AddShopForm = () => {
       return;
     }
 
+    // Clean up previous preview if exists
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
     setFormData((prev) => ({ ...prev, image: file }));
     setFileName(file.name);
     setImagePreview(URL.createObjectURL(file));
@@ -111,25 +141,18 @@ const AddShopForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting:", formData); // Debug log
 
     if (!validateForm()) return;
     setLocalStatus("loading");
 
     try {
-      const resultAction = await dispatch(createShop(formData));
-      if (createShop.fulfilled.match(resultAction)) {
-        console.log("Created shop:", resultAction.payload); // Debug log
-        setLocalStatus("succeeded");
-        setTimeout(() => navigate("/dashboard/shops"), 1500);
-      } else {
-        setLocalStatus("failed");
-      }
+      await dispatch(createShop(formData));
     } catch (err) {
       console.error("Failed to create shop:", err);
       setLocalStatus("failed");
     }
   };
+
   return (
     <Box
       sx={{
@@ -212,11 +235,7 @@ const AddShopForm = () => {
             {error || "Failed to add shop"}
           </Alert>
         )}
-        {localStatus === "succeeded" && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Shop added successfully!
-          </Alert>
-        )}
+
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
           {fileName || "Upload Image (max 2MB)"}
           <input

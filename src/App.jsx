@@ -41,6 +41,7 @@ import "./i18n/i18n";
 import { DialogProvider } from "./components/common/Dialogs/reuse/DialogContext";
 import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 import ProtectedRoute from "./utils/ProtectedRoute";
+import AddOfferForm from "./features/Offers/AddOfferForm";
 
 // Create a JSS instance with RTL support
 const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
@@ -82,6 +83,7 @@ function App() {
 
                   {/* Offers Routes - Updated */}
                   <Route path="offers" element={<Offers />} />
+                  <Route path="offers/add" element={<AddOfferForm />} />
                   <Route path="offers/edit" element={<EditOfferForm />} />
 
                   {/* Category Management */}

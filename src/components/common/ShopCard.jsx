@@ -50,8 +50,8 @@ function ShopCard({ shop }) {
         }}
       />
 
-      {/* Interested Badge */}
-      {is_interested && (
+      {/* Interested Badge - Only shows when is_interested is 1 */}
+      {is_interested === 1 && (
         <Typography
           sx={{
             position: "absolute",
