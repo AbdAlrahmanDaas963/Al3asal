@@ -15,7 +15,7 @@ import loginLogo from "../assets/loginLogo.svg";
 
 import { useDispatch, useSelector } from "react-redux";
 
-import { login } from "../store/features/auth/authSlice";
+import { logIn } from "../features/Auth/authSlice";
 
 function LoginPage() {
   const theme = useTheme();
@@ -29,7 +29,7 @@ function LoginPage() {
   const handleLogin = () => {
     if (username && password) {
       // navigate("/dashboard");
-      dispatch(login({ username, password }));
+      dispatch(logIn({ username, password }));
       console.log("sent");
     } else {
       alert("Please enter valid credentials.");

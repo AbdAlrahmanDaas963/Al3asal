@@ -10,8 +10,11 @@ import "./i18n/i18n.js";
 
 import DevDimmensions from "./development/DevDimensions.jsx";
 import getTheme from "./theme";
+import setupAxiosInterceptors from "./utils/axiosInterceptor.js";
 
 const theme = getTheme("ltr");
+
+setupAxiosInterceptors();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

@@ -15,6 +15,23 @@ const getToken = () => {
   }
 };
 
+export const validateToken = createAsyncThunk(
+  "auth/validateToken",
+  async (_, { getState, rejectWithValue }) => {
+    const token = getState().auth.token;
+    try {
+      const response = await axios.get(`${BASE_URL}/dashboard/validate-token`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Login (Admin endpoint)
 export const logIn = createAsyncThunk(
   "auth/logIn",
@@ -114,6 +131,14 @@ const authSlice = createSlice({
         state.token = null;
         state.status = "idle";
         state.error = null;
+      })
+      .addCase(validateToken.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(validateToken.rejected, (state) => {
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem("token");
       });
   },
 });
