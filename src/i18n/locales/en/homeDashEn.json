@@ -1,0 +1,35 @@
+{
+  "earnings": {
+    "title": "Earnings",
+    "timeRanges": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "chartLabels": {
+      "year": "Year",
+      "month": "Month",
+      "week": "Week",
+      "amount": "Amount ($)",
+      "profit": "Profit"
+    },
+    "messages": {
+      "loading": "Loading data...",
+      "noData": "No earnings data available"
+    }
+  },
+  "stats": {
+    "totalUsers": {
+      "title": "Total Users",
+      "subtitle": "All time"
+    },
+    "topProduct": {
+      "title": "Top Selling Product",
+      "noData": "No sales data",
+      "salesCount": "{count} sales"
+    }
+  },
+  "ordersTable": {
+    "title": "Recent Orders"
+  }
+}

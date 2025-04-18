@@ -1,0 +1,35 @@
+{
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "preparing": "Preparing",
+      "done": "Completed",
+      "rejected": "Rejected"
+    },
+    "table": {
+      "headers": {
+        "customer": "Customer",
+        "accountId": "Account ID",
+        "status": "Status",
+        "card": "Card",
+        "amount": "Amount",
+        "actions": "Actions"
+      },
+      "messages": {
+        "loading": "Loading orders...",
+        "error": "Error loading orders: {error}",
+        "empty": "No orders found",
+        "retry": "Retry",
+        "pageInfo": "Page {current} of {total}",
+        "cardNotProvided": "Card not provided",
+        "statusUpdated": "Status updated to {status}"
+      },
+      "buttons": {
+        "details": "Details"
+      }
+    },
+    "status": {
+      "updated": "Status updated successfully",
+      "updateFailed": "Failed to update status: {error}"
+    }
+  }

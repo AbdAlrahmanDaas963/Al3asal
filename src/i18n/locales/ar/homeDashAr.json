@@ -1,0 +1,35 @@
+{
+  "earnings": {
+    "title": "الأرباح",
+    "timeRanges": {
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "yearly": "سنوي"
+    },
+    "chartLabels": {
+      "year": "السنة",
+      "month": "الشهر",
+      "week": "الأسبوع",
+      "amount": "المبلغ ($)",
+      "profit": "الربح"
+    },
+    "messages": {
+      "loading": "جاري تحميل البيانات...",
+      "noData": "لا توجد بيانات عن الأرباح"
+    }
+  },
+  "stats": {
+    "totalUsers": {
+      "title": "إجمالي المستخدمين",
+      "subtitle": "منذ البداية"
+    },
+    "topProduct": {
+      "title": "المنتج الأكثر مبيعاً",
+      "noData": "لا توجد بيانات مبيعات",
+      "salesCount": "تم بيع {count}"
+    }
+  },
+  "ordersTable": {
+    "title": "الطلبات الحديثة"
+  }
+}

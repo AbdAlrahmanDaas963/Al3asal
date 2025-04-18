@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Table,
   TableBody,
@@ -31,6 +31,9 @@ import OrderDetailsModal from "./OrderDetailsModal";
 import { useDispatch } from "react-redux";
 import { fetchOrders, updateOrderStatus } from "./ordersSlice";
 
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../../contexts/LanguageContext";
+
 const statusFilters = ["all", "pending", "preparing", "done", "rejected"];
 const statusColors = {
   done: "#A1FCB6",
@@ -40,14 +43,16 @@ const statusColors = {
   default: "#9E9E9E",
 };
 
-const statusDisplayMap = {
-  preparing: "Preparing",
-  rejected: "Rejected",
-  pending: "Pending",
-  done: "Completed",
-};
-
 const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
+  const { t } = useTranslation("ordersTable");
+
+  const statusDisplayMap = {
+    preparing: t("filters.preparing"),
+    rejected: t("filters.rejected"),
+    pending: t("filters.pending"),
+    done: t("filters.done"),
+  };
+  const { direction } = useContext(LanguageContext);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const dispatch = useDispatch();
@@ -93,7 +98,9 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
 
       setSnackbar({
         open: true,
-        message: `Status updated to ${statusDisplayMap[status] || status}`,
+        message: t("table.messages.statusUpdated", {
+          status: statusDisplayMap[status] || status,
+        }),
         severity: "success",
       });
 
@@ -102,7 +109,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error.message,
+        message: t("status.updateFailed", { error: error.message }),
         severity: "error",
       });
     }
@@ -211,7 +218,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
             sx={{ py: 4, color: "white" }}
           >
             <Typography color="error">
-              Error loading orders: {error.message}
+              {t("table.messages.error", { error: error.message })}
             </Typography>
             <Button
               variant="contained"
@@ -219,7 +226,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
               onClick={() => dispatch(fetchOrders())}
               sx={{ mt: 2 }}
             >
-              Retry
+              {t("table.messages.retry")}
             </Button>
           </TableCell>
         </TableRow>
@@ -232,7 +239,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
             align="center"
             sx={{ py: 4, color: "white" }}
           >
-            <Typography>No orders found</Typography>
+            <Typography>{t("table.messages.empty")}</Typography>
           </TableCell>
         </TableRow>
       );
@@ -248,7 +255,9 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         {renderStatusCell(order)}
         {!isMobile && (
           <TableCell sx={{ color: "white" }}>
-            <Tooltip title={order.card_number || "Card not provided"}>
+            <Tooltip
+              title={order.card_number || t("table.messages.cardNotProvided")}
+            >
               <Box display="flex" alignItems="center">
                 <CreditCardIcon
                   fontSize="small"
@@ -277,7 +286,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
             }}
             sx={{ minWidth: 90 }}
           >
-            Details
+            {t("table.buttons.details")}
           </Button>
         </TableCell>
       </TableRow>
@@ -323,7 +332,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
                     />
                   )}
                   {status === "all"
-                    ? "All"
+                    ? t("filters.all")
                     : statusDisplayMap[status] || status}
                 </Box>
               }
@@ -351,14 +360,28 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ color: "white" }}>Customer</TableCell>
+              <TableCell sx={{ color: "white" }}>
+                {t("table.headers.customer")}
+              </TableCell>
               {!isMobile && (
-                <TableCell sx={{ color: "white" }}>Account ID</TableCell>
+                <TableCell sx={{ color: "white" }}>
+                  {t("table.headers.accountId")}
+                </TableCell>
               )}
-              <TableCell sx={{ color: "white" }}>Status</TableCell>
-              {!isMobile && <TableCell sx={{ color: "white" }}>Card</TableCell>}
-              <TableCell sx={{ color: "white" }}>Amount</TableCell>
-              <TableCell sx={{ color: "white" }}>Actions</TableCell>
+              <TableCell sx={{ color: "white" }}>
+                {t("table.headers.status")}
+              </TableCell>
+              {!isMobile && (
+                <TableCell sx={{ color: "white" }}>
+                  {t("table.headers.card")}
+                </TableCell>
+              )}
+              <TableCell sx={{ color: "white" }}>
+                {t("table.headers.amount")}
+              </TableCell>
+              <TableCell sx={{ color: "white" }}>
+                {t("table.headers.actions")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>{renderTableContent()}</TableBody>
@@ -375,17 +398,23 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           <IconButton
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            sx={{ color: "white" }}
+            sx={{
+              transform: direction === "rtl" ? "scaleX(-1)" : "none",
+              transition: "transform 0.3s ease",
+            }}
           >
             <ArrowBackIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
           <Typography variant="body2" sx={{ mx: 2 }}>
-            Page {page + 1} of {totalPages}
+            {page + 1} / {totalPages}
           </Typography>
           <IconButton
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            sx={{ color: "white" }}
+            sx={{
+              transform: direction === "rtl" ? "scaleX(-1)" : "none",
+              transition: "transform 0.3s ease",
+            }}
           >
             <ArrowForwardIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>

@@ -19,7 +19,11 @@ import {
 } from "../features/Statistics/statisticsSlice";
 import { LineChart } from "@mui/x-charts/LineChart";
 
+import { useTranslation } from "react-i18next";
+
 const TinyCard = ({ children, title, value, subValue }) => {
+  const { t } = useTranslation("homeDash");
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -89,6 +93,7 @@ function getTranslatedText(text, lang = "en") {
 }
 
 function HomeDash() {
+  const { t } = useTranslation("homeDash");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useDispatch();
@@ -155,7 +160,7 @@ function HomeDash() {
           }}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6">Earnings</Typography>
+            <Typography variant="h6">{t("earnings.title")}</Typography>
             <Select
               value={range}
               onChange={handleRangeChange}
@@ -163,9 +168,15 @@ function HomeDash() {
               size="small"
               sx={{ minWidth: 120, color: "white" }}
             >
-              <MenuItem value="weekly">Weekly</MenuItem>
-              <MenuItem value="monthly">Monthly</MenuItem>
-              <MenuItem value="yearly">Yearly</MenuItem>
+              <MenuItem value="weekly">
+                {t("earnings.timeRanges.weekly")}
+              </MenuItem>
+              <MenuItem value="monthly">
+                {t("earnings.timeRanges.monthly")}
+              </MenuItem>
+              <MenuItem value="yearly">
+                {t("earnings.timeRanges.yearly")}
+              </MenuItem>
             </Select>
           </Box>
           <Box sx={{ height: "90%" }}>
@@ -174,7 +185,7 @@ function HomeDash() {
                 series={[
                   {
                     data: earningsData.map((item) => item.profit),
-                    label: "Profit",
+                    label: t("earnings.chartLabels.profit"),
                     color: "#8884d8",
                   },
                 ]}
@@ -182,17 +193,20 @@ function HomeDash() {
                   {
                     scaleType: "point",
                     data: earningsData.map((item) => item.period),
-                    label:
-                      range === "yearly"
-                        ? "Year"
-                        : range === "monthly"
-                          ? "Month"
-                          : "Week",
+                    label: t(
+                      `earnings.chartLabels.${
+                        range === "yearly"
+                          ? "year"
+                          : range === "monthly"
+                            ? "month"
+                            : "week"
+                      }`
+                    ),
                   },
                 ]}
                 yAxis={[
                   {
-                    label: "Amount ($)",
+                    label: t("earnings.chartLabels.amount"),
                   },
                 ]}
                 grid={{ vertical: true, horizontal: true }}
@@ -212,7 +226,9 @@ function HomeDash() {
                   color: "gray",
                 }}
               >
-                {loading ? "Loading data..." : "No earnings data available"}
+                {loading
+                  ? t("earnings.messages.loading")
+                  : t("earnings.messages.noData")}
               </Box>
             )}
           </Box>
@@ -225,17 +241,21 @@ function HomeDash() {
           sx={{ width: "100%" }}
         >
           <TinyCard
-            title="Total Users"
+            title={t("stats.totalUsers.title")}
             value={usersCount.toLocaleString()}
-            subValue="All time"
+            subValue={t("stats.totalUsers.subtitle")}
           >
             <PersonIcon />
           </TinyCard>
 
           <TinyCard
-            title="Top Selling Product"
+            title={t("stats.topProduct.title")}
             value={topProductName}
-            subValue={topSalesCount > 0 ? `${topSalesCount} sales` : "No data"}
+            subValue={
+              topSalesCount > 0
+                ? t("stats.topProduct.salesCount", { count: topSalesCount })
+                : t("stats.topProduct.noData")
+            }
           >
             <LocalAtmIcon sx={{ color: "#000000" }} />
           </TinyCard>

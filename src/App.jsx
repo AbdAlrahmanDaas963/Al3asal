@@ -7,10 +7,8 @@ import {
 } from "react-router-dom";
 
 // Pages
-import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import HomeDash from "./pages/HomeDash";
-import Statistics from "./pages/Statistics";
 
 // Features
 import Accounts from "./features/Dashboard/Accounts";

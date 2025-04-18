@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -36,15 +37,6 @@ const statusColors = {
   default: "#9E9E9E",
 };
 
-const statusDisplayMap = {
-  preparing: "Preparing",
-  rejected: "Rejected",
-  pending: "Pending",
-  done: "Completed",
-  prepering: "Preparing",
-  fail: "Rejected",
-};
-
 const getAvailableStatuses = (currentStatus) => {
   const transitions = {
     pending: ["preparing"],
@@ -54,7 +46,7 @@ const getAvailableStatuses = (currentStatus) => {
   return transitions[currentStatus] || [];
 };
 
-const CopyableLocation = ({ location }) => {
+const CopyableLocation = ({ location, copyText, copiedText }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -67,7 +59,7 @@ const CopyableLocation = ({ location }) => {
     <Box display="flex" alignItems="center">
       {location}
       <LocationOnIcon sx={{ fontSize: 16, ml: 0.5, color: "#E4272B" }} />
-      <Tooltip title={copied ? "Copied!" : "Copy location"} arrow>
+      <Tooltip title={copied ? copiedText : copyText} arrow>
         <IconButton onClick={handleCopy} size="small" sx={{ ml: 0.5 }}>
           <FileCopyIcon fontSize="small" />
         </IconButton>
@@ -101,6 +93,16 @@ const DetailItem = ({ label, value }) => (
 );
 
 const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
+  const { t } = useTranslation("orderDetails");
+  const statusDisplayMap = {
+    preparing: t("status.preparing"),
+    rejected: t("status.rejected"),
+    pending: t("status.pending"),
+    done: t("status.done"),
+    prepering: t("status.prepering"),
+    fail: t("status.fail"),
+  };
+
   const dispatch = useDispatch();
   const [selectedStatus, setSelectedStatus] = useState(
     order?.status || "pending"
@@ -175,7 +177,9 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
       <DialogTitle sx={{ backgroundColor: "#121212", color: "white" }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
-            <Typography variant="h6">Order #{order.id}</Typography>
+            <Typography variant="h6">
+              {t("title")} {order.id}
+            </Typography>
             <Chip
               label={statusDisplayMap[order.status] || order.status}
               sx={{
@@ -199,7 +203,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
       >
         <Box>
           <Typography variant="h6" gutterBottom>
-            Products ({order.items.length})
+            {t("sections.products", { count: order.items.length })}
           </Typography>
           <Grid container spacing={2}>
             {order.items.map((item, index) => (
@@ -232,16 +236,25 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
-            Order Details
+            {t("sections.orderDetails")}
           </Typography>
           <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <DetailItem label="Customer Name" value={order.user?.name} />
-                <DetailItem label="Receiver Name" value={order.reciver_name} />
-                <DetailItem label="Order ID" value={`#${order.id}`} />
                 <DetailItem
-                  label="Payment Card"
+                  label={t("fields.customerName")}
+                  value={order.user?.name}
+                />
+                <DetailItem
+                  label={t("fields.receiverName")}
+                  value={order.reciver_name}
+                />
+                <DetailItem
+                  label={t("fields.orderId")}
+                  value={`#${order.id}`}
+                />
+                <DetailItem
+                  label={t("fields.paymentCard")}
                   value={
                     order.card_number
                       ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
@@ -249,18 +262,27 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                   }
                 />
                 <DetailItem
-                  label="Location"
-                  value={<CopyableLocation location="54.5461, 71.5149" />}
+                  label={t("fields.location")}
+                  value={
+                    <CopyableLocation
+                      location="54.5461, 71.5149"
+                      copyText={t("buttons.copyLocation")}
+                      copiedText={t("buttons.copied")}
+                    />
+                  }
                 />
               </Grid>
               <Grid item xs={12} md={6}>
-                <DetailItem label="Customer Email" value={order.user?.email} />
                 <DetailItem
-                  label="Receiver Phone"
+                  label={t("fields.customerEmail")}
+                  value={order.user?.email}
+                />
+                <DetailItem
+                  label={t("fields.receiverPhone")}
                   value={order.reciver_phone}
                 />
                 <DetailItem
-                  label="Delivery Date"
+                  label={t("fields.deliveryDate")}
                   value={
                     <span style={{ color: "#E4272B" }}>
                       {new Date(order.date).toLocaleString()}
@@ -268,11 +290,11 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                   }
                 />
                 <DetailItem
-                  label="Total Payment"
+                  label={t("fields.totalPayment")}
                   value={`$${order.total_price}`}
                 />
                 <DetailItem
-                  label="Category"
+                  label={t("fields.category")}
                   value={renderMultilingualText(order.items[0]?.category_name)}
                 />
               </Grid>
@@ -284,11 +306,11 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
               <CrownIcon sx={{ color: "#E4272B", mr: 1, fontSize: 20 }} />
-              Premium Service
+              {t("sections.premiumService")}
             </Typography>
             <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
               <DetailItem
-                label="Delivery Date"
+                label={t("fields.deliveryDate")}
                 value={
                   <span style={{ color: "#E4272B" }}>
                     {new Date(order.date).toLocaleString()}
@@ -297,7 +319,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
               />
               <Box mt={2}>
                 <Typography color="#aaa" gutterBottom>
-                  Attachments
+                  {t("fields.attachments")}
                 </Typography>
                 <Box display="flex" gap={1.5}>
                   {[1, 2, 3].map((item) => (
@@ -324,13 +346,13 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
-            Update Order Status
+            {t("sections.updateStatus")}
           </Typography>
           <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Typography color="#aaa" gutterBottom>
-                  New Status
+                  {t("fields.newStatus")}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Button
@@ -381,7 +403,10 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Rejection Reason"
+                    label={t("fields.rejectionReason")}
+                    helperText={
+                      error ? t("errors.rejectionReasonRequired") : ""
+                    }
                     value={rejectReason}
                     onChange={(e) => {
                       setRejectReason(e.target.value);
@@ -410,7 +435,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           onClick={onClose}
           sx={{ color: "white", borderColor: "#555", mr: 2 }}
         >
-          Cancel
+          {t("buttons.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -425,7 +450,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             "&:hover": { backgroundColor: "#3e8e41" },
           }}
         >
-          Save Changes
+          {t("buttons.saveChanges")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,0 +1,35 @@
+{
+    "filters": {
+      "all": "الكل",
+      "pending": "قيد الانتظار",
+      "preparing": "قيد التحضير",
+      "done": "مكتمل",
+      "rejected": "مرفوض"
+    },
+    "table": {
+      "headers": {
+        "customer": "العميل",
+        "accountId": "رقم الحساب",
+        "status": "الحالة",
+        "card": "البطاقة",
+        "amount": "المبلغ",
+        "actions": "إجراءات"
+      },
+      "messages": {
+        "loading": "جاري تحميل الطلبات...",
+        "error": "خطأ في تحميل الطلبات: {error}",
+        "empty": "لا توجد طلبات",
+        "retry": "إعادة المحاولة",
+        "pageInfo": "الصفحة {current} من {total}",
+        "cardNotProvided": "لم يتم تقديم بطاقة",
+        "statusUpdated": "تم تحديث الحالة إلى {status}"
+      },
+      "buttons": {
+        "details": "التفاصيل"
+      }
+    },
+    "status": {
+      "updated": "تم تحديث الحالة بنجاح",
+      "updateFailed": "فشل تحديث الحالة: {error}"
+    }
+  }

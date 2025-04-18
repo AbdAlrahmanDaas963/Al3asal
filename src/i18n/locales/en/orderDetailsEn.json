@@ -1,0 +1,41 @@
+{
+    "title": "Order",
+    "sections": {
+      "products": "Products ({count})",
+      "orderDetails": "Order Details",
+      "premiumService": "Premium Service",
+      "updateStatus": "Update Order Status"
+    },
+    "fields": {
+      "customerName": "Customer Name",
+      "receiverName": "Receiver Name",
+      "orderId": "Order ID",
+      "paymentCard": "Payment Card",
+      "location": "Location",
+      "customerEmail": "Customer Email",
+      "receiverPhone": "Receiver Phone",
+      "deliveryDate": "Delivery Date",
+      "totalPayment": "Total Payment",
+      "category": "Category",
+      "attachments": "Attachments",
+      "newStatus": "New Status",
+      "rejectionReason": "Rejection Reason"
+    },
+    "status": {
+      "preparing": "Preparing",
+      "rejected": "Rejected",
+      "pending": "Pending",
+      "done": "Completed",
+      "prepering": "Preparing",
+      "fail": "Rejected"
+    },
+    "buttons": {
+      "copyLocation": "Copy location",
+      "copied": "Copied!",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes"
+    },
+    "errors": {
+      "rejectionReasonRequired": "Please provide a rejection reason"
+    }
+  }

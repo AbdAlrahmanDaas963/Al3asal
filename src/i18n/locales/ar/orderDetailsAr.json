@@ -1,0 +1,41 @@
+{
+    "title": "الطلب ",
+    "sections": {
+      "products": "المنتجات ({count})",
+      "orderDetails": "تفاصيل الطلب",
+      "premiumService": "خدمة مميزة",
+      "updateStatus": "تحديث حالة الطلب"
+    },
+    "fields": {
+      "customerName": "اسم العميل",
+      "receiverName": "اسم المستلم",
+      "orderId": "رقم الطلب",
+      "paymentCard": "بطاقة الدفع",
+      "location": "الموقع",
+      "customerEmail": "بريد العميل",
+      "receiverPhone": "هاتف المستلم",
+      "deliveryDate": "تاريخ التوصيل",
+      "totalPayment": "المبلغ الإجمالي",
+      "category": "الفئة",
+      "attachments": "المرفقات",
+      "newStatus": "الحالة الجديدة",
+      "rejectionReason": "سبب الرفض"
+    },
+    "status": {
+      "preparing": "قيد التحضير",
+      "rejected": "مرفوض",
+      "pending": "قيد الانتظار",
+      "done": "مكتمل",
+      "prepering": "قيد التحضير",
+      "fail": "مرفوض"
+    },
+    "buttons": {
+      "copyLocation": "نسخ الموقع",
+      "copied": "تم النسخ!",
+      "cancel": "إلغاء",
+      "saveChanges": "حفظ التغييرات"
+    },
+    "errors": {
+      "rejectionReasonRequired": "يرجى تقديم سبب الرفض"
+    }
+  }
