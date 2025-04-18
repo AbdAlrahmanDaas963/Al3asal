@@ -59,51 +59,48 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 {/* Protected Routes */}
-                <Route
-                  path="/dashboard/*"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                >
-                  <Route index element={<HomeDash />} />
-                  <Route path="orders" element={<Orders />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/dashboard" element={<Dashboard />}>
+                    <Route index element={<HomeDash />} />
+                    <Route path="orders" element={<Orders />} />
+                    <Route path="accounts" element={<Accounts />} />
+                    <Route path="statistics" element={<StatisticsTest />} />
 
-                  <Route path="accounts" element={<Accounts />} />
-                  <Route path="statistics" element={<StatisticsTest />} />
+                    {/* Products Routes */}
+                    <Route path="products" element={<Products />} />
+                    <Route path="products/add" element={<AddProductForm />} />
+                    <Route
+                      path="products/edit/:productId"
+                      element={<EditProductForm />}
+                    />
 
-                  {/* Products Routes */}
-                  <Route path="products" element={<Products />} />
-                  <Route path="products/add" element={<AddProductForm />} />
-                  <Route
-                    path="products/edit/:productId"
-                    element={<EditProductForm />}
-                  />
+                    {/* Offers Routes */}
+                    <Route path="offers" element={<Offers />} />
+                    <Route path="offers/add" element={<AddOfferForm />} />
+                    <Route path="offers/edit" element={<EditOfferForm />} />
 
-                  {/* Offers Routes - Updated */}
-                  <Route path="offers" element={<Offers />} />
-                  <Route path="offers/add" element={<AddOfferForm />} />
-                  <Route path="offers/edit" element={<EditOfferForm />} />
+                    {/* Category Management */}
+                    <Route path="category" element={<Categories />} />
+                    <Route
+                      path="category/add"
+                      element={<AddCategoryForm isEdit={false} />}
+                    />
+                    <Route
+                      path="category/edit/:categoryId"
+                      element={<EditCategory />}
+                    />
 
-                  {/* Category Management */}
-                  <Route path="category" element={<Categories />} />
-                  <Route
-                    path="category/add"
-                    element={<AddCategoryForm isEdit={false} />}
-                  />
-                  <Route
-                    path="category/edit/:categoryId"
-                    element={<EditCategory />}
-                  />
-
-                  {/* Shop Management */}
-                  <Route path="shops" element={<Shops />} />
-                  <Route path="shops/add" element={<AddShopForm />} />
-                  <Route path="shops/edit/:shopId" element={<EditShopForm />} />
+                    {/* Shop Management */}
+                    <Route path="shops" element={<Shops />} />
+                    <Route path="shops/add" element={<AddShopForm />} />
+                    <Route
+                      path="shops/edit/:shopId"
+                      element={<EditShopForm />}
+                    />
+                  </Route>
                 </Route>
 
-                {/* Redirect unknown routes */}
+                {/* Redirect unknown routes to login */}
                 <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
             </ThemeProvider>

@@ -1,28 +1,17 @@
-import React, { useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+// utils/ProtectedRoute.jsx
 import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ children }) => {
-  const token = useSelector((state) => state.auth.token);
-  const location = useLocation();
-
-  // Sync Redux token with localStorage on mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-
-    // Optional: If you want to sync Redux with localStorage on mount
-    // You would need to dispatch an action here to update Redux
-    // if (storedToken && !token) {
-    //   dispatch(setToken(storedToken));
-    // }
-  }, []);
+const ProtectedRoute = () => {
+  const { token } = useSelector((state) => state.auth);
 
   if (!token) {
-    // Redirect to login page, preserving the location they came from
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // User not logged in, redirect to login
+    return <Navigate to="/login" replace />;
   }
 
-  return children;
+  // User is logged in, render the child routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;
