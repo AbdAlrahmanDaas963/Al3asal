@@ -18,14 +18,13 @@ import {
   fetchEarnings,
 } from "../features/Statistics/statisticsSlice";
 import { LineChart } from "@mui/x-charts/LineChart";
-
 import { useTranslation } from "react-i18next";
 
 const TinyCard = ({ children, title, value, subValue }) => {
-  const { t } = useTranslation("homeDash");
-
+  const { t, i18n } = useTranslation("homeDash");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isRTL = i18n.language === "ar";
 
   return (
     <Stack
@@ -49,13 +48,14 @@ const TinyCard = ({ children, title, value, subValue }) => {
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
+          marginInlineEnd: "12px", // RTL-safe margin
         }}
       >
         {React.cloneElement(children, {
           sx: { fontSize: isMobile ? "20px" : "24px" },
         })}
       </Box>
-      <Stack>
+      <Stack sx={{ textAlign: isRTL ? "right" : "left" }}>
         <Box color="white" fontSize={isMobile ? "0.8rem" : "0.9rem"}>
           {title}
         </Box>
@@ -76,12 +76,10 @@ const TinyCard = ({ children, title, value, subValue }) => {
   );
 };
 
-// Helper function to handle translation objects
 function getTranslatedText(text, lang = "en") {
   if (!text) return "";
   if (typeof text === "string") {
     try {
-      // Handle case where name might be a JSON string
       const parsed = JSON.parse(text);
       return parsed[lang] || parsed.en || "";
     } catch {
@@ -93,13 +91,14 @@ function getTranslatedText(text, lang = "en") {
 }
 
 function HomeDash() {
-  const { t } = useTranslation("homeDash");
+  const { t, i18n } = useTranslation("homeDash");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useDispatch();
+  const isRTL = i18n.language === "ar";
 
   const [range, setRange] = useState("monthly");
-  const [language] = useState("en");
+  const [language] = useState(i18n.language);
 
   const { orders } = useSelector((state) => state.orders);
   const { topSales, earnings, loading, error } = useSelector(
@@ -116,20 +115,18 @@ function HomeDash() {
     setRange(e.target.value);
   };
 
-  // Process earnings data for chart
   const earningsData =
     earnings?.data?.map((item) => ({
       period: item.period?.toString(),
       profit: item.profit,
     })) || [];
 
-  // Get top product info from topSales
   const topProduct = topSales?.data?.most_sold_product;
   const usersCount = topSales?.usersCount || 0;
 
   const topProductName = topProduct
     ? getTranslatedText(topProduct.name, language)
-    : "No sales data";
+    : t("stats.topProduct.noData");
 
   const topSalesCount = topProduct ? parseInt(topProduct.quantity) || 0 : 0;
 
@@ -142,6 +139,7 @@ function HomeDash() {
         overflowX: "hidden",
         backgroundColor: "#121212",
         color: "white",
+        direction: isRTL ? "rtl" : "ltr", // Set base direction
       }}
     >
       <Stack
@@ -159,14 +157,33 @@ function HomeDash() {
             borderRadius: 2,
           }}
         >
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h6">{t("earnings.title")}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mb: 2,
+              flexDirection: isRTL ? "row-reverse" : "row", // RTL-aware flex
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ textAlign: isRTL ? "right" : "left" }}
+            >
+              {t("earnings.title")}
+            </Typography>
             <Select
               value={range}
               onChange={handleRangeChange}
               variant="outlined"
               size="small"
-              sx={{ minWidth: 120, color: "white" }}
+              sx={{
+                minWidth: 120,
+                color: "white",
+                "& .MuiSelect-icon": {
+                  left: isRTL ? "7px" : "auto",
+                  right: isRTL ? "auto" : "7px",
+                },
+              }}
             >
               <MenuItem value="weekly">
                 {t("earnings.timeRanges.weekly")}
@@ -215,6 +232,14 @@ function HomeDash() {
                   "& .MuiChartsAxis-line": { stroke: "white" },
                   "& .MuiChartsAxis-label": { fill: "white" },
                 }}
+                slotProps={{
+                  legend: {
+                    direction: isRTL ? "row-reverse" : "row",
+                    labelStyle: {
+                      textAlign: isRTL ? "right" : "left",
+                    },
+                  },
+                }}
               />
             ) : (
               <Box
@@ -224,6 +249,7 @@ function HomeDash() {
                   justifyContent: "center",
                   height: "100%",
                   color: "gray",
+                  textAlign: isRTL ? "right" : "left",
                 }}
               >
                 {loading
@@ -262,7 +288,13 @@ function HomeDash() {
         </Stack>
 
         {/* Orders Table */}
-        <Box sx={{ width: "100%", overflowX: isMobile ? "auto" : "hidden" }}>
+        <Box
+          sx={{
+            width: "100%",
+            overflowX: isMobile ? "auto" : "hidden",
+            direction: "ltr", // Force LTR for tables to prevent column reordering
+          }}
+        >
           <OrdersTable2 orders={orders} rows={isMobile ? 3 : 5} />
         </Box>
       </Stack>

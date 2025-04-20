@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -33,6 +34,7 @@ const VisuallyHiddenInput = styled("input")({
 });
 
 const AddOfferForm = ({ onSuccess }) => {
+  const { t } = useTranslation("offers");
   const dispatch = useDispatch();
   const { data: products, status: productsStatus } = useSelector(
     (state) => state.products
@@ -69,7 +71,7 @@ const AddOfferForm = ({ onSuccess }) => {
     if (file.size > MAX_FILE_SIZE) {
       setValidationErrors({
         ...validationErrors,
-        poster_image: "Image size must be less than 2MB",
+        poster_image: t("imageSizeError"),
       });
       e.target.value = "";
       setFormData({ ...formData, poster_image: null });
@@ -80,7 +82,7 @@ const AddOfferForm = ({ onSuccess }) => {
     if (!file.type.match("image.*")) {
       setValidationErrors({
         ...validationErrors,
-        poster_image: "Please select an image file (JPEG, PNG, etc.)",
+        poster_image: t("imageTypeError"),
       });
       e.target.value = "";
       setFormData({ ...formData, poster_image: null });
@@ -103,9 +105,9 @@ const AddOfferForm = ({ onSuccess }) => {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.percentage) errors.percentage = "Percentage is required";
-    if (!formData.product_id) errors.product_id = "Product is required";
-    if (!formData.poster_image) errors.poster_image = "Image is required";
+    if (!formData.percentage) errors.percentage = t("percentageRequired");
+    if (!formData.product_id) errors.product_id = t("productRequired");
+    if (!formData.poster_image) errors.poster_image = t("imageRequired");
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -143,7 +145,7 @@ const AddOfferForm = ({ onSuccess }) => {
     <Card variant="outlined">
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Create New Offer
+          {t("createOfferTitle")}
         </Typography>
 
         <Box
@@ -152,10 +154,10 @@ const AddOfferForm = ({ onSuccess }) => {
           sx={{ display: "flex", flexDirection: "column", gap: 3 }}
         >
           <FormControl fullWidth error={!!validationErrors.product_id}>
-            <InputLabel id="product-select-label">Product</InputLabel>
+            <InputLabel id="product-select-label">{t("product")}</InputLabel>
             <Select
               labelId="product-select-label"
-              label="Product"
+              label={t("product")}
               value={formData.product_id}
               onChange={(e) =>
                 setFormData({ ...formData, product_id: e.target.value })
@@ -166,7 +168,9 @@ const AddOfferForm = ({ onSuccess }) => {
                 <MenuItem disabled>
                   <Box display="flex" alignItems="center" gap={1}>
                     <CircularProgress size={20} />
-                    <Typography variant="body2">Loading products...</Typography>
+                    <Typography variant="body2">
+                      {t("loadingProducts")}
+                    </Typography>
                   </Box>
                 </MenuItem>
               ) : (
@@ -185,7 +189,7 @@ const AddOfferForm = ({ onSuccess }) => {
           </FormControl>
 
           <TextField
-            label="Percentage"
+            label={t("percentage")}
             type="number"
             value={formData.percentage}
             onChange={(e) =>
@@ -207,7 +211,7 @@ const AddOfferForm = ({ onSuccess }) => {
               startIcon={<CloudUpload />}
               fullWidth
             >
-              Upload Poster Image (Max 2MB)
+              {t("uploadPosterImage")}
               <VisuallyHiddenInput
                 type="file"
                 accept="image/*"
@@ -240,7 +244,7 @@ const AddOfferForm = ({ onSuccess }) => {
             {operation.status === "loading" ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              "Create Offer"
+              t("createOffer")
             )}
           </Button>
         </Box>
@@ -259,8 +263,8 @@ const AddOfferForm = ({ onSuccess }) => {
             sx={{ width: "100%" }}
           >
             {operation.status === "succeeded"
-              ? "Offer created successfully!"
-              : operation.error?.message || "Failed to create offer"}
+              ? t("offerCreated")
+              : operation.error?.message || t("createError")}
           </Alert>
         </Snackbar>
       </CardContent>

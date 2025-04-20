@@ -39,6 +39,15 @@ import productFormAr from "./locales/ar/productFormAr.json";
 import addProductFormEn from "./locales/en/addProductFormEn.json";
 import addProductFormAr from "./locales/ar/addProductFormAr.json";
 
+import offersEn from "./locales/en/offersEn.json";
+import offersAr from "./locales/ar/offersAr.json";
+
+import categoriesEn from "./locales/en/categoriesEn.json";
+import categoriesAr from "./locales/ar/categoriesAr.json";
+
+import shopsEn from "./locales/en/shopsEn.json";
+import shopsAr from "./locales/ar/shopsAr.json";
+
 // Initialize with all namespaces
 i18n.use(initReactI18next).init({
   resources: {
@@ -56,6 +65,9 @@ i18n.use(initReactI18next).init({
       products: productsEn,
       productForm: productFormEn,
       addProductForm: addProductFormEn,
+      offers: offersEn,
+      categories: categoriesEn,
+      shops: shopsEn,
     },
     ar: {
       common: commonAr,
@@ -71,6 +83,9 @@ i18n.use(initReactI18next).init({
       products: productsAr,
       productForm: productFormAr,
       addProductForm: addProductFormAr,
+      offers: offersAr,
+      categories: categoriesAr,
+      shops: shopsAr,
     },
   },
   lng: localStorage.getItem("language") || "en",
@@ -89,6 +104,9 @@ i18n.use(initReactI18next).init({
     "products",
     "productForm",
     "addProductForm",
+    "offers",
+    "categories",
+    "shops",
   ],
   defaultNS: "common",
   interpolation: {

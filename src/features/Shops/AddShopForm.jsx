@@ -11,6 +11,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { resetStatus, createShop } from "./shopSlice";
+import { useTranslation } from "react-i18next";
 
 // Constants
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -22,6 +23,7 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 
 const AddShopForm = () => {
+  const { t } = useTranslation("shops");
   const [formData, setFormData] = useState({
     name: {
       en: "",
@@ -40,12 +42,10 @@ const AddShopForm = () => {
   const { status: reduxStatus, error } = useSelector((state) => state.shops);
 
   useEffect(() => {
-    // Reset status when component mounts
     dispatch(resetStatus());
     setLocalStatus("idle");
 
     return () => {
-      // Cleanup on unmount
       dispatch(resetStatus());
       if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
@@ -54,11 +54,9 @@ const AddShopForm = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    // Only update local status if redux status changes to something meaningful
     if (reduxStatus !== "idle") {
       setLocalStatus(reduxStatus);
 
-      // Redirect on success
       if (reduxStatus === "succeeded") {
         const timer = setTimeout(() => {
           navigate("/dashboard/shops");
@@ -72,14 +70,12 @@ const AddShopForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Clear errors when field changes
     if (name.startsWith("name.")) {
       setErrors((prev) => ({ ...prev, [name.split(".")[1]]: undefined }));
     } else {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
 
-    // Handle nested name fields
     if (name.startsWith("name.")) {
       const [parent, lang] = name.split(".");
       setFormData((prev) => ({
@@ -106,7 +102,7 @@ const AddShopForm = () => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
-        image: "Only JPG, PNG or WEBP images allowed",
+        image: t("invalidImageType"),
       }));
       return;
     }
@@ -114,12 +110,11 @@ const AddShopForm = () => {
     if (file.size > MAX_IMAGE_SIZE) {
       setErrors((prev) => ({
         ...prev,
-        image: `Image must be less than ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+        image: t("imageSizeError", { size: MAX_IMAGE_SIZE / 1024 / 1024 }),
       }));
       return;
     }
 
-    // Clean up previous preview if exists
     if (imagePreview) {
       URL.revokeObjectURL(imagePreview);
     }
@@ -131,9 +126,9 @@ const AddShopForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.ar.trim()) newErrors.ar = "Arabic name is required";
-    if (!formData.name.en.trim()) newErrors.en = "English name is required";
-    if (!formData.image) newErrors.image = "Image is required";
+    if (!formData.name.ar.trim()) newErrors.ar = t("nameArRequired");
+    if (!formData.name.en.trim()) newErrors.en = t("nameEnRequired");
+    if (!formData.image) newErrors.image = t("imageRequired");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -163,7 +158,7 @@ const AddShopForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Add New Shop
+        {t("addShopTitle")}
       </Typography>
       <Box
         component="form"
@@ -171,7 +166,7 @@ const AddShopForm = () => {
         sx={{ mt: 2, width: "400px" }}
       >
         <TextField
-          label="Shop Name (Arabic)"
+          label={t("shopNameAr")}
           name="name.ar"
           value={formData.name.ar}
           onChange={handleChange}
@@ -180,9 +175,10 @@ const AddShopForm = () => {
           required
           error={!!errors.ar}
           helperText={errors.ar}
+          dir="rtl"
         />
         <TextField
-          label="Shop Name (English)"
+          label={t("shopNameEn")}
           name="name.en"
           value={formData.name.en}
           onChange={handleChange}
@@ -194,7 +190,7 @@ const AddShopForm = () => {
         />
         <TextField
           select
-          label="Is Interested"
+          label={t("isInterested")}
           name="is_interested"
           value={formData.is_interested}
           onChange={handleChange}
@@ -202,8 +198,8 @@ const AddShopForm = () => {
           margin="normal"
           required
         >
-          <MenuItem value={1}>Yes</MenuItem>
-          <MenuItem value={0}>No</MenuItem>
+          <MenuItem value={1}>{t("yes")}</MenuItem>
+          <MenuItem value={0}>{t("no")}</MenuItem>
         </TextField>
 
         {errors.image && (
@@ -232,12 +228,12 @@ const AddShopForm = () => {
 
         {localStatus === "failed" && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {error || "Failed to add shop"}
+            {error || t("createError")}
           </Alert>
         )}
 
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload Image (max 2MB)"}
+          {fileName || t("uploadImage")}
           <input
             type="file"
             hidden
@@ -256,7 +252,7 @@ const AddShopForm = () => {
             localStatus === "loading" ? <CircularProgress size={20} /> : null
           }
         >
-          {localStatus === "loading" ? "Adding Shop..." : "Add Shop"}
+          {localStatus === "loading" ? t("addingShop") : t("addShop")}
         </Button>
       </Box>
     </Box>

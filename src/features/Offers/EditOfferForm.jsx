@@ -16,17 +16,17 @@ import {
 } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import { updateOffer, resetOperationStatus } from "./offersSlice";
+import { useTranslation } from "react-i18next";
 
 const EditOfferForm = () => {
+  const { t } = useTranslation("offers");
   const { state } = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { operation } = useSelector((state) => state.offers);
 
-  // Get offer from navigation state
   const currentOffer = state?.offer;
 
-  // Form state
   const [formData, setFormData] = useState({
     percentage: "",
     poster_image: null,
@@ -34,7 +34,6 @@ const EditOfferForm = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Initialize form with current offer data
   useEffect(() => {
     if (currentOffer) {
       setFormData({
@@ -49,14 +48,13 @@ const EditOfferForm = () => {
     };
   }, [currentOffer, dispatch]);
 
-  // Redirect on successful update
   useEffect(() => {
     if (operation.status === "succeeded") {
       navigate("/dashboard/offers", {
-        state: { success: "Offer updated successfully" },
+        state: { success: t("updateSuccess") },
       });
     }
-  }, [operation.status, navigate]);
+  }, [operation.status, navigate, t]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -66,7 +64,7 @@ const EditOfferForm = () => {
     if (file.size > MAX_FILE_SIZE) {
       setValidationErrors({
         ...validationErrors,
-        poster_image: "Image size must be less than 2MB",
+        poster_image: t("imageSizeError"),
       });
       e.target.value = "";
       setFormData((prev) => ({ ...prev, poster_image: null }));
@@ -77,7 +75,7 @@ const EditOfferForm = () => {
     if (!file.type.match("image.*")) {
       setValidationErrors({
         ...validationErrors,
-        poster_image: "Please select an image file (JPEG, PNG, etc.)",
+        poster_image: t("imageTypeError"),
       });
       e.target.value = "";
       setFormData((prev) => ({ ...prev, poster_image: null }));
@@ -102,9 +100,9 @@ const EditOfferForm = () => {
   const validateForm = () => {
     const errors = {};
     if (!formData.percentage) {
-      errors.percentage = "Percentage is required";
+      errors.percentage = t("percentageRequired");
     } else if (formData.percentage < 0 || formData.percentage > 100) {
-      errors.percentage = "Must be between 0-100%";
+      errors.percentage = t("percentageRange");
     }
 
     setValidationErrors(errors);
@@ -131,7 +129,7 @@ const EditOfferForm = () => {
       );
     } catch (error) {
       setValidationErrors({
-        submit: error.message || "Failed to update offer",
+        submit: error.message || t("updateError"),
       });
     }
   };
@@ -146,13 +144,13 @@ const EditOfferForm = () => {
     return (
       <Container maxWidth="sm" sx={{ mt: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Offer data not found. Please select an offer from the list.
+          {t("offerNotFound")}
         </Alert>
         <Button
           variant="contained"
           onClick={() => navigate("/dashboard/offers")}
         >
-          Back to Offers
+          {t("backToOffers")}
         </Button>
       </Container>
     );
@@ -163,29 +161,29 @@ const EditOfferForm = () => {
       <Card variant="outlined">
         <CardContent>
           <Typography variant="h5" gutterBottom>
-            Edit Offer
+            {t("editOfferTitle")}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
             {/* Read-only Product Info Section */}
             <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-              Product Information
+              {t("productInfo")}
             </Typography>
             <Stack spacing={2} sx={{ mb: 3 }}>
               <TextField
-                label="Product Name"
+                label={t("productName")}
                 value={getDisplayName(currentOffer.product?.name)}
                 fullWidth
                 disabled
               />
               <TextField
-                label="Shop"
+                label={t("shop")}
                 value={getDisplayName(currentOffer.product?.shop?.name)}
                 fullWidth
                 disabled
               />
               <TextField
-                label="Original Price"
+                label={t("originalPrice")}
                 value={
                   currentOffer.product?.price
                     ? `$${currentOffer.product.price.toFixed(2)}`
@@ -198,11 +196,11 @@ const EditOfferForm = () => {
 
             {/* Editable Fields Section */}
             <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-              Offer Details
+              {t("offerDetails")}
             </Typography>
             <Stack spacing={2} sx={{ mb: 3 }}>
               <TextField
-                label="Discount Percentage"
+                label={t("discountPercentage")}
                 name="percentage"
                 type="number"
                 value={formData.percentage}
@@ -221,7 +219,7 @@ const EditOfferForm = () => {
 
               <Box>
                 <Typography variant="body2" sx={{ mb: 1 }}>
-                  Poster Image (Max 2MB)
+                  {t("posterImage")}
                 </Typography>
                 {imagePreview && (
                   <Box
@@ -242,7 +240,9 @@ const EditOfferForm = () => {
                   component="label"
                   startIcon={<CloudUpload />}
                 >
-                  {formData.poster_image ? "Change Image" : "Upload New Image"}
+                  {formData.poster_image
+                    ? t("changeImage")
+                    : t("uploadNewImage")}
                   <input
                     type="file"
                     onChange={handleImageChange}
@@ -263,13 +263,15 @@ const EditOfferForm = () => {
               <Box
                 sx={{ mb: 3, p: 2, bgcolor: "action.hover", borderRadius: 1 }}
               >
-                <Typography variant="subtitle2">Price Preview</Typography>
+                <Typography variant="subtitle2">{t("pricePreview")}</Typography>
                 <Typography>
-                  Original: ${currentOffer.product.price.toFixed(2)}
+                  {t("original")}: ${currentOffer.product.price.toFixed(2)}
                 </Typography>
-                <Typography>Discount: {formData.percentage}%</Typography>
+                <Typography>
+                  {t("discount")}: {formData.percentage}%
+                </Typography>
                 <Typography variant="h6" sx={{ mt: 1 }}>
-                  New Price: $
+                  {t("newPrice")}: $
                   {(
                     currentOffer.product.price *
                     (1 - formData.percentage / 100)
@@ -286,7 +288,7 @@ const EditOfferForm = () => {
                 onClick={() => navigate("/dashboard/offers")}
                 disabled={operation.status === "loading"}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button
                 type="submit"
@@ -298,7 +300,7 @@ const EditOfferForm = () => {
                 {operation.status === "loading" ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
-                  "Update Offer"
+                  t("updateOffer")
                 )}
               </Button>
             </Stack>

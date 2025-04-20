@@ -14,13 +14,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import CategoryCard from "../../components/common/CategoryCard";
 import { fetchCategories } from "./categorySlice";
+import { useTranslation } from "react-i18next";
 
 const CategoryList = () => {
+  const { t } = useTranslation("categories");
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
-  // Get state with proper defaults and backward compatibility
   const {
     data: categories = [],
     loading,
@@ -35,20 +36,17 @@ const CategoryList = () => {
     status: state.categories.status,
   }));
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => setSearchDebounced(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch data only when needed
   useEffect(() => {
     if (!lastFetched || Date.now() - lastFetched > 300000) {
       dispatch(fetchCategories());
     }
   }, [dispatch, lastFetched]);
 
-  // Filter categories with multilingual support
   const filteredCategories = useMemo(() => {
     if (!searchDebounced) return categories;
 
@@ -64,10 +62,8 @@ const CategoryList = () => {
     });
   }, [categories, searchDebounced]);
 
-  // Skeleton loading array
   const loadingSkeletons = Array(6).fill(0);
 
-  // Show skeletons only on initial load when no data exists
   if (status === "loading" && (!lastFetched || categories.length === 0)) {
     return (
       <Box sx={{ p: 3 }}>
@@ -97,31 +93,29 @@ const CategoryList = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load: {error}
+          {t("loadError", { error })}
         </Alert>
         <Button
           variant="contained"
           onClick={() => dispatch(fetchCategories())}
           startIcon={<RefreshIcon />}
         >
-          Retry
+          {t("retry")}
         </Button>
       </Box>
     );
   }
 
-  // Main render
   return (
     <Box sx={{ p: 3 }}>
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Search categories..."
+        placeholder={t("searchPlaceholder")}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
@@ -162,8 +156,8 @@ const CategoryList = () => {
             >
               <Typography variant="h6" color="textSecondary">
                 {searchDebounced
-                  ? "No matching categories found"
-                  : "No categories available"}
+                  ? t("noMatchingCategories")
+                  : t("noCategories")}
               </Typography>
               {searchDebounced && (
                 <Button
@@ -171,7 +165,7 @@ const CategoryList = () => {
                   onClick={() => setSearchQuery("")}
                   sx={{ mt: 2 }}
                 >
-                  Clear Search
+                  {t("clearSearch")}
                 </Button>
               )}
             </Box>

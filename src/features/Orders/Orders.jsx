@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders } from "./ordersSlice";
 import OrdersTable from "./OrdersTable";
 import OrdersTable2 from "./OrdersTable2";
+import { Box } from "@mui/material";
 
 const Orders = () => {
   const dispatch = useDispatch();
@@ -33,10 +34,10 @@ const Orders = () => {
   }, [orders]);
 
   return (
-    <div>
+    <Box sx={{ direction: "ltr" }}>
       {/* <OrdersTable orders={orders} /> */}
       <OrdersTable2 orders={orders} />
-    </div>
+    </Box>
   );
 };
 

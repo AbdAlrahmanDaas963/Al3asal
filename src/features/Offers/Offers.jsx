@@ -2,8 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import OfferList from "./OfferList";
 import { Button, Stack } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 function Offers() {
+  const { t } = useTranslation("offers");
   const navigate = useNavigate();
 
   return (
@@ -17,7 +19,7 @@ function Offers() {
           fontSize: "20px",
         }}
       >
-        Add Offer +
+        {t("addOffer")}
       </Button>
       <OfferList />
     </Stack>

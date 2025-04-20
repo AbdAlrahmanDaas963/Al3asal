@@ -15,13 +15,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import { fetchOffers } from "./offersSlice";
 import OfferCard from "./OfferCard";
+import { useTranslation } from "react-i18next";
 
 const OfferList = () => {
+  const { t } = useTranslation("offers");
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
-  // Redux state with better default values
   const {
     data: offers = [],
     loading = false,
@@ -29,7 +30,6 @@ const OfferList = () => {
     lastFetched = null,
   } = useSelector((state) => state.offers?.offers || {});
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(searchQuery);
@@ -38,9 +38,8 @@ const OfferList = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch offers with cache validation
   useEffect(() => {
-    const shouldFetch = !lastFetched || Date.now() - lastFetched > 300000; // 5 minute cache
+    const shouldFetch = !lastFetched || Date.now() - lastFetched > 300000;
     if (shouldFetch) {
       dispatch(fetchOffers());
     }
@@ -51,13 +50,11 @@ const OfferList = () => {
 
     const searchLower = searchDebounced.toLowerCase();
     return offers.filter((offer) => {
-      // Safely handle product name (null/undefined/object cases)
       const productName =
         typeof offer.product?.name === "string"
           ? offer.product.name.toLowerCase()
           : "";
 
-      // Safely handle description (null/undefined/object cases)
       const description =
         typeof offer.product?.description === "string"
           ? offer.product.description.toLowerCase()
@@ -69,7 +66,6 @@ const OfferList = () => {
     });
   }, [offers, searchDebounced]);
 
-  // Loading skeleton array
   const loadingSkeletons = Array(6).fill(0);
 
   if (loading && offers.length === 0) {
@@ -102,14 +98,14 @@ const OfferList = () => {
     return (
       <Box mt={4}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load offers: {error.message || "Unknown error"}
+          {t("loadError", { error: error.message || "Unknown error" })}
         </Alert>
         <Button
           variant="contained"
           onClick={() => dispatch(fetchOffers())}
           startIcon={<RefreshIcon />}
         >
-          Retry
+          {t("retry")}
         </Button>
       </Box>
     );
@@ -117,12 +113,11 @@ const OfferList = () => {
 
   return (
     <Box>
-      {/* Search Bar */}
       <Box mb={3}>
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Search offers by name or description"
+          placeholder={t("searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{
@@ -146,7 +141,6 @@ const OfferList = () => {
         />
       </Box>
 
-      {/* Offers List */}
       {filteredOffers.length > 0 ? (
         <Grid container spacing={3} justifyContent="center">
           {filteredOffers.map((offer) => (
@@ -164,9 +158,7 @@ const OfferList = () => {
           minHeight="300px"
         >
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            {searchDebounced
-              ? "No matching offers found"
-              : "No offers available"}
+            {searchDebounced ? t("noMatchingOffers") : t("noOffers")}
           </Typography>
           {searchDebounced && (
             <Button
@@ -174,7 +166,7 @@ const OfferList = () => {
               onClick={() => setSearchQuery("")}
               sx={{ mt: 2 }}
             >
-              Clear search
+              {t("clearSearch")}
             </Button>
           )}
         </Box>

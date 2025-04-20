@@ -2,25 +2,24 @@ import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { deleteCategory } from "../../features/Categories/categorySlice";
+import { useTranslation } from "react-i18next";
 
 function CategoryCard({ category }) {
+  const { t } = useTranslation("categories");
   const { id, name, image, is_featured, is_interested } = category;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const handleDelete = () => {
-    if (
-      window.confirm(`Are you sure you want to delete this category? ${id}`)
-    ) {
+    if (window.confirm(t("deleteConfirmation", { id }))) {
       dispatch(deleteCategory(id));
     }
   };
 
-  // Safely get the display name (handles both string and {en, ar} object cases)
   const getDisplayName = () => {
     if (typeof name === "string") return name;
-    if (name && name.en) return name.en; // Default to English
-    return "Unnamed Category"; // Fallback
+    if (name && name.en) return name.en;
+    return t("unnamedCategory");
   };
 
   return (
@@ -61,20 +60,20 @@ function CategoryCard({ category }) {
             fontSize: 12,
           }}
         >
-          Interested
+          {t("interested")}
         </Typography>
       )}
 
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">
-          Category Name:
+          {t("categoryName")}:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
           {getDisplayName()}
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} mt={1} justifyContent="center">
+      <Stack direction="row" spacing={1} mt={1} justifyContent="space-between">
         <Button
           variant="contained"
           color="primary"
@@ -83,7 +82,7 @@ function CategoryCard({ category }) {
             navigate(`/dashboard/category/edit/${id}`, { state: { category } })
           }
         >
-          Edit
+          {t("edit")}
         </Button>
         <Button
           variant="contained"
@@ -91,7 +90,7 @@ function CategoryCard({ category }) {
           size="small"
           onClick={handleDelete}
         >
-          Delete
+          {t("delete")}
         </Button>
       </Stack>
     </Stack>

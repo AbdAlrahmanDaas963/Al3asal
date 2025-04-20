@@ -10,8 +10,10 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchShopById, updateShop, resetStatus } from "./shopSlice";
+import { useTranslation } from "react-i18next";
 
 const EditShopForm = () => {
+  const { t } = useTranslation("shops");
   const { shopId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -70,6 +72,7 @@ const EditShopForm = () => {
           [lang]: value,
         },
       }));
+      setValidationErrors((prev) => ({ ...prev, [`name_${lang}`]: undefined }));
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -88,8 +91,8 @@ const EditShopForm = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.name.ar?.trim()) errors.name_ar = "Arabic name is required";
-    if (!formData.name.en?.trim()) errors.name_en = "English name is required";
+    if (!formData.name.ar?.trim()) errors.name_ar = t("nameArRequired");
+    if (!formData.name.en?.trim()) errors.name_en = t("nameEnRequired");
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -107,7 +110,7 @@ const EditShopForm = () => {
       );
 
       if (updateShop.fulfilled.match(result)) {
-        navigate("/dashboard/shops"); // Immediately navigate back on success
+        navigate("/dashboard/shops");
       }
     } catch (err) {
       console.error("Update failed:", err);
@@ -117,13 +120,13 @@ const EditShopForm = () => {
   return (
     <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
       <Typography variant="h5" gutterBottom align="center">
-        Edit Shop
+        {t("editShopTitle")}
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} noValidate>
         {/* Arabic Name */}
         <TextField
-          label="Shop Name (Arabic)"
+          label={t("shopNameAr")}
           name="name.ar"
           value={formData.name.ar || ""}
           onChange={handleChange}
@@ -132,11 +135,12 @@ const EditShopForm = () => {
           required
           error={!!validationErrors.name_ar}
           helperText={validationErrors.name_ar}
+          dir="rtl"
         />
 
         {/* English Name */}
         <TextField
-          label="Shop Name (English)"
+          label={t("shopNameEn")}
           name="name.en"
           value={formData.name.en || ""}
           onChange={handleChange}
@@ -149,7 +153,7 @@ const EditShopForm = () => {
 
         <TextField
           select
-          label="Is Interested"
+          label={t("isInterested")}
           name="is_interested"
           value={formData.is_interested}
           onChange={handleChange}
@@ -157,14 +161,14 @@ const EditShopForm = () => {
           margin="normal"
           required
         >
-          <MenuItem value={1}>Yes</MenuItem>
-          <MenuItem value={0}>No</MenuItem>
+          <MenuItem value={1}>{t("yes")}</MenuItem>
+          <MenuItem value={0}>{t("no")}</MenuItem>
         </TextField>
 
         {(formData.previewImage || preview) && (
           <Box mt={2}>
             <Typography variant="subtitle2" gutterBottom>
-              {preview ? "New Preview" : "Current Image"}
+              {preview ? t("newPreview") : t("currentImage")}
             </Typography>
             <img
               src={preview || formData.previewImage}
@@ -178,7 +182,7 @@ const EditShopForm = () => {
           </Box>
         )}
         <Button variant="outlined" component="label" fullWidth sx={{ mt: 2 }}>
-          {fileName || "Upload New Image (max 2MB)"}
+          {fileName || t("uploadImage")}
           <input
             type="file"
             hidden
@@ -192,7 +196,7 @@ const EditShopForm = () => {
             fullWidth
             onClick={() => navigate("/dashboard/shops")}
           >
-            Cancel
+            {t("cancel")}
           </Button>
 
           <Button
@@ -205,7 +209,7 @@ const EditShopForm = () => {
               status === "loading" ? <CircularProgress size={20} /> : null
             }
           >
-            {status === "loading" ? "Updating..." : "Update Shop"}
+            {status === "loading" ? t("updating") : t("updateShop")}
           </Button>
         </Box>
       </Box>

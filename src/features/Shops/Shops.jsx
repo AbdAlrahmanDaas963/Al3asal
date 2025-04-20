@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button, Stack } from "@mui/material";
 import ShopForm from "./ShopForm";
 import ShopList from "./ShopList";
+import { useTranslation } from "react-i18next";
 
 const Shops = ({ shopId }) => {
+  const { t } = useTranslation("shops");
   const navigate = useNavigate();
 
   return (
@@ -22,7 +24,7 @@ const Shops = ({ shopId }) => {
               fontSize: "20px",
             }}
           >
-            Add Shop +
+            {t("addShop")}
           </Button>
           <ShopList />
         </>

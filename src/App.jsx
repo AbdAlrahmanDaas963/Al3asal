@@ -42,7 +42,17 @@ import ProtectedRoute from "./utils/ProtectedRoute";
 import AddOfferForm from "./features/Offers/AddOfferForm";
 
 // Create a JSS instance with RTL support
-const jss = create({ plugins: [...jssPreset().plugins, rtl()] });
+const jss = create({
+  plugins: [...jssPreset().plugins, rtl()],
+});
+
+function RTLWrapper({ children, direction }) {
+  return direction === "rtl" ? (
+    <StylesProvider jss={jss}>{children}</StylesProvider>
+  ) : (
+    <StylesProvider>{children}</StylesProvider>
+  );
+}
 
 function App() {
   return (
@@ -51,56 +61,52 @@ function App() {
         <LanguageContext.Consumer>
           {({ direction }) => (
             <ThemeProvider theme={getTheme(direction)}>
-              <CssBaseline />
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<Login />} />
-
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/dashboard" element={<Dashboard />}>
-                    <Route index element={<HomeDash />} />
-                    <Route path="orders" element={<Orders />} />
-                    <Route path="accounts" element={<Accounts />} />
-                    <Route path="statistics" element={<StatisticsTest />} />
-
-                    {/* Products Routes */}
-                    <Route path="products" element={<Products />} />
-                    <Route path="products/add" element={<AddProductForm />} />
-                    <Route
-                      path="products/edit/:productId"
-                      element={<EditProductForm />}
-                    />
-
-                    {/* Offers Routes */}
-                    <Route path="offers" element={<Offers />} />
-                    <Route path="offers/add" element={<AddOfferForm />} />
-                    <Route path="offers/edit" element={<EditOfferForm />} />
-
-                    {/* Category Management */}
-                    <Route path="category" element={<Categories />} />
-                    <Route
-                      path="category/add"
-                      element={<AddCategoryForm isEdit={false} />}
-                    />
-                    <Route
-                      path="category/edit/:categoryId"
-                      element={<EditCategory />}
-                    />
-
-                    {/* Shop Management */}
-                    <Route path="shops" element={<Shops />} />
-                    <Route path="shops/add" element={<AddShopForm />} />
-                    <Route
-                      path="shops/edit/:shopId"
-                      element={<EditShopForm />}
-                    />
+              <RTLWrapper direction={direction}>
+                <CssBaseline />
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<Login />} />
+                  {/* Protected Routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="/dashboard" element={<Dashboard />}>
+                      <Route index element={<HomeDash />} />
+                      <Route path="orders" element={<Orders />} />
+                      <Route path="accounts" element={<Accounts />} />
+                      <Route path="statistics" element={<StatisticsTest />} />
+                      {/* Products Routes */}
+                      <Route path="products" element={<Products />} />
+                      <Route path="products/add" element={<AddProductForm />} />
+                      <Route
+                        path="products/edit/:productId"
+                        element={<EditProductForm />}
+                      />
+                      {/* Offers Routes */}
+                      <Route path="offers" element={<Offers />} />
+                      <Route path="offers/add" element={<AddOfferForm />} />
+                      <Route path="offers/edit" element={<EditOfferForm />} />
+                      {/* Category Management */}
+                      <Route path="category" element={<Categories />} />
+                      <Route
+                        path="category/add"
+                        element={<AddCategoryForm isEdit={false} />}
+                      />
+                      <Route
+                        path="category/edit/:categoryId"
+                        element={<EditCategory />}
+                      />
+                      {/* Shop Management */}
+                      <Route path="shops" element={<Shops />} />
+                      <Route path="shops/add" element={<AddShopForm />} />
+                      <Route
+                        path="shops/edit/:shopId"
+                        element={<EditShopForm />}
+                      />
+                    </Route>
                   </Route>
-                </Route>
-
-                {/* Redirect unknown routes to login */}
-                <Route path="*" element={<Navigate to="/login" replace />} />
-              </Routes>
+                  {/* Redirect unknown routes to login */}
+                  <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
+              </RTLWrapper>
             </ThemeProvider>
           )}
         </LanguageContext.Consumer>

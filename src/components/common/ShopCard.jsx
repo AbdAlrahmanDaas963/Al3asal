@@ -2,16 +2,17 @@ import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { deleteShop } from "../../features/Shops/shopSlice";
+import { useTranslation } from "react-i18next";
 
 function ShopCard({ shop }) {
+  const { t } = useTranslation("shops");
   const { id, name, image, is_interested } = shop;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Get display name (handles both string and multilingual object)
   const getDisplayName = () => {
     if (typeof name === "string") return name;
-    return name?.en || name?.ar || "Untitled Shop";
+    return name?.en || name?.ar || t("untitledShop");
   };
 
   const handleEdit = () => {
@@ -19,7 +20,7 @@ function ShopCard({ shop }) {
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this shop?")) {
+    if (window.confirm(t("deleteConfirmation"))) {
       dispatch(deleteShop(id));
     }
   };
@@ -34,7 +35,6 @@ function ShopCard({ shop }) {
         position: "relative",
       }}
     >
-      {/* Shop Image */}
       <img
         src={image || "https://via.placeholder.com/300x150?text=No+Image"}
         style={{
@@ -50,7 +50,6 @@ function ShopCard({ shop }) {
         }}
       />
 
-      {/* Interested Badge - Only shows when is_interested is 1 */}
       {is_interested === 1 && (
         <Typography
           sx={{
@@ -64,30 +63,28 @@ function ShopCard({ shop }) {
             fontSize: 12,
           }}
         >
-          Interested
+          {t("interested")}
         </Typography>
       )}
 
-      {/* Shop Name */}
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">
-          Shop Name:
+          {t("shopName")}:
         </Typography>
         <Typography variant="body1" fontWeight="bold">
           {getDisplayName()}
         </Typography>
       </Stack>
 
-      {/* Action Buttons */}
       <Stack direction="row" spacing={1} mt={2} justifyContent="center">
         <Button
           variant="contained"
           color="primary"
           size="small"
-          onClick={() => navigate(`/dashboard/shops/edit/${id}`)}
+          onClick={handleEdit}
           sx={{ flex: 1 }}
         >
-          Edit
+          {t("edit")}
         </Button>
         <Button
           variant="contained"
@@ -96,7 +93,7 @@ function ShopCard({ shop }) {
           onClick={handleDelete}
           sx={{ flex: 1 }}
         >
-          Delete
+          {t("delete")}
         </Button>
       </Stack>
     </Stack>

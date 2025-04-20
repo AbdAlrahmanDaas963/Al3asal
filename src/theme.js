@@ -29,9 +29,30 @@ const getTheme = (direction) =>
         textTransform: "none", // Optional: to avoid uppercase transformation
       },
     },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          marginInlineStart: "8px",
+          marginInlineEnd: "8px",
+          minWidth: "unset", // Prevents button width issues in RTL
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          marginBottom: "16px",
+        },
+      },
+    },
+    MuiStack: {
+      defaultProps: {
+        direction: "row", // Let MUI handle RTL conversion automatically
+      },
+    },
     components: {
       MuiCssBaseline: {
-        styleOverrides: {
+        styleOverrides: (theme) => ({
           html: {
             width: "100%",
             height: "100%",
@@ -41,8 +62,11 @@ const getTheme = (direction) =>
             width: "100%",
             height: "100%",
             WebkitTextSizeAdjust: "100%",
+            // Add these for RTL support
+            direction: theme.direction,
+            fontFamily: theme.typography.fontFamily,
           },
-        },
+        }),
       },
     },
   });

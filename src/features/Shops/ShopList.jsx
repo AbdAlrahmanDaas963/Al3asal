@@ -14,13 +14,14 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import ShopCard from "../../components/common/ShopCard";
 import { fetchShops } from "./shopSlice";
+import { useTranslation } from "react-i18next";
 
 const ShopList = () => {
+  const { t } = useTranslation("shops");
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
-  // Get state with proper defaults and backward compatibility
   const {
     data: shops = [],
     loading,
@@ -35,20 +36,17 @@ const ShopList = () => {
     status: state.shops.status,
   }));
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => setSearchDebounced(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch data only when needed
   useEffect(() => {
     if (!lastFetched || Date.now() - lastFetched > 300000) {
       dispatch(fetchShops());
     }
   }, [dispatch, lastFetched]);
 
-  // Filter shops with multilingual support and image fallback
   const filteredShops = useMemo(() => {
     return shops
       .filter((shop) => {
@@ -66,10 +64,8 @@ const ShopList = () => {
       }));
   }, [shops, searchDebounced]);
 
-  // Skeleton loading array
   const loadingSkeletons = Array(6).fill(0);
 
-  // Show skeletons only on initial load when no data exists
   if (status === "loading" && (!lastFetched || shops.length === 0)) {
     return (
       <Box sx={{ p: 3 }}>
@@ -99,31 +95,29 @@ const ShopList = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load shops: {error.message || error}
+          {t("loadError", { error: error.message || error })}
         </Alert>
         <Button
           variant="contained"
           onClick={() => dispatch(fetchShops())}
           startIcon={<RefreshIcon />}
         >
-          Retry
+          {t("retry")}
         </Button>
       </Box>
     );
   }
 
-  // Main render
   return (
     <Box sx={{ p: 3 }}>
       <TextField
         fullWidth
         variant="outlined"
-        placeholder="Search shops..."
+        placeholder={t("searchPlaceholder")}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         sx={{
@@ -150,15 +144,7 @@ const ShopList = () => {
         {filteredShops.length > 0 ? (
           filteredShops.map((shop) => (
             <Grid item key={shop.id}>
-              <ShopCard
-                shop={shop}
-                onError={(e) => {
-                  if (!e.target.dataset.error) {
-                    e.target.dataset.error = "true";
-                    e.target.src = "/placeholder.png";
-                  }
-                }}
-              />
+              <ShopCard shop={shop} />
             </Grid>
           ))
         ) : (
@@ -171,9 +157,7 @@ const ShopList = () => {
               minHeight="200px"
             >
               <Typography variant="h6" color="textSecondary">
-                {searchDebounced
-                  ? "No matching shops found"
-                  : "No shops available"}
+                {searchDebounced ? t("noMatchingShops") : t("noShops")}
               </Typography>
               {searchDebounced && (
                 <Button
@@ -181,7 +165,7 @@ const ShopList = () => {
                   onClick={() => setSearchQuery("")}
                   sx={{ mt: 2 }}
                 >
-                  Clear Search
+                  {t("clearSearch")}
                 </Button>
               )}
             </Box>

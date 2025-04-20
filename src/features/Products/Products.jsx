@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import ProductList from "./ProductList";
-import { Button, Typography, Container } from "@mui/material";
+import { Button, Typography, Container, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 const Products = () => {
@@ -29,7 +29,9 @@ const Products = () => {
           {t("products.addButton")}
         </Button>
       </div>
-      <ProductList />
+      <Box sx={{ direction: "ltr" }}>
+        <ProductList />
+      </Box>
     </Container>
   );
 };

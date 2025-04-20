@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Box, Grid, Typography, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Typography,
+  Select,
+  MenuItem,
+  Skeleton,
+} from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchTopShops,
@@ -85,6 +92,58 @@ const StatisticsTest = () => {
       revenue: item.total_sold,
     })) || [];
 
+  // Skeleton components
+  const ProductSkeleton = () => (
+    <Box sx={{ width: 200, height: 280, p: 1 }}>
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height={120}
+        sx={{ bgcolor: "#333" }}
+      />
+      <Skeleton width="60%" sx={{ bgcolor: "#333", mt: 1 }} />
+      <Skeleton width="40%" sx={{ bgcolor: "#333" }} />
+      <Skeleton width="30%" sx={{ bgcolor: "#333" }} />
+    </Box>
+  );
+
+  const StoreSkeleton = () => (
+    <Box sx={{ width: 200, height: 240, p: 1 }}>
+      <Skeleton
+        variant="circular"
+        width={80}
+        height={80}
+        sx={{ bgcolor: "#333", mx: "auto" }}
+      />
+      <Skeleton width="70%" sx={{ bgcolor: "#333", mt: 2, mx: "auto" }} />
+      <Skeleton width="50%" sx={{ bgcolor: "#333", mx: "auto" }} />
+    </Box>
+  );
+
+  const ChartSkeleton = () => (
+    <Box
+      sx={{
+        height: "90%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Skeleton
+        variant="rectangular"
+        width="100%"
+        height="90%"
+        sx={{ bgcolor: "#333" }}
+      />
+    </Box>
+  );
+
+  const CategorySkeleton = () => (
+    <Box sx={{ mb: 1 }}>
+      <Skeleton width="80%" sx={{ bgcolor: "#333" }} />
+    </Box>
+  );
+
   return (
     <Box
       sx={{
@@ -128,7 +187,9 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Box sx={{ height: "90%" }}>
-          {earningsData.length > 0 ? (
+          {earnings.status === false ? (
+            <ChartSkeleton />
+          ) : earningsData.length > 0 ? (
             <LineChart
               series={[
                 {
@@ -180,7 +241,7 @@ const StatisticsTest = () => {
                 color: "gray",
               }}
             >
-              {loading ? t("messages.loading") : t("messages.noData")}
+              {t("messages.noData")}
             </Box>
           )}
         </Box>
@@ -207,12 +268,16 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Box>
-          {processedCategories.slice(0, 5).map((cat, idx) => (
-            <Typography key={cat.id} sx={{ mb: 1 }}>
-              {t("messages.rank", { rank: idx + 1 })} {cat.name} -{" "}
-              {t("messages.sold", { count: cat.total_sold })}
-            </Typography>
-          ))}
+          {topCategories.status === false
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <CategorySkeleton key={`category-skeleton-${index}`} />
+              ))
+            : processedCategories.slice(0, 5).map((cat, idx) => (
+                <Typography key={cat.id} sx={{ mb: 1 }}>
+                  {t("messages.rank", { rank: idx + 1 })} {cat.name} -{" "}
+                  {t("messages.sold", { count: cat.total_sold })}
+                </Typography>
+              ))}
         </Box>
       </Box>
 
@@ -237,16 +302,22 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Grid container spacing={2}>
-          {processedProducts.map((product, idx) => (
-            <Grid item key={product.id}>
-              <ProductCard
-                image={product.image}
-                name={product.name}
-                sales={product.sales_count}
-                rank={idx + 1}
-              />
-            </Grid>
-          ))}
+          {topProducts.status === false
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Grid item key={`product-skeleton-${index}`}>
+                  <ProductSkeleton />
+                </Grid>
+              ))
+            : processedProducts.map((product, idx) => (
+                <Grid item key={product.id}>
+                  <ProductCard
+                    image={product.image}
+                    name={product.name}
+                    sales={product.sales_count}
+                    rank={idx + 1}
+                  />
+                </Grid>
+              ))}
         </Grid>
       </Box>
 
@@ -271,16 +342,22 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Grid container spacing={2}>
-          {processedShops.map((shop, idx) => (
-            <Grid item key={shop.id}>
-              <StoreCard
-                image={shop.image}
-                name={shop.name}
-                revenue={shop.revenue}
-                rank={idx + 1}
-              />
-            </Grid>
-          ))}
+          {topShops.status === false
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Grid item key={`store-skeleton-${index}`}>
+                  <StoreSkeleton />
+                </Grid>
+              ))
+            : processedShops.map((shop, idx) => (
+                <Grid item key={shop.id}>
+                  <StoreCard
+                    image={shop.image}
+                    name={shop.name}
+                    revenue={shop.revenue}
+                    rank={idx + 1}
+                  />
+                </Grid>
+              ))}
         </Grid>
       </Box>
     </Box>

@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button, Stack } from "@mui/material";
 import AddCategoryForm from "./AddCategoryForm";
 import CategoryList from "./CategoryList";
+import { useTranslation } from "react-i18next";
 
 const Categories = ({ categoryId }) => {
+  const { t } = useTranslation("categories");
   const navigate = useNavigate();
 
   return (
@@ -22,7 +24,7 @@ const Categories = ({ categoryId }) => {
               fontSize: "20px",
             }}
           >
-            Add Category +
+            {t("addCategory")}
           </Button>
           <CategoryList />
         </>

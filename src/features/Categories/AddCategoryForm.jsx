@@ -16,8 +16,10 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { createCategory } from "./categorySlice";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const AddCategoryForm = () => {
+  const { t } = useTranslation("categories");
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -32,7 +34,6 @@ const AddCategoryForm = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [preview, setPreview] = useState(null);
 
-  // Get shops and category status from Redux
   const {
     shops,
     status: shopsStatus,
@@ -40,14 +41,12 @@ const AddCategoryForm = () => {
   } = useSelector((state) => state.shops);
   const { status: categoryStatus } = useSelector((state) => state.categories);
 
-  // Fetch shops on mount
   useEffect(() => {
     if (shopsStatus === "idle") {
       dispatch(fetchShops());
     }
   }, [dispatch, shopsStatus]);
 
-  // Handle image preview
   useEffect(() => {
     if (formData.image) {
       const objectUrl = URL.createObjectURL(formData.image);
@@ -79,26 +78,23 @@ const AddCategoryForm = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check file size (2MB limit)
-    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+    const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      setErrorMessage("Image size must be less than 2MB");
-      e.target.value = ""; // Clear the file input
+      setErrorMessage(t("imageSizeError"));
+      e.target.value = "";
       setFormData((prev) => ({ ...prev, image: null }));
       setPreview(null);
       return;
     }
 
-    // Check file type
     if (!file.type.match("image.*")) {
-      setErrorMessage("Please select an image file");
-      e.target.value = ""; // Clear the file input
+      setErrorMessage(t("imageTypeError"));
+      e.target.value = "";
       setFormData((prev) => ({ ...prev, image: null }));
       setPreview(null);
       return;
     }
 
-    // If validation passes
     setErrorMessage("");
     setFormData({ ...formData, image: file });
   };
@@ -108,13 +104,12 @@ const AddCategoryForm = () => {
     setErrorMessage("");
     setValidationErrors({});
 
-    // Validation
     const errors = {};
-    if (!formData.shop_id) errors.shop_id = "Shop is required";
+    if (!formData.shop_id) errors.shop_id = t("shopRequired");
     if (!formData.name.en)
-      errors.name = { ...errors.name, en: "English name is required" };
+      errors.name = { ...errors.name, en: t("nameEnRequired") };
     if (!formData.name.ar)
-      errors.name = { ...errors.name, ar: "Arabic name is required" };
+      errors.name = { ...errors.name, ar: t("nameArRequired") };
 
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -128,9 +123,7 @@ const AddCategoryForm = () => {
       })
       .catch((err) => {
         setErrorMessage(
-          err.message ||
-            err.response?.data?.message ||
-            "Failed to create category"
+          err.message || err.response?.data?.message || t("createError")
         );
         if (err.response?.data?.errors) {
           setValidationErrors(err.response.data.errors);
@@ -141,7 +134,7 @@ const AddCategoryForm = () => {
   const getShopName = (shop) => {
     return typeof shop.name === "string"
       ? shop.name
-      : shop.name?.en || shop.name?.ar || "Untitled Shop";
+      : shop.name?.en || shop.name?.ar || t("unnamedShop");
   };
 
   return (
@@ -154,7 +147,7 @@ const AddCategoryForm = () => {
       }}
     >
       <Typography variant="h5" gutterBottom>
-        Add New Category
+        {t("addCategoryTitle")}
       </Typography>
 
       <Box
@@ -164,7 +157,7 @@ const AddCategoryForm = () => {
       >
         {/* English Name */}
         <TextField
-          label="Category Name (English)"
+          label={t("nameEn")}
           name="en"
           value={formData.name.en}
           onChange={handleChange}
@@ -177,7 +170,7 @@ const AddCategoryForm = () => {
 
         {/* Arabic Name */}
         <TextField
-          label="Category Name (Arabic)"
+          label={t("nameAr")}
           name="ar"
           value={formData.name.ar}
           onChange={handleChange}
@@ -195,16 +188,16 @@ const AddCategoryForm = () => {
           required
           error={!!validationErrors.shop_id}
         >
-          <InputLabel>Shop</InputLabel>
+          <InputLabel>{t("shop")}</InputLabel>
           <Select
-            label="Shop"
+            label={t("shop")}
             name="shop_id"
             value={formData.shop_id}
             onChange={handleChange}
             disabled={shopsStatus === "loading"}
           >
             {shopsStatus === "loading" ? (
-              <MenuItem disabled>Loading shops...</MenuItem>
+              <MenuItem disabled>{t("loadingShops")}</MenuItem>
             ) : shops?.data?.length > 0 ? (
               shops.data.map((shop) => (
                 <MenuItem key={shop.id} value={shop.id}>
@@ -212,7 +205,7 @@ const AddCategoryForm = () => {
                 </MenuItem>
               ))
             ) : (
-              <MenuItem disabled>No shops available</MenuItem>
+              <MenuItem disabled>{t("noShops")}</MenuItem>
             )}
           </Select>
           {validationErrors.shop_id && (
@@ -222,7 +215,7 @@ const AddCategoryForm = () => {
 
         {/* Image Upload */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload Image (Max 2MB)
+          {t("uploadImage")}
           <input
             type="file"
             hidden
@@ -234,7 +227,7 @@ const AddCategoryForm = () => {
         {/* Image Preview */}
         {preview && (
           <Box mt={2}>
-            <Typography variant="body2">Image Preview:</Typography>
+            <Typography variant="body2">{t("imagePreview")}</Typography>
             <img
               src={preview}
               alt="Preview"
@@ -266,7 +259,7 @@ const AddCategoryForm = () => {
             categoryStatus === "loading" ? <CircularProgress size={20} /> : null
           }
         >
-          {categoryStatus === "loading" ? "Creating..." : "Create Category"}
+          {categoryStatus === "loading" ? t("creating") : t("createCategory")}
         </Button>
       </Box>
     </Box>

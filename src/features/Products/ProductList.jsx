@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogContentText,
   TablePagination,
-  CircularProgress,
+  Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -64,14 +64,35 @@ const ProductList = () => {
     navigate(`/dashboard/products/edit/${product.id}`, { state: { product } });
   };
 
-  // Loading state - only show when there are no products yet
-  if (status === "loading" && products.length === 0) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Improved Skeleton Loader
+  const SkeletonRow = () => (
+    <TableRow>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Skeleton variant="text" />
+      </TableCell>
+      <TableCell>
+        <Stack direction="row" spacing={1}>
+          <Skeleton variant="rectangular" width={60} height={30} />
+          <Skeleton variant="rectangular" width={60} height={30} />
+        </Stack>
+      </TableCell>
+    </TableRow>
+  );
 
   // Error state
   if (status === "failed") {
@@ -140,59 +161,65 @@ const ProductList = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {products
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((product, index) => (
-                <TableRow key={index}>
-                  <TableCell>{product.id}</TableCell>
-                  <TableCell>
-                    {product.name?.ar ||
-                      product.name?.en ||
-                      product.name ||
-                      t("products.table.notAvailable")}
-                  </TableCell>
-                  <TableCell>
-                    {product.description?.ar ||
-                      product.description?.en ||
-                      t("products.table.notAvailable")}
-                  </TableCell>
-                  <TableCell>
-                    {product.price || t("products.table.notAvailable")}
-                  </TableCell>
-                  <TableCell>
-                    {product.shop?.name?.ar ||
-                      product.shop?.name?.en ||
-                      product.shop?.name ||
-                      t("products.table.notAvailable")}
-                  </TableCell>
-                  <TableCell>
-                    {product.category?.name?.ar ||
-                      product.category?.name?.en ||
-                      product.category?.name ||
-                      t("products.table.notAvailable")}
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        onClick={() => handleEditClick(product)}
-                      >
-                        {t("products.table.actions.edit")}
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => handleDeleteClick(product.id)}
-                      >
-                        {t("products.table.actions.delete")}
-                      </Button>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {status === "loading" && products.length === 0
+              ? // Show skeleton rows when loading
+                Array.from({ length: rowsPerPage }).map((_, index) => (
+                  <SkeletonRow key={`skeleton-${index}`} />
+                ))
+              : // Show actual data when loaded
+                products
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((product, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{product.id}</TableCell>
+                      <TableCell>
+                        {product.name?.ar ||
+                          product.name?.en ||
+                          product.name ||
+                          t("products.table.notAvailable")}
+                      </TableCell>
+                      <TableCell>
+                        {product.description?.ar ||
+                          product.description?.en ||
+                          t("products.table.notAvailable")}
+                      </TableCell>
+                      <TableCell>
+                        {product.price || t("products.table.notAvailable")}
+                      </TableCell>
+                      <TableCell>
+                        {product.shop?.name?.ar ||
+                          product.shop?.name?.en ||
+                          product.shop?.name ||
+                          t("products.table.notAvailable")}
+                      </TableCell>
+                      <TableCell>
+                        {product.category?.name?.ar ||
+                          product.category?.name?.en ||
+                          product.category?.name ||
+                          t("products.table.notAvailable")}
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            onClick={() => handleEditClick(product)}
+                          >
+                            {t("products.table.actions.edit")}
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="error"
+                            size="small"
+                            onClick={() => handleDeleteClick(product.id)}
+                          >
+                            {t("products.table.actions.delete")}
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
           </TableBody>
         </Table>
         <TablePagination

@@ -18,8 +18,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategoryById, updateCategory } from "./categorySlice";
 import { fetchShops } from "../Shops/shopSlice";
+import { useTranslation } from "react-i18next";
 
 const EditCategory = () => {
+  const { t } = useTranslation("categories");
   const { categoryId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -37,7 +39,6 @@ const EditCategory = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Fetch data on mount
   useEffect(() => {
     dispatch(fetchCategoryById(categoryId));
     if (shopsStatus === "idle") {
@@ -45,7 +46,6 @@ const EditCategory = () => {
     }
   }, [dispatch, categoryId, shopsStatus]);
 
-  // Initialize form data when category loads
   useEffect(() => {
     if (selectedCategory?.data) {
       const category = selectedCategory.data;
@@ -68,7 +68,6 @@ const EditCategory = () => {
     }
   }, [selectedCategory]);
 
-  // Handle image preview cleanup
   useEffect(() => {
     if (formData.image instanceof File) {
       const objectUrl = URL.createObjectURL(formData.image);
@@ -78,9 +77,9 @@ const EditCategory = () => {
   }, [formData.image]);
 
   const getShopName = (shop) => {
-    if (!shop) return "Untitled Shop";
+    if (!shop) return t("untitledShop");
     if (typeof shop.name === "string") return shop.name;
-    return shop.name?.en || shop.name?.ar || "Untitled Shop";
+    return shop.name?.en || shop.name?.ar || t("untitledShop");
   };
 
   const handleChange = (e) => {
@@ -110,12 +109,11 @@ const EditCategory = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (2MB limit)
     const MAX_FILE_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
       setErrors({
         ...errors,
-        image: "Image size must be less than 2MB",
+        image: t("imageSizeError"),
       });
       e.target.value = "";
       setFormData((prev) => ({
@@ -126,11 +124,10 @@ const EditCategory = () => {
       return;
     }
 
-    // Check file type
     if (!file.type.match("image.*")) {
       setErrors({
         ...errors,
-        image: "Please select an image file (JPEG, PNG, etc.)",
+        image: t("imageTypeError"),
       });
       e.target.value = "";
       setFormData((prev) => ({
@@ -155,14 +152,11 @@ const EditCategory = () => {
     e.preventDefault();
     setErrors({});
 
-    // Basic validation
     const newErrors = {};
-    if (!formData.name.en?.trim())
-      newErrors["name.en"] = "English name required";
-    if (!formData.name.ar?.trim())
-      newErrors["name.ar"] = "Arabic name required";
+    if (!formData.name.en?.trim()) newErrors["name.en"] = t("nameEnRequired");
+    if (!formData.name.ar?.trim()) newErrors["name.ar"] = t("nameArRequired");
     if (!Array.isArray(formData.shop_ids) || formData.shop_ids.length === 0) {
-      newErrors.shop_ids = "At least one shop required";
+      newErrors.shop_ids = t("shopsRequired");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -196,9 +190,7 @@ const EditCategory = () => {
       console.error("Update error:", error);
       setErrors({
         form:
-          error.message ||
-          error.response?.data?.message ||
-          "Failed to update category",
+          error.message || error.response?.data?.message || t("updateError"),
       });
     }
   };
@@ -211,19 +203,18 @@ const EditCategory = () => {
     );
   }
 
-  // Safely get shops data
   const shopsData = Array.isArray(shops?.data) ? shops.data : [];
 
   return (
     <Paper sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
       <Typography variant="h5" gutterBottom>
-        Edit Category
+        {t("editCategoryTitle")}
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
         {/* English Name */}
         <TextField
-          label="English Name"
+          label={t("nameEn")}
           name="name.en"
           value={formData.name.en || ""}
           onChange={handleChange}
@@ -236,7 +227,7 @@ const EditCategory = () => {
 
         {/* Arabic Name */}
         <TextField
-          label="Arabic Name"
+          label={t("nameAr")}
           name="name.ar"
           value={formData.name.ar || ""}
           onChange={handleChange}
@@ -257,18 +248,18 @@ const EditCategory = () => {
               onChange={handleChange}
             />
           }
-          label="Is Interested"
+          label={t("isInterested")}
         />
 
         {/* Shops Multi-select */}
         <FormControl fullWidth margin="normal" error={!!errors.shop_ids}>
-          <InputLabel>Shops *</InputLabel>
+          <InputLabel>{t("shops")} *</InputLabel>
           <Select
             multiple
             name="shop_ids"
             value={Array.isArray(formData.shop_ids) ? formData.shop_ids : []}
             onChange={handleShopSelection}
-            label="Shops *"
+            label={`${t("shops")} *`}
             renderValue={(selected) =>
               selected
                 .map((id) => {
@@ -294,7 +285,7 @@ const EditCategory = () => {
 
         {/* Image Upload */}
         <Button variant="contained" component="label" fullWidth sx={{ mt: 2 }}>
-          Upload Image (Max 2MB)
+          {t("uploadImage")}
           <input
             type="file"
             hidden
@@ -313,7 +304,7 @@ const EditCategory = () => {
         {/* Image Preview */}
         {formData.previewImage && (
           <Box mt={2}>
-            <Typography variant="body2">Current Image:</Typography>
+            <Typography variant="body2">{t("currentImage")}</Typography>
             <img
               src={formData.previewImage}
               alt="Preview"
@@ -345,7 +336,7 @@ const EditCategory = () => {
             status === "loading" ? <CircularProgress size={20} /> : null
           }
         >
-          {status === "loading" ? "Updating..." : "Update Category"}
+          {status === "loading" ? t("updating") : t("updateCategory")}
         </Button>
       </Box>
     </Paper>
