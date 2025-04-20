@@ -23,6 +23,7 @@ import {
   Grid,
   Backdrop,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 // Constants
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -34,6 +35,7 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 
 const EditProductForm = () => {
+  const { t } = useTranslation(["productForm", "products"]);
   const { id } = useParams();
   const { state } = useLocation();
   const dispatch = useDispatch();
@@ -219,13 +221,12 @@ const EditProductForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name?.ar?.trim())
-      newErrors.name_ar = "Arabic name is required";
-    if (!formData.price) newErrors.price = "Price is required";
-    if (!formData.shop_id) newErrors.shop = "Shop is required";
-    if (!formData.category_id) newErrors.category = "Category is required";
+    if (!formData.name?.ar?.trim()) newErrors.name_ar = t("form.name.arError");
+    if (!formData.price) newErrors.price = t("form.price.error");
+    if (!formData.shop_id) newErrors.shop = t("form.shop.error");
+    if (!formData.category_id) newErrors.category = t("form.category.error");
     if (formData.profit_percentage > 100) {
-      newErrors.profit_percentage = "Must be ≤ 100";
+      newErrors.profit_percentage = t("form.profit.error");
     }
 
     setErrors(newErrors);
@@ -283,6 +284,7 @@ const EditProductForm = () => {
     return (
       <Container sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
         <CircularProgress />
+        <Typography sx={{ ml: 2 }}>{t("messages.loading")}</Typography>
       </Container>
     );
   }
@@ -291,12 +293,12 @@ const EditProductForm = () => {
     return (
       <Container>
         <Alert severity="error">
-          Product not found
+          {t("messages.notFound")}
           <Button
             onClick={() => navigate("/dashboard/products")}
             sx={{ ml: 2 }}
           >
-            Back to Products
+            {t("messages.back")}
           </Button>
         </Alert>
       </Container>
@@ -313,7 +315,7 @@ const EditProductForm = () => {
       </Backdrop>
 
       <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-        Edit Product
+        {t("title")}
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit}>
@@ -321,7 +323,7 @@ const EditProductForm = () => {
           {/* Name Fields */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Name (English)"
+              label={t("form.name.en")}
               name="name.en"
               value={formData.name.en}
               onChange={handleChange}
@@ -331,7 +333,7 @@ const EditProductForm = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Name (Arabic)"
+              label={t("form.name.ar")}
               name="name.ar"
               value={formData.name.ar}
               onChange={handleChange}
@@ -351,18 +353,18 @@ const EditProductForm = () => {
               error={!!errors.shop}
               disabled={isFormLoading}
             >
-              <InputLabel>Shop</InputLabel>
+              <InputLabel>{t("form.shop.label")}</InputLabel>
               <Select
                 name="shop_id"
                 value={formData.shop_id}
                 onChange={handleChange}
-                label="Shop"
+                label={t("form.shop.label")}
                 disabled={shopsStatus === "loading" || isFormLoading}
               >
                 <MenuItem value="" disabled>
                   {shopsStatus === "loading"
-                    ? "Loading shops..."
-                    : "Select a shop"}
+                    ? t("form.shop.loading")
+                    : t("form.shop.select")}
                 </MenuItem>
                 {shops.map((shop) => (
                   <MenuItem key={shop.id} value={String(shop.id)}>
@@ -382,12 +384,12 @@ const EditProductForm = () => {
               error={!!errors.category}
               disabled={isFormLoading}
             >
-              <InputLabel>Category</InputLabel>
+              <InputLabel>{t("form.category.label")}</InputLabel>
               <Select
                 name="category_id"
                 value={formData.category_id}
                 onChange={handleChange}
-                label="Category"
+                label={t("form.category.label")}
                 disabled={
                   !formData.shop_id ||
                   categoriesStatus === "loading" ||
@@ -396,11 +398,11 @@ const EditProductForm = () => {
               >
                 {!formData.shop_id ? (
                   <MenuItem value="" disabled>
-                    Select a shop first
+                    {t("form.category.selectShop")}
                   </MenuItem>
                 ) : filteredCategories.length === 0 ? (
                   <MenuItem value="" disabled>
-                    No categories available for this shop
+                    {t("form.category.noCategories")}
                   </MenuItem>
                 ) : (
                   filteredCategories.map((category) => (
@@ -419,7 +421,7 @@ const EditProductForm = () => {
           {/* Price and Profit Percentage */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Price"
+              label={t("form.price.label")}
               name="price"
               type="number"
               value={formData.price}
@@ -434,7 +436,7 @@ const EditProductForm = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Profit Percentage"
+              label={t("form.profit.label")}
               name="profit_percentage"
               type="number"
               value={formData.profit_percentage}
@@ -450,7 +452,7 @@ const EditProductForm = () => {
           {/* Descriptions */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Description (English)"
+              label={t("form.description.en")}
               name="description.en"
               value={formData.description.en}
               onChange={handleChange}
@@ -462,7 +464,7 @@ const EditProductForm = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Description (Arabic)"
+              label={t("form.description.ar")}
               name="description.ar"
               value={formData.description.ar}
               onChange={handleChange}
@@ -482,7 +484,8 @@ const EditProductForm = () => {
                 fullWidth
                 disabled={isFormLoading}
               >
-                {imagePreview ? "Change Image" : "Upload Image"} (max 2MB)
+                {imagePreview ? t("form.image.change") : t("form.image.upload")}{" "}
+                ({t("form.image.maxSize")})
                 <input
                   type="file"
                   name="image"
@@ -501,7 +504,7 @@ const EditProductForm = () => {
                 <Box sx={{ mt: 2, textAlign: "center" }}>
                   <img
                     src={imagePreview}
-                    alt="Preview"
+                    alt={t("form.image.preview")}
                     style={{
                       maxHeight: 200,
                       maxWidth: "100%",
@@ -528,7 +531,7 @@ const EditProductForm = () => {
                   disabled={isFormLoading}
                 />
               }
-              label="Mark as Hot Product"
+              label={t("form.hotProduct")}
             />
           </Grid>
         </Grid>
@@ -541,7 +544,7 @@ const EditProductForm = () => {
             onClick={() => navigate("/dashboard/products")}
             disabled={isFormLoading}
           >
-            Cancel
+            {t("form.buttons.cancel")}
           </Button>
           <Button
             type="submit"
@@ -553,14 +556,14 @@ const EditProductForm = () => {
             {status === "loading" ? (
               <CircularProgress size={24} />
             ) : (
-              "Update Product"
+              t("form.buttons.update")
             )}
           </Button>
         </Box>
 
         {error && (
           <Alert severity="error" sx={{ mt: 3 }}>
-            {error.message || "Failed to update product"}
+            {error.message || t("messages.error")}
           </Alert>
         )}
       </Box>
@@ -575,7 +578,7 @@ const EditProductForm = () => {
           severity="success"
           sx={{ width: "100%" }}
         >
-          Product updated successfully!
+          {t("messages.success")}
         </Alert>
       </Snackbar>
     </Container>

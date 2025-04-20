@@ -1,0 +1,29 @@
+{
+    "title": "لوحة الإحصائيات",
+    "sections": {
+      "earnings": "الأرباح",
+      "topCategories": "أفضل الفئات",
+      "topProducts": "أفضل المنتجات",
+      "topStores": "أفضل المتاجر"
+    },
+    "timeRanges": {
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "yearly": "سنوي"
+    },
+    "chart": {
+      "profit": "الربح",
+      "amount": "المبلغ ($)",
+      "period": {
+        "year": "السنة",
+        "month": "الشهر",
+        "week": "الأسبوع"
+      }
+    },
+    "messages": {
+      "loading": "جاري تحميل البيانات...",
+      "noData": "لا توجد بيانات متاحة",
+      "sold": "تم بيع: {count}",
+      "rank": "الترتيب #{rank}"
+    }
+  }

@@ -1,7 +1,9 @@
 import React from "react";
 import { Stack, Typography, Chip, Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const StoreCard = ({ image, name, revenue, rank }) => {
+  const { t } = useTranslation("cards");
   // Handle name (string or {ar, en} object)
   const getName = () => {
     if (!name) return "N/A";
@@ -95,7 +97,7 @@ const StoreCard = ({ image, name, revenue, rank }) => {
           alignItems="center"
         >
           <Typography variant="body2" color="text.secondary">
-            Shop Name:
+            {t("store.name")}
           </Typography>
           <Typography
             variant="body1"
@@ -116,7 +118,7 @@ const StoreCard = ({ image, name, revenue, rank }) => {
             alignItems="center"
           >
             <Typography variant="body2" color="text.secondary">
-              Revenue:
+              {t("store.revenue")}
             </Typography>
             <Typography variant="body1" fontWeight="bold">
               {getRevenue()}

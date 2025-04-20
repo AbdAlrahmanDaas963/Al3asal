@@ -22,8 +22,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const ProductList = () => {
+  const { t } = useTranslation("products");
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const products = useSelector((state) => state.products.data || []);
@@ -75,13 +77,13 @@ const ProductList = () => {
   if (status === "failed") {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        {error || "Failed to load products"}
+        {error || t("products.errors.loadFailed")}
         <Button
           variant="outlined"
           onClick={() => dispatch(fetchProducts())}
           sx={{ ml: 2 }}
         >
-          Retry
+          {t("products.errors.retry")}
         </Button>
       </Alert>
     );
@@ -91,12 +93,12 @@ const ProductList = () => {
   if (products.length === 0 && status === "succeeded") {
     return (
       <Stack spacing={2} alignItems="center" sx={{ mt: 4 }}>
-        <Alert severity="info">No products found</Alert>
+        <Alert severity="info">{t("products.emptyState.message")}</Alert>
         <Button
           variant="contained"
           onClick={() => navigate("/dashboard/products/add")}
         >
-          Create New Product
+          {t("products.emptyState.createButton")}
         </Button>
       </Stack>
     );
@@ -108,17 +110,18 @@ const ProductList = () => {
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
       >
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>{t("products.deleteDialog.title")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this product? This action cannot be
-            undone.
+            {t("products.deleteDialog.message")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)}>
+            {t("products.deleteDialog.cancel")}
+          </Button>
           <Button onClick={handleDelete} color="error" variant="contained">
-            Delete
+            {t("products.deleteDialog.confirm")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -127,13 +130,13 @@ const ProductList = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Description (AR)</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Shop</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>{t("products.table.headers.id")}</TableCell>
+              <TableCell>{t("products.table.headers.name")}</TableCell>
+              <TableCell>{t("products.table.headers.description")}</TableCell>
+              <TableCell>{t("products.table.headers.price")}</TableCell>
+              <TableCell>{t("products.table.headers.shop")}</TableCell>
+              <TableCell>{t("products.table.headers.category")}</TableCell>
+              <TableCell>{t("products.table.headers.actions")}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -146,25 +149,27 @@ const ProductList = () => {
                     {product.name?.ar ||
                       product.name?.en ||
                       product.name ||
-                      "N/A"}
+                      t("products.table.notAvailable")}
                   </TableCell>
                   <TableCell>
                     {product.description?.ar ||
                       product.description?.en ||
-                      "N/A"}
+                      t("products.table.notAvailable")}
                   </TableCell>
-                  <TableCell>{product.price || "N/A"}</TableCell>
+                  <TableCell>
+                    {product.price || t("products.table.notAvailable")}
+                  </TableCell>
                   <TableCell>
                     {product.shop?.name?.ar ||
                       product.shop?.name?.en ||
                       product.shop?.name ||
-                      "N/A"}
+                      t("products.table.notAvailable")}
                   </TableCell>
                   <TableCell>
                     {product.category?.name?.ar ||
                       product.category?.name?.en ||
                       product.category?.name ||
-                      "N/A"}
+                      t("products.table.notAvailable")}
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
@@ -174,7 +179,7 @@ const ProductList = () => {
                         size="small"
                         onClick={() => handleEditClick(product)}
                       >
-                        Edit
+                        {t("products.table.actions.edit")}
                       </Button>
                       <Button
                         variant="contained"
@@ -182,7 +187,7 @@ const ProductList = () => {
                         size="small"
                         onClick={() => handleDeleteClick(product.id)}
                       >
-                        Delete
+                        {t("products.table.actions.delete")}
                       </Button>
                     </Stack>
                   </TableCell>

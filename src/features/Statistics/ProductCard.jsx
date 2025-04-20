@@ -1,7 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Stack, Typography, Chip, Box } from "@mui/material";
 
 const ProductCard = ({ image, name, sales, rank }) => {
+  const { t } = useTranslation("cards");
   return (
     <Box
       sx={{
@@ -40,7 +42,7 @@ const ProductCard = ({ image, name, sales, rank }) => {
       >
         <img
           src={image || "https://via.placeholder.com/150"}
-          alt={name}
+          alt={name || t("notAvailable")}
           style={{
             position: "absolute",
             top: 0,
@@ -59,17 +61,17 @@ const ProductCard = ({ image, name, sales, rank }) => {
       <Stack spacing={1}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="textSecondary">
-            Product Name:
+            {t("product.name")}
           </Typography>
           <Typography variant="body1" fontWeight="bold">
-            {name || "N/A"}
+            {name || t("notAvailable")}
           </Typography>
         </Stack>
 
         {sales && (
           <Stack direction="row" justifyContent="space-between">
             <Typography variant="body2" color="textSecondary">
-              Sales:
+              {t("product.sales")}
             </Typography>
             <Typography variant="body1" fontWeight="bold">
               {sales}

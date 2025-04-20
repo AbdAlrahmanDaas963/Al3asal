@@ -21,6 +21,24 @@ import ordersTableAr from "./locales/ar/ordersTableAr.json";
 import orderDetailsEn from "./locales/en/orderDetailsEn.json";
 import orderDetailsAr from "./locales/ar/orderDetailsAr.json";
 
+import userFormEn from "./locales/en/userFormEn.json";
+import userFormAr from "./locales/ar/userFormAr.json";
+
+import statisticsEn from "./locales/en/statisticsEn.json";
+import statisticsAr from "./locales/ar/statisticsAr.json";
+
+import cardsEn from "./locales/en/cardsEn.json";
+import cardsAr from "./locales/ar/cardsAr.json";
+
+import productsEn from "./locales/en/productsEn.json";
+import productsAr from "./locales/ar/productsAr.json";
+
+import productFormEn from "./locales/en/productFormEn.json";
+import productFormAr from "./locales/ar/productFormAr.json";
+
+import addProductFormEn from "./locales/en/addProductFormEn.json";
+import addProductFormAr from "./locales/ar/addProductFormAr.json";
+
 // Initialize with all namespaces
 i18n.use(initReactI18next).init({
   resources: {
@@ -32,6 +50,12 @@ i18n.use(initReactI18next).init({
       homeDash: homeDashEn,
       ordersTable: ordersTableEn,
       orderDetails: orderDetailsEn,
+      userForm: userFormEn,
+      statistics: statisticsEn,
+      cards: cardsEn,
+      products: productsEn,
+      productForm: productFormEn,
+      addProductForm: addProductFormEn,
     },
     ar: {
       common: commonAr,
@@ -41,6 +65,12 @@ i18n.use(initReactI18next).init({
       homeDash: homeDashAr,
       ordersTable: ordersTableAr,
       orderDetails: orderDetailsAr,
+      userForm: userFormAr,
+      statistics: statisticsAr,
+      cards: cardsAr,
+      products: productsAr,
+      productForm: productFormAr,
+      addProductForm: addProductFormAr,
     },
   },
   lng: localStorage.getItem("language") || "en",
@@ -53,6 +83,12 @@ i18n.use(initReactI18next).init({
     "homeDash",
     "ordersTable",
     "orderDetails",
+    "userForm",
+    "statistics",
+    "cards",
+    "products",
+    "productForm",
+    "addProductForm",
   ],
   defaultNS: "common",
   interpolation: {

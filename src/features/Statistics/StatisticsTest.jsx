@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Grid, Typography, Select, MenuItem } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -28,6 +29,7 @@ function getTranslatedText(text, lang = "en") {
 }
 
 const StatisticsTest = () => {
+  const { t } = useTranslation(["statistics", "common"]);
   const dispatch = useDispatch();
   const [ranges, setRanges] = useState({
     earnings: "monthly",
@@ -94,7 +96,7 @@ const StatisticsTest = () => {
     >
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4 }}>
-        <Typography variant="h5">Statistics Dashboard</Typography>
+        <Typography variant="h5">{t("title")}</Typography>
       </Box>
 
       {/* Earnings Chart */}
@@ -108,7 +110,7 @@ const StatisticsTest = () => {
         }}
       >
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6">Earnings</Typography>
+          <Typography variant="h6">{t("sections.earnings")}</Typography>
           <Select
             value={ranges.earnings}
             onChange={handleRangeChange("earnings")}
@@ -116,9 +118,13 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            <MenuItem value="weekly">Weekly</MenuItem>
-            <MenuItem value="monthly">Monthly</MenuItem>
-            <MenuItem value="yearly">Yearly</MenuItem>
+            {Object.entries(t("timeRanges", { returnObjects: true })).map(
+              ([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              )
+            )}
           </Select>
         </Box>
         <Box sx={{ height: "90%" }}>
@@ -127,7 +133,7 @@ const StatisticsTest = () => {
               series={[
                 {
                   data: earningsData.map((item) => item.profit),
-                  label: "Profit",
+                  label: t("chart.profit"),
                   color: "#8884d8",
                 },
               ]}
@@ -135,17 +141,20 @@ const StatisticsTest = () => {
                 {
                   scaleType: "point",
                   data: earningsData.map((item) => item.period),
-                  label:
-                    ranges.earnings === "yearly"
-                      ? "Year"
-                      : ranges.earnings === "monthly"
-                        ? "Month"
-                        : "Week",
+                  label: t(
+                    `chart.period.${
+                      ranges.earnings === "yearly"
+                        ? "year"
+                        : ranges.earnings === "monthly"
+                          ? "month"
+                          : "week"
+                    }`
+                  ),
                 },
               ]}
               yAxis={[
                 {
-                  label: "Amount ($)",
+                  label: t("chart.amount"),
                 },
               ]}
               grid={{ vertical: true, horizontal: true }}
@@ -171,23 +180,16 @@ const StatisticsTest = () => {
                 color: "gray",
               }}
             >
-              {loading ? "Loading data..." : "No earnings data available"}
+              {loading ? t("messages.loading") : t("messages.noData")}
             </Box>
           )}
         </Box>
       </Box>
 
       {/* Top Categories */}
-      <Box
-        sx={{
-          mb: 4,
-          p: 2,
-          backgroundColor: "#1e1e1e",
-          borderRadius: 2,
-        }}
-      >
+      <Box sx={{ mb: 4, p: 2, backgroundColor: "#1e1e1e", borderRadius: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6">Top Categories</Typography>
+          <Typography variant="h6">{t("sections.topCategories")}</Typography>
           <Select
             value={ranges.categories}
             onChange={handleRangeChange("categories")}
@@ -195,31 +197,29 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            <MenuItem value="weekly">Weekly</MenuItem>
-            <MenuItem value="monthly">Monthly</MenuItem>
-            <MenuItem value="yearly">Yearly</MenuItem>
+            {Object.entries(t("timeRanges", { returnObjects: true })).map(
+              ([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              )
+            )}
           </Select>
         </Box>
         <Box>
           {processedCategories.slice(0, 5).map((cat, idx) => (
             <Typography key={cat.id} sx={{ mb: 1 }}>
-              #{idx + 1} {cat.name} - Sold: {cat.total_sold}
+              {t("messages.rank", { rank: idx + 1 })} {cat.name} -{" "}
+              {t("messages.sold", { count: cat.total_sold })}
             </Typography>
           ))}
         </Box>
       </Box>
 
       {/* Top Products */}
-      <Box
-        sx={{
-          mb: 4,
-          p: 2,
-          backgroundColor: "#1e1e1e",
-          borderRadius: 2,
-        }}
-      >
+      <Box sx={{ mb: 4, p: 2, backgroundColor: "#1e1e1e", borderRadius: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6">Top Products</Typography>
+          <Typography variant="h6">{t("sections.topProducts")}</Typography>
           <Select
             value={ranges.products}
             onChange={handleRangeChange("products")}
@@ -227,9 +227,13 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            <MenuItem value="weekly">Weekly</MenuItem>
-            <MenuItem value="monthly">Monthly</MenuItem>
-            <MenuItem value="yearly">Yearly</MenuItem>
+            {Object.entries(t("timeRanges", { returnObjects: true })).map(
+              ([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              )
+            )}
           </Select>
         </Box>
         <Grid container spacing={2}>
@@ -247,16 +251,9 @@ const StatisticsTest = () => {
       </Box>
 
       {/* Top Stores */}
-      <Box
-        sx={{
-          mb: 4,
-          p: 2,
-          backgroundColor: "#1e1e1e",
-          borderRadius: 2,
-        }}
-      >
+      <Box sx={{ mb: 4, p: 2, backgroundColor: "#1e1e1e", borderRadius: 2 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-          <Typography variant="h6">Top Stores</Typography>
+          <Typography variant="h6">{t("sections.topStores")}</Typography>
           <Select
             value={ranges.shops}
             onChange={handleRangeChange("shops")}
@@ -264,9 +261,13 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            <MenuItem value="weekly">Weekly</MenuItem>
-            <MenuItem value="monthly">Monthly</MenuItem>
-            <MenuItem value="yearly">Yearly</MenuItem>
+            {Object.entries(t("timeRanges", { returnObjects: true })).map(
+              ([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              )
+            )}
           </Select>
         </Box>
         <Grid container spacing={2}>

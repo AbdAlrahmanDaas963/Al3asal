@@ -2,8 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import ProductList from "./ProductList";
 import { Button, Typography, Container } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const Products = () => {
+  const { t } = useTranslation("products");
+
   return (
     <Container>
       <div
@@ -15,7 +18,7 @@ const Products = () => {
         }}
       >
         <Typography variant="h4" component="h1">
-          Products
+          {t("products.title")}
         </Typography>
         <Button
           variant="contained"
@@ -23,7 +26,7 @@ const Products = () => {
           component={Link}
           to="/dashboard/products/add"
         >
-          Add Product
+          {t("products.addButton")}
         </Button>
       </div>
       <ProductList />

@@ -1,0 +1,51 @@
+{
+    "title": "Edit Product",
+    "form": {
+      "name": {
+        "en": "Name (English)",
+        "ar": "Name (Arabic)"
+      },
+      "description": {
+        "en": "Description (English)",
+        "ar": "Description (Arabic)"
+      },
+      "shop": {
+        "label": "Shop",
+        "loading": "Loading shops...",
+        "select": "Select a shop",
+        "error": "Shop is required"
+      },
+      "category": {
+        "label": "Category",
+        "selectShop": "Select a shop first",
+        "noCategories": "No categories available for this shop",
+        "error": "Category is required"
+      },
+      "price": {
+        "label": "Price",
+        "error": "Price is required"
+      },
+      "profit": {
+        "label": "Profit Percentage",
+        "error": "Must be ≤ 100"
+      },
+      "image": {
+        "upload": "Upload Image",
+        "change": "Change Image",
+        "maxSize": "max 2MB",
+        "error": "Only JPG, PNG, or WEBP images are allowed"
+      },
+      "hotProduct": "Mark as Hot Product",
+      "buttons": {
+        "cancel": "Cancel",
+        "update": "Update Product"
+      }
+    },
+    "messages": {
+      "loading": "Loading product...",
+      "notFound": "Product not found",
+      "back": "Back to Products",
+      "success": "Product updated successfully!",
+      "error": "Failed to update product"
+    }
+  }

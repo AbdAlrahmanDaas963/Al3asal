@@ -22,6 +22,7 @@ import {
   Box,
   Grid,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 // Constants
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB (increased from 100KB)
@@ -71,6 +72,7 @@ const selectProducts = createSelector(
 );
 
 const AddProductForm = ({ onSuccess }) => {
+  const { t } = useTranslation("addProductForm");
   const dispatch = useDispatch();
   const { shops, shopsLoading } = useSelector(selectShops);
   const { categories, categoriesLoading } = useSelector(selectCategories);
@@ -138,7 +140,7 @@ const AddProductForm = ({ onSuccess }) => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
-        image: "Only JPG, PNG, or WEBP images are allowed",
+        image: t("imageTypeError"),
       }));
       return;
     }
@@ -147,7 +149,7 @@ const AddProductForm = ({ onSuccess }) => {
     if (file.size > MAX_IMAGE_SIZE) {
       setErrors((prev) => ({
         ...prev,
-        image: `Image must be less than ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+        image: t("imageSizeError", { size: MAX_IMAGE_SIZE / 1024 / 1024 }),
       }));
       return;
     }
@@ -160,15 +162,14 @@ const AddProductForm = ({ onSuccess }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name?.ar?.trim())
-      newErrors.name_ar = "Arabic name is required";
-    if (!formData.price) newErrors.price = "Price is required";
-    if (!formData.shop_id) newErrors.shop = "Shop is required";
-    if (!formData.category_id) newErrors.category = "Category is required";
+    if (!formData.name?.ar?.trim()) newErrors.name_ar = t("nameArRequired");
+    if (!formData.price) newErrors.price = t("priceRequired");
+    if (!formData.shop_id) newErrors.shop = t("shopRequired");
+    if (!formData.category_id) newErrors.category = t("categoryRequired");
     if (formData.profit_percentage > 100) {
-      newErrors.profit_percentage = "Must be ≤ 100";
+      newErrors.profit_percentage = t("profitError");
     }
-    if (!formData.image) newErrors.image = "Image is required";
+    if (!formData.image) newErrors.image = t("imageRequired");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -198,7 +199,7 @@ const AddProductForm = ({ onSuccess }) => {
       }
     } catch (error) {
       console.error("Product submission error:", error);
-      setErrors({ submit: error.message || "Failed to add product" });
+      setErrors({ submit: error.message || t("errorMessage") });
     }
   };
 
@@ -212,7 +213,7 @@ const AddProductForm = ({ onSuccess }) => {
   return (
     <Container maxWidth="md">
       <Typography variant="h5" gutterBottom>
-        Add Product
+        {t("title")}
       </Typography>
 
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
@@ -220,7 +221,7 @@ const AddProductForm = ({ onSuccess }) => {
           {/* Name Fields */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Name (English)"
+              label={t("nameEn")}
               name="name.en"
               value={formData.name.en}
               onChange={handleChange}
@@ -229,7 +230,7 @@ const AddProductForm = ({ onSuccess }) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Name (Arabic)"
+              label={t("nameAr")}
               name="name.ar"
               value={formData.name.ar}
               onChange={handleChange}
@@ -248,6 +249,7 @@ const AddProductForm = ({ onSuccess }) => {
               value={formData.shop_id}
               onChange={handleChange}
               error={errors.shop}
+              t={t}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -258,13 +260,14 @@ const AddProductForm = ({ onSuccess }) => {
               value={formData.category_id}
               onChange={handleChange}
               error={errors.category}
+              t={t}
             />
           </Grid>
 
           {/* Price and Profit */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Price"
+              label={t("price")}
               name="price"
               type="number"
               value={formData.price}
@@ -278,7 +281,7 @@ const AddProductForm = ({ onSuccess }) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Profit Percentage"
+              label={t("profitPercentage")}
               name="profit_percentage"
               type="number"
               value={formData.profit_percentage}
@@ -293,7 +296,7 @@ const AddProductForm = ({ onSuccess }) => {
           {/* Descriptions */}
           <Grid item xs={12} md={6}>
             <TextField
-              label="Description (English)"
+              label={t("descriptionEn")}
               name="description.en"
               value={formData.description.en}
               onChange={handleChange}
@@ -304,7 +307,7 @@ const AddProductForm = ({ onSuccess }) => {
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
-              label="Description (Arabic)"
+              label={t("descriptionAr")}
               name="description.ar"
               value={formData.description.ar}
               onChange={handleChange}
@@ -321,6 +324,7 @@ const AddProductForm = ({ onSuccess }) => {
               preview={imagePreview}
               error={errors.image}
               maxSize={MAX_IMAGE_SIZE}
+              t={t}
             />
           </Grid>
           <Grid
@@ -338,7 +342,7 @@ const AddProductForm = ({ onSuccess }) => {
                   color="primary"
                 />
               }
-              label="Mark as Hot Product"
+              label={t("hotProduct")}
             />
           </Grid>
         </Grid>
@@ -351,13 +355,13 @@ const AddProductForm = ({ onSuccess }) => {
             disabled={productsLoading}
             sx={{ minWidth: 150 }}
           >
-            {productsLoading ? <CircularProgress size={24} /> : "Add Product"}
+            {productsLoading ? <CircularProgress size={24} /> : t("submit")}
           </Button>
         </Box>
 
         {productsError && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            {productsError.message || "Failed to add product"}
+            {productsError.message || t("errorMessage")}
           </Alert>
         )}
       </Box>
@@ -365,24 +369,25 @@ const AddProductForm = ({ onSuccess }) => {
       <SuccessSnackbar
         open={snackbarOpen}
         onClose={() => setSnackbarOpen(false)}
+        t={t}
       />
     </Container>
   );
 };
 
 // Extracted Components with improvements
-const ShopSelect = ({ shops, loading, value, onChange, error }) => (
+const ShopSelect = ({ shops, loading, value, onChange, error, t }) => (
   <FormControl fullWidth required error={!!error}>
-    <InputLabel>Shop</InputLabel>
+    <InputLabel>{t("shop")}</InputLabel>
     <Select
       name="shop_id"
       value={value}
       onChange={onChange}
-      label="Shop"
+      label={t("shop")}
       disabled={loading}
     >
       <MenuItem value="" disabled>
-        Select a shop
+        {t("selectShop")}
       </MenuItem>
       {shops.map((shop) => (
         <MenuItem key={shop.id} value={String(shop.id)}>
@@ -401,20 +406,21 @@ const CategorySelect = ({
   value,
   onChange,
   error,
+  t,
 }) => (
   <FormControl fullWidth required error={!!error} disabled={disabled}>
-    <InputLabel>Category</InputLabel>
+    <InputLabel>{t("category")}</InputLabel>
     <Select
       name="category_id"
       value={value}
       onChange={onChange}
-      label="Category"
+      label={t("category")}
       disabled={disabled || loading}
     >
       {disabled ? (
-        <MenuItem value="">Select a shop first</MenuItem>
+        <MenuItem value="">{t("selectCategoryFirst")}</MenuItem>
       ) : categories.length === 0 ? (
-        <MenuItem value="">No categories available</MenuItem>
+        <MenuItem value="">{t("noCategories")}</MenuItem>
       ) : (
         categories.map((category) => (
           <MenuItem key={category.id} value={String(category.id)}>
@@ -430,10 +436,10 @@ const CategorySelect = ({
   </FormControl>
 );
 
-const ImageUpload = ({ onChange, preview, error, maxSize }) => (
+const ImageUpload = ({ onChange, preview, error, maxSize, t }) => (
   <Box>
     <Button variant="contained" component="label" fullWidth>
-      Upload Image (max {maxSize / 1024 / 1024}MB)
+      {t("imageUpload", { size: maxSize / 1024 / 1024 })}
       <input
         type="file"
         name="image"
@@ -459,10 +465,10 @@ const ImageUpload = ({ onChange, preview, error, maxSize }) => (
   </Box>
 );
 
-const SuccessSnackbar = ({ open, onClose }) => (
+const SuccessSnackbar = ({ open, onClose, t }) => (
   <Snackbar open={open} autoHideDuration={6000} onClose={onClose}>
     <Alert onClose={onClose} severity="success" sx={{ width: "100%" }}>
-      Product added successfully!
+      {t("successMessage")}
     </Alert>
   </Snackbar>
 );

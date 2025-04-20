@@ -1,0 +1,36 @@
+{
+    "products": {
+      "title": "Products",
+      "addButton": "Add Product",
+      "table": {
+        "headers": {
+          "id": "ID",
+          "name": "Name",
+          "description": "Description (AR)",
+          "price": "Price",
+          "shop": "Shop",
+          "category": "Category",
+          "actions": "Actions"
+        },
+        "actions": {
+          "edit": "Edit",
+          "delete": "Delete"
+        },
+        "notAvailable": "N/A"
+      },
+      "emptyState": {
+        "message": "No products found",
+        "createButton": "Create New Product"
+      },
+      "deleteDialog": {
+        "title": "Confirm Delete",
+        "message": "Are you sure you want to delete this product? This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "errors": {
+        "loadFailed": "Failed to load products",
+        "retry": "Retry"
+      }
+    }
+  }

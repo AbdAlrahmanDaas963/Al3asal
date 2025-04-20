@@ -1,0 +1,36 @@
+{
+    "products": {
+      "title": "المنتجات",
+      "addButton": "إضافة منتج",
+      "table": {
+        "headers": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "description": "الوصف (عربي)",
+          "price": "السعر",
+          "shop": "المتجر",
+          "category": "الفئة",
+          "actions": "الإجراءات"
+        },
+        "actions": {
+          "edit": "تعديل",
+          "delete": "حذف"
+        },
+        "notAvailable": "غير متاح"
+      },
+      "emptyState": {
+        "message": "لا توجد منتجات",
+        "createButton": "إنشاء منتج جديد"
+      },
+      "deleteDialog": {
+        "title": "تأكيد الحذف",
+        "message": "هل أنت متأكد أنك تريد حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.",
+        "cancel": "إلغاء",
+        "confirm": "حذف"
+      },
+      "errors": {
+        "loadFailed": "فشل تحميل المنتجات",
+        "retry": "إعادة المحاولة"
+      }
+    }
+  }

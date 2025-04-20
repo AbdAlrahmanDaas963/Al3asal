@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -15,6 +16,7 @@ import {
 import { addUser } from "../Auth/userSlice";
 
 const AddUserForm = () => {
+  const { t } = useTranslation("userForm");
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dispatch = useDispatch();
@@ -78,12 +80,12 @@ const AddUserForm = () => {
         }}
       >
         <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
-          Add New User
+          {t("title")}
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
           <TextField
-            label="Username"
+            label={t("form.username.label")}
             name="username"
             value={formData.username}
             onChange={handleChange}
@@ -91,12 +93,12 @@ const AddUserForm = () => {
             margin="normal"
             required
             error={formErrors.username}
-            helperText={formErrors.username ? "Username is required" : ""}
+            helperText={formErrors.username ? t("form.username.error") : ""}
             sx={{ mb: 2 }}
           />
 
           <TextField
-            label="Password"
+            label={t("form.password.label")}
             name="password"
             type="password"
             value={formData.password}
@@ -105,7 +107,7 @@ const AddUserForm = () => {
             margin="normal"
             required
             error={formErrors.password}
-            helperText={formErrors.password ? "Password is required" : ""}
+            helperText={formErrors.password ? t("form.password.error") : ""}
             sx={{ mb: 2 }}
             inputProps={{
               minLength: 6,
@@ -114,7 +116,7 @@ const AddUserForm = () => {
 
           <TextField
             select
-            label="Role"
+            label={t("form.role.label")}
             name="is_admin"
             value={formData.is_admin}
             onChange={handleChange}
@@ -123,19 +125,19 @@ const AddUserForm = () => {
             required
             sx={{ mb: 3 }}
           >
-            <MenuItem value="1">Admin</MenuItem>
-            <MenuItem value="0">Employee</MenuItem>
+            <MenuItem value="1">{t("form.role.options.admin")}</MenuItem>
+            <MenuItem value="0">{t("form.role.options.employee")}</MenuItem>
           </TextField>
 
           {status === "failed" && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error?.message || "Failed to add user. Please try again."}
+              {error?.message || t("alerts.error")}
             </Alert>
           )}
 
           {status === "succeeded" && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              User added successfully!
+              {t("alerts.success")}
             </Alert>
           )}
 
@@ -155,10 +157,10 @@ const AddUserForm = () => {
             {status === "loading" ? (
               <Box display="flex" alignItems="center">
                 <CircularProgress size={24} color="inherit" sx={{ mr: 1.5 }} />
-                Adding User...
+                {t("form.submit.loading")}
               </Box>
             ) : (
-              "Add User"
+              t("form.submit.default")
             )}
           </Button>
         </Box>

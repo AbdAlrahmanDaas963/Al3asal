@@ -1,0 +1,29 @@
+{
+    "title": "Statistics Dashboard",
+    "sections": {
+      "earnings": "Earnings",
+      "topCategories": "Top Categories",
+      "topProducts": "Top Products",
+      "topStores": "Top Stores"
+    },
+    "timeRanges": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "chart": {
+      "profit": "Profit",
+      "amount": "Amount ($)",
+      "period": {
+        "year": "Year",
+        "month": "Month",
+        "week": "Week"
+      }
+    },
+    "messages": {
+      "loading": "Loading data...",
+      "noData": "No data available",
+      "sold": "Sold: {count}",
+      "rank": "#{rank}"
+    }
+  }

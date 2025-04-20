@@ -1,0 +1,28 @@
+{
+    "title": "Add New User",
+    "form": {
+      "username": {
+        "label": "Username",
+        "error": "Username is required"
+      },
+      "password": {
+        "label": "Password",
+        "error": "Password is required"
+      },
+      "role": {
+        "label": "Role",
+        "options": {
+          "admin": "Admin",
+          "employee": "Employee"
+        }
+      },
+      "submit": {
+        "default": "Add User",
+        "loading": "Adding User..."
+      }
+    },
+    "alerts": {
+      "success": "User added successfully!",
+      "error": "Failed to add user. Please try again."
+    }
+  }

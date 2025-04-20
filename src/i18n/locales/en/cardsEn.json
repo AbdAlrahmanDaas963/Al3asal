@@ -1,0 +1,11 @@
+{
+    "product": {
+      "name": "Product Name:",
+      "sales": "Sales:"
+    },
+    "store": {
+      "name": "Shop Name:",
+      "revenue": "Revenue:"
+    },
+    "notAvailable": "N/A"
+  }
