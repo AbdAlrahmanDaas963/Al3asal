@@ -41,7 +41,7 @@ const getAvailableStatuses = (currentStatus) => {
   const transitions = {
     pending: ["preparing"],
     preparing: ["done"],
-    rejected: ["done"],
+    rejected: [],
   };
   return transitions[currentStatus] || [];
 };

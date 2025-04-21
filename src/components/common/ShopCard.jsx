@@ -76,13 +76,19 @@ function ShopCard({ shop }) {
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} mt={2} justifyContent="center">
+      <Stack
+        direction="row"
+        spacing={1}
+        mt={2}
+        gap={"10px"}
+        justifyContent="space-between"
+      >
         <Button
           variant="contained"
           color="primary"
           size="small"
           onClick={handleEdit}
-          sx={{ flex: 1 }}
+          // sx={{ flex: 1 }}
         >
           {t("edit")}
         </Button>
@@ -91,7 +97,7 @@ function ShopCard({ shop }) {
           color="error"
           size="small"
           onClick={handleDelete}
-          sx={{ flex: 1 }}
+          // sx={{ flex: 1 }}
         >
           {t("delete")}
         </Button>

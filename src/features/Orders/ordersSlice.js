@@ -9,12 +9,12 @@ const getToken = () => localStorage.getItem("token");
 // Helper function to normalize status values
 const normalizeStatus = (status) => {
   const statusMap = {
-    prepering: "preparing", // Backend typo -> frontend correct
-    fail: "rejected", // Backend 'fail' -> frontend 'rejected'
+    prepering: "preparing",
+    fail: "rejected",
     stripe_pending: "pending",
-    preparing: "preparing", // Just in case backend fixes the typo
+    preparing: "preparing",
     done: "done",
-    pending: "pending", // For consistency
+    pending: "pending",
   };
   return statusMap[status] || status;
 };
@@ -78,7 +78,7 @@ export const updateOrderStatus = createAsyncThunk(
       const validTransitions = {
         pending: ["preparing", "rejected"],
         preparing: ["done"],
-        rejected: ["done"],
+        rejected: [],
       };
 
       if (!validTransitions[currentStatus]?.includes(newStatus)) {
