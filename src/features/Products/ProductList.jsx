@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, deleteProduct } from "./productsSlice";
 import {
@@ -12,7 +12,6 @@ import {
   Paper,
   Stack,
   Alert,
-  Box,
   Dialog,
   DialogActions,
   DialogTitle,
@@ -23,9 +22,11 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../../contexts/LanguageContext";
 
 const ProductList = () => {
   const { t } = useTranslation("products");
+  const { language } = useContext(LanguageContext);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const products = useSelector((state) => state.products.data || []);
@@ -162,24 +163,22 @@ const ProductList = () => {
           </TableHead>
           <TableBody>
             {status === "loading" && products.length === 0
-              ? // Show skeleton rows when loading
-                Array.from({ length: rowsPerPage }).map((_, index) => (
+              ? Array.from({ length: rowsPerPage }).map((_, index) => (
                   <SkeletonRow key={`skeleton-${index}`} />
                 ))
-              : // Show actual data when loaded
-                products
+              : products
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((product, index) => (
-                    <TableRow key={index}>
+                  .map((product) => (
+                    <TableRow key={product.id}>
                       <TableCell>{product.id}</TableCell>
                       <TableCell>
-                        {product.name?.ar ||
+                        {product.name?.[language] ||
                           product.name?.en ||
                           product.name ||
                           t("products.table.notAvailable")}
                       </TableCell>
                       <TableCell>
-                        {product.description?.ar ||
+                        {product.description?.[language] ||
                           product.description?.en ||
                           t("products.table.notAvailable")}
                       </TableCell>
@@ -187,13 +186,13 @@ const ProductList = () => {
                         {product.price || t("products.table.notAvailable")}
                       </TableCell>
                       <TableCell>
-                        {product.shop?.name?.ar ||
+                        {product.shop?.name?.[language] ||
                           product.shop?.name?.en ||
                           product.shop?.name ||
                           t("products.table.notAvailable")}
                       </TableCell>
                       <TableCell>
-                        {product.category?.name?.ar ||
+                        {product.category?.name?.[language] ||
                           product.category?.name?.en ||
                           product.category?.name ||
                           t("products.table.notAvailable")}
@@ -228,7 +227,7 @@ const ProductList = () => {
           count={products.length}
           rowsPerPage={rowsPerPage}
           page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
+          onPageChange={(_, newPage) => setPage(newPage)}
           onRowsPerPageChange={(e) => {
             setRowsPerPage(parseInt(e.target.value, 10));
             setPage(0);

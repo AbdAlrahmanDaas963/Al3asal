@@ -172,7 +172,9 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ backgroundColor: "#121212", color: "white" }}>
+      <DialogTitle
+        sx={{ backgroundColor: "#121212", color: "white", direction: "ltr" }}
+      >
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
             <Typography variant="h6">Order Details #{order.id}</Typography>
@@ -192,7 +194,6 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           </IconButton>
         </Box>
       </DialogTitle>
-
       <DialogContent
         dividers
         sx={{ backgroundColor: "#121212", color: "white" }}
@@ -229,7 +230,6 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             ))}
           </Grid>
         </Box>
-
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Order Details
@@ -281,7 +281,6 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             </Grid>
           </Box>
         </Box>
-
         {order.user?.is_premium && (
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
@@ -323,12 +322,18 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             </Box>
           </Box>
         )}
-
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             Update Status
           </Typography>
-          <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
+          <Box
+            sx={{
+              backgroundColor: "#292929",
+              p: 3,
+              borderRadius: 2,
+              direction: "ltr",
+            }}
+          >
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Typography color="#aaa" gutterBottom>
@@ -378,7 +383,6 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                   </Menu>
                 </Box>
               </Grid>
-
               {showRejectReason && (
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -408,8 +412,9 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           </Box>
         </Box>
       </DialogContent>
-
-      <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
+      <DialogActions
+        sx={{ backgroundColor: "#121212", p: 2, direction: "ltr" }}
+      >
         <Button
           variant="outlined"
           onClick={onClose}
@@ -428,6 +433,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             backgroundColor: "#4CAF50",
             color: "white",
             "&:hover": { backgroundColor: "#3e8e41" },
+            direction: "ltr",
           }}
         >
           Save Changes

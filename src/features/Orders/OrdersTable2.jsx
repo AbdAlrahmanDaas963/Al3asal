@@ -398,10 +398,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           <IconButton
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
-            sx={{
-              transform: direction === "rtl" ? "scaleX(-1)" : "none",
-              transition: "transform 0.3s ease",
-            }}
           >
             <ArrowBackIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
@@ -411,10 +407,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           <IconButton
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page >= totalPages - 1}
-            sx={{
-              transform: direction === "rtl" ? "scaleX(-1)" : "none",
-              transition: "transform 0.3s ease",
-            }}
           >
             <ArrowForwardIosIcon fontSize={isMobile ? "small" : "medium"} />
           </IconButton>
