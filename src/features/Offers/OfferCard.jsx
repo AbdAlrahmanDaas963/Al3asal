@@ -17,7 +17,7 @@ const OfferCard = ({ offer }) => {
   };
 
   const handleDelete = () => {
-    if (window.confirm(t("deleteConfirmation", { id: offer.id }))) {
+    if (window.confirm("deleteConfirmation", { id: offer.id })) {
       dispatch(deleteOffer(offer.id));
     }
   };

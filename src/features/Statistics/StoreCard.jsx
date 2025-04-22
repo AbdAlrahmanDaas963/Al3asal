@@ -3,6 +3,8 @@ import { Stack, Typography, Chip, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 const StoreCard = ({ image, name, revenue, rank }) => {
+  console.log("name", name);
+  console.log("image", image);
   const { t } = useTranslation("cards");
   // Handle name (string or {ar, en} object)
   const getName = () => {
@@ -50,8 +52,8 @@ const StoreCard = ({ image, name, revenue, rank }) => {
           size="small"
           sx={{
             position: "absolute",
-            top: 10,
-            left: 10,
+            top: 15,
+            left: 15,
             zIndex: 1,
             fontFamily: "'Roboto', sans-serif",
           }}
@@ -85,6 +87,7 @@ const StoreCard = ({ image, name, revenue, rank }) => {
           }}
           onError={(e) => {
             e.target.src = "https://via.placeholder.com/150";
+            e.target.onerror = null; // Prevent infinite loop if placeholder also fails
           }}
         />
       </Box>

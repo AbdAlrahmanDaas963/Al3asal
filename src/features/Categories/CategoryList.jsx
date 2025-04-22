@@ -97,7 +97,7 @@ const CategoryList = () => {
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t("loadError", { error })}
+          {error}
         </Alert>
         <Button
           variant="contained"

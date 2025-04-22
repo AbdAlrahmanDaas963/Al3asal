@@ -24,7 +24,7 @@ const ProductCard = ({ image, name, sales, rank }) => {
           label={`#${rank}`}
           color="primary"
           size="small"
-          sx={{ position: "absolute", top: 10, left: 10, zIndex: 1 }}
+          sx={{ position: "absolute", top: 15, left: 15, zIndex: 1 }}
         />
       )}
 

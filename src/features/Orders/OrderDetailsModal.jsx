@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -93,14 +92,13 @@ const DetailItem = ({ label, value }) => (
 );
 
 const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
-  const { t } = useTranslation("orderDetails");
   const statusDisplayMap = {
-    preparing: t("status.preparing"),
-    rejected: t("status.rejected"),
-    pending: t("status.pending"),
-    done: t("status.done"),
-    prepering: t("status.prepering"),
-    fail: t("status.fail"),
+    preparing: "Preparing",
+    rejected: "Rejected",
+    pending: "Pending",
+    done: "Done",
+    prepering: "Preparing",
+    fail: "Failed",
   };
 
   const dispatch = useDispatch();
@@ -177,9 +175,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
       <DialogTitle sx={{ backgroundColor: "#121212", color: "white" }}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center">
-            <Typography variant="h6">
-              {t("title")} {order.id}
-            </Typography>
+            <Typography variant="h6">Order Details #{order.id}</Typography>
             <Chip
               label={statusDisplayMap[order.status] || order.status}
               sx={{
@@ -203,7 +199,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
       >
         <Box>
           <Typography variant="h6" gutterBottom>
-            {t("sections.products", { count: order.items.length })}
+            Products ({order.items.length})
           </Typography>
           <Grid container spacing={2}>
             {order.items.map((item, index) => (
@@ -236,25 +232,16 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
-            {t("sections.orderDetails")}
+            Order Details
           </Typography>
           <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
+                <DetailItem label="Customer Name" value={order.user?.name} />
+                <DetailItem label="Receiver Name" value={order.reciver_name} />
+                <DetailItem label="Order ID" value={`#${order.id}`} />
                 <DetailItem
-                  label={t("fields.customerName")}
-                  value={order.user?.name}
-                />
-                <DetailItem
-                  label={t("fields.receiverName")}
-                  value={order.reciver_name}
-                />
-                <DetailItem
-                  label={t("fields.orderId")}
-                  value={`#${order.id}`}
-                />
-                <DetailItem
-                  label={t("fields.paymentCard")}
+                  label="Payment Card"
                   value={
                     order.card_number
                       ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
@@ -262,27 +249,24 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                   }
                 />
                 <DetailItem
-                  label={t("fields.location")}
+                  label="Location"
                   value={
                     <CopyableLocation
                       location="54.5461, 71.5149"
-                      copyText={t("buttons.copyLocation")}
-                      copiedText={t("buttons.copied")}
+                      copyText="Copy location"
+                      copiedText="Copied!"
                     />
                   }
                 />
               </Grid>
               <Grid item xs={12} md={6}>
+                <DetailItem label="Customer Email" value={order.user?.email} />
                 <DetailItem
-                  label={t("fields.customerEmail")}
-                  value={order.user?.email}
-                />
-                <DetailItem
-                  label={t("fields.receiverPhone")}
+                  label="Receiver Phone"
                   value={order.reciver_phone}
                 />
                 <DetailItem
-                  label={t("fields.deliveryDate")}
+                  label="Delivery Date"
                   value={
                     <span style={{ color: "#E4272B" }}>
                       {new Date(order.date).toLocaleString()}
@@ -290,12 +274,8 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                   }
                 />
                 <DetailItem
-                  label={t("fields.totalPayment")}
+                  label="Total Payment"
                   value={`$${order.total_price}`}
-                />
-                <DetailItem
-                  label={t("fields.category")}
-                  value={renderMultilingualText(order.items[0]?.category_name)}
                 />
               </Grid>
             </Grid>
@@ -306,11 +286,11 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
               <CrownIcon sx={{ color: "#E4272B", mr: 1, fontSize: 20 }} />
-              {t("sections.premiumService")}
+              Premium Service
             </Typography>
             <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
               <DetailItem
-                label={t("fields.deliveryDate")}
+                label="Delivery Date"
                 value={
                   <span style={{ color: "#E4272B" }}>
                     {new Date(order.date).toLocaleString()}
@@ -319,7 +299,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
               />
               <Box mt={2}>
                 <Typography color="#aaa" gutterBottom>
-                  {t("fields.attachments")}
+                  Attachments
                 </Typography>
                 <Box display="flex" gap={1.5}>
                   {[1, 2, 3].map((item) => (
@@ -346,13 +326,13 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
 
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
-            {t("sections.updateStatus")}
+            Update Status
           </Typography>
           <Box sx={{ backgroundColor: "#292929", p: 3, borderRadius: 2 }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={6}>
                 <Typography color="#aaa" gutterBottom>
-                  {t("fields.newStatus")}
+                  New Status
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Button
@@ -403,9 +383,9 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label={t("fields.rejectionReason")}
+                    label="Rejection Reason"
                     helperText={
-                      error ? t("errors.rejectionReasonRequired") : ""
+                      error ? "Please provide a rejection reason" : ""
                     }
                     value={rejectReason}
                     onChange={(e) => {
@@ -435,7 +415,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           onClick={onClose}
           sx={{ color: "white", borderColor: "#555", mr: 2 }}
         >
-          {t("buttons.cancel")}
+          Cancel
         </Button>
         <Button
           variant="contained"
@@ -450,7 +430,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
             "&:hover": { backgroundColor: "#3e8e41" },
           }}
         >
-          {t("buttons.saveChanges")}
+          Save Changes
         </Button>
       </DialogActions>
     </Dialog>

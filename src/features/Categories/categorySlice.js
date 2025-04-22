@@ -2,21 +2,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-
 const API_URL = `${BASE_URL}/categories`;
 
-const logFormData = (formData) => {
-  console.log("--- FormData Contents ---");
-  if (formData instanceof FormData) {
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
-  } else {
-    console.log("Regular Object:", formData);
-  }
-  console.log("-------------------------");
-};
-
+// Helper Functions
 const getToken = () => {
   try {
     return localStorage.getItem("token") || null;
@@ -26,20 +14,114 @@ const getToken = () => {
   }
 };
 
-// Update Category
-export const updateCategory = createAsyncThunk(
-  "categories/updateCategory",
-  async ({ id, formData }, { getState, rejectWithValue }) => {
-    // Changed parameter name
+const handleApiError = (error) => {
+  console.error("API Error:", error);
+  return {
+    message: error.response?.data?.message || error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+  };
+};
+
+// Thunks
+export const fetchCategories = createAsyncThunk(
+  "categories/fetchAll",
+  async (_, { getState, rejectWithValue }) => {
+    const { auth, categories } = getState();
+
+    try {
+      // Cache validation (5 minutes)
+      if (
+        categories.lastFetched &&
+        Date.now() - categories.lastFetched < 300000
+      ) {
+        return categories.data;
+      }
+
+      const response = await axios.get(API_URL, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+
+      return response.data.data || response.data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+export const fetchCategoryById = createAsyncThunk(
+  "categories/fetchCategoryById",
+  async (id, { getState, rejectWithValue }) => {
     const { auth } = getState();
 
     try {
-      // Debug: Verify received FormData
-      console.log("Received FormData in slice:");
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
+      const response = await axios.get(`${API_URL}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.token}`,
+          Accept: "application/json",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+export const createCategory = createAsyncThunk(
+  "categories/createCategory",
+  async (categoryData, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+
+    try {
+      const formData = new FormData();
+
+      // Handle multilingual names
+      if (categoryData.name && typeof categoryData.name === "object") {
+        formData.append("name[en]", categoryData.name.en);
+        formData.append("name[ar]", categoryData.name.ar);
       }
 
+      // Append other fields
+      if (categoryData.is_interested) {
+        formData.append("is_interested", categoryData.is_interested);
+      }
+
+      if (categoryData.shop_id) {
+        const shopIdsArray = Array.isArray(categoryData.shop_id)
+          ? categoryData.shop_id
+          : [categoryData.shop_id];
+        shopIdsArray.forEach((id) => formData.append("shop_ids[]", id));
+      }
+
+      if (categoryData.image instanceof File) {
+        formData.append("image", categoryData.image);
+      }
+
+      const response = await axios.post(`${API_URL}/create`, formData, {
+        headers: {
+          Authorization: `Bearer ${auth.token || getToken()}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+export const updateCategory = createAsyncThunk(
+  "categories/updateCategory",
+  async ({ id, formData }, { getState, rejectWithValue }) => {
+    const { auth } = getState();
+
+    try {
       const response = await axios.post(`${API_URL}/update/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${auth.token}`,
@@ -49,205 +131,131 @@ export const updateCategory = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error("API Error:", error);
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return rejectWithValue(handleApiError(error));
     }
   }
 );
 
-// Fetch Categories
-export const fetchCategories = createAsyncThunk(
-  "categories/fetchAll",
-  async (_, { getState, rejectWithValue }) => {
-    const { auth } = getState(); // Get auth state
-    try {
-      const { categories } = getState();
-
-      // Return cached data if recent (5 minute cache)
-      if (
-        categories.lastFetched &&
-        Date.now() - categories.lastFetched < 300000
-      ) {
-        return categories.data || categories.categories;
-      }
-
-      const response = await axios.get(API_URL, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`, // Add authorization
-          Accept: "application/json",
-        },
-      });
-
-      return response.data.data || response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-// Fetch Category by ID
-export const fetchCategoryById = createAsyncThunk(
-  "categories/fetchCategoryById",
-  async (id, { getState, rejectWithValue }) => {
-    const { auth } = getState(); // Get authentication token from state
-    try {
-      const response = await axios.get(`${API_URL}/${id}`, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`, // Attach the token to the request
-          Accept: "application/json",
-        },
-      });
-
-      console.log("Category data fetched:", response.data);
-      return response.data; // Return the fetched category data
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to fetch category"
-      );
-    }
-  }
-);
-
-// Create Category
-export const createCategory = createAsyncThunk(
-  "categories/createCategory",
-  async (categoryData, { getState, rejectWithValue }) => {
-    const { auth } = getState(); // Get authentication token from state
-
-    try {
-      const formData = new FormData();
-
-      if (categoryData.name && typeof categoryData.name === "object") {
-        formData.append("name[en]", categoryData.name.en);
-        formData.append("name[ar]", categoryData.name.ar);
-      }
-
-      if (categoryData.is_interested) {
-        formData.append("is_interested", categoryData.is_interested);
-      }
-      if (categoryData.shop_id) {
-        const shopIdsArray = Array.isArray(categoryData.shop_id)
-          ? categoryData.shop_id
-          : [categoryData.shop_id]; // Ensure it's always an array
-
-        shopIdsArray.forEach((id) => {
-          formData.append("shop_ids[]", id); // Append each shop ID properly
-        });
-      }
-
-      if (categoryData.image instanceof File) {
-        formData.append("image", categoryData.image);
-      }
-
-      const response = await axios.post(`${API_URL}/create`, formData, {
-        headers: {
-          Authorization: `Bearer ${auth.token || getToken()}`, // Fallback to localStorage
-          "Content-Type": "multipart/form-data",
-          Accept: "application/json",
-        },
-      });
-
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to create category"
-      );
-    }
-  }
-);
-
-// Delete Category
 export const deleteCategory = createAsyncThunk(
   "categories/deleteCategory",
   async (id, { getState, rejectWithValue }) => {
     const { auth } = getState();
+
     try {
       await axios.delete(`${API_URL}/destroy/${id}`, {
         headers: {
-          Authorization: `Bearer ${auth.token || getToken()}`, // Fallback to localStorage
-          "Content-Type": "multipart/form-data",
-          Accept: "application/json",
+          Authorization: `Bearer ${auth.token || getToken()}`,
         },
       });
       return id;
     } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to delete category"
-      );
+      return rejectWithValue(handleApiError(error));
     }
   }
 );
 
+// Slice
 const categorySlice = createSlice({
   name: "categories",
   initialState: {
-    data: [], // Primary data field
-    categories: [], // Legacy field (for backward compatibility)
+    data: [],
     selectedCategory: null,
     status: "idle",
     error: null,
-    lastFetched: null, // Track when data was last fetched
+    lastFetched: null,
+    operation: null,
   },
   reducers: {
     resetStatus: (state) => {
       state.status = "idle";
       state.error = null;
+      state.operation = null;
+    },
+    clearSelectedCategory: (state) => {
+      state.selectedCategory = null;
+    },
+    resetCategories: (state) => {
+      state.data = [];
+      state.selectedCategory = null;
+      state.status = "idle";
+      state.error = null;
+      state.lastFetched = null;
+      state.operation = null;
     },
   },
   extraReducers: (builder) => {
+    // Specific cases first
     builder
-      .addCase(createCategory.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(createCategory.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.categories.push(action.payload);
-      })
-      .addCase(createCategory.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
       .addCase(fetchCategories.pending, (state) => {
         state.status = "loading";
+        state.operation = "fetchAll";
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.data = action.payload;
-        state.categories = action.payload; // Maintain both fields
         state.lastFetched = Date.now();
-      })
-      .addCase(fetchCategories.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
+        state.operation = null;
       })
       .addCase(fetchCategoryById.pending, (state) => {
         state.status = "loading";
+        state.operation = "fetchById";
       })
       .addCase(fetchCategoryById.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.selectedCategory = action.payload; // Store the fetched category data
+        state.selectedCategory = action.payload;
+        state.operation = null;
       })
-      .addCase(fetchCategoryById.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
+      .addCase(createCategory.pending, (state) => {
+        state.status = "loading";
+        state.operation = "create";
+      })
+      .addCase(createCategory.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.data.unshift(action.payload);
+        state.operation = null;
+      })
+      .addCase(updateCategory.pending, (state) => {
+        state.status = "loading";
+        state.operation = "update";
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const index = state.categories.findIndex(
+        const index = state.data.findIndex(
           (cat) => cat.id === action.payload.id
         );
-        if (index !== -1) state.categories[index] = action.payload;
+        if (index !== -1) state.data[index] = action.payload;
+        if (state.selectedCategory?.id === action.payload.id) {
+          state.selectedCategory = action.payload;
+        }
+        state.operation = null;
+      })
+      .addCase(deleteCategory.pending, (state) => {
+        state.status = "loading";
+        state.operation = "delete";
       })
       .addCase(deleteCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.categories = state.categories.filter(
-          (cat) => cat.id !== action.payload
-        );
+        state.data = state.data.filter((cat) => cat.id !== action.payload);
+        if (state.selectedCategory?.id === action.payload) {
+          state.selectedCategory = null;
+        }
+        state.operation = null;
       });
+
+    // Generic matchers last
+    builder.addMatcher(
+      (action) =>
+        action.type.startsWith("categories/") &&
+        action.type.endsWith("/rejected"),
+      (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+        state.operation = null;
+      }
+    );
   },
 });
 
-export const { resetStatus } = categorySlice.actions;
+export const { resetStatus, clearSelectedCategory, resetCategories } =
+  categorySlice.actions;
 export default categorySlice.reducer;
-
-// export { fetchCategoryById };

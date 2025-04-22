@@ -177,13 +177,9 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            {Object.entries(t("timeRanges", { returnObjects: true })).map(
-              ([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              )
-            )}
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
         </Box>
         <Box sx={{ height: "90%" }}>
@@ -194,7 +190,7 @@ const StatisticsTest = () => {
               series={[
                 {
                   data: earningsData.map((item) => item.profit),
-                  label: t("chart.profit"),
+                  label: "Profit",
                   color: "#8884d8",
                 },
               ]}
@@ -202,20 +198,17 @@ const StatisticsTest = () => {
                 {
                   scaleType: "point",
                   data: earningsData.map((item) => item.period),
-                  label: t(
-                    `chart.period.${
-                      ranges.earnings === "yearly"
-                        ? "year"
-                        : ranges.earnings === "monthly"
-                          ? "month"
-                          : "week"
-                    }`
-                  ),
+                  label:
+                    ranges.earnings === "yearly"
+                      ? "Year"
+                      : ranges.earnings === "monthly"
+                        ? "Month"
+                        : "Week",
                 },
               ]}
               yAxis={[
                 {
-                  label: t("chart.amount"),
+                  label: "Amount ($)",
                 },
               ]}
               grid={{ vertical: true, horizontal: true }}
@@ -241,7 +234,7 @@ const StatisticsTest = () => {
                 color: "gray",
               }}
             >
-              {t("messages.noData")}
+              No data available
             </Box>
           )}
         </Box>
@@ -258,13 +251,9 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            {Object.entries(t("timeRanges", { returnObjects: true })).map(
-              ([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              )
-            )}
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
         </Box>
         <Box>
@@ -274,8 +263,7 @@ const StatisticsTest = () => {
               ))
             : processedCategories.slice(0, 5).map((cat, idx) => (
                 <Typography key={cat.id} sx={{ mb: 1 }}>
-                  {t("messages.rank", { rank: idx + 1 })} {cat.name} -{" "}
-                  {t("messages.sold", { count: cat.total_sold })}
+                  #{idx + 1} {cat.name} - Sold: {cat.total_sold}
                 </Typography>
               ))}
         </Box>
@@ -292,13 +280,9 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            {Object.entries(t("timeRanges", { returnObjects: true })).map(
-              ([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              )
-            )}
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
         </Box>
         <Grid container spacing={2}>
@@ -332,13 +316,9 @@ const StatisticsTest = () => {
             size="small"
             sx={{ minWidth: 120, color: "white" }}
           >
-            {Object.entries(t("timeRanges", { returnObjects: true })).map(
-              ([value, label]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              )
-            )}
+            <MenuItem value="weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="yearly">Yearly</MenuItem>
           </Select>
         </Box>
         <Grid container spacing={2}>
