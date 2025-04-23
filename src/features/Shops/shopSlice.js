@@ -44,13 +44,47 @@ const transformShopData = (shop) => {
 };
 
 // Fetch all shops
+// export const fetchShops = createAsyncThunk(
+//   "shops/fetchShops",
+//   async (_, { getState, rejectWithValue }) => {
+//     try {
+//       const { shops } = getState();
+
+//       if (shops.lastFetched && Date.now() - shops.lastFetched < 300000) {
+//         return shops.data || shops.shops.data;
+//       }
+
+//       const response = await axios.get(API_BASE_URL, {
+//         headers: {
+//           Authorization: `Bearer ${getToken()}`,
+//         },
+//       });
+//       console.log("Shops API response:", response.data);
+
+//       const transformedData = response.data.data.map(transformShopData);
+
+//       return {
+//         ...response.data,
+//         data: transformedData,
+//       };
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data || "Failed to fetch shops");
+//     }
+//   }
+// );
+
 export const fetchShops = createAsyncThunk(
   "shops/fetchShops",
-  async (_, { getState, rejectWithValue }) => {
+  async (forceRefresh = false, { getState, rejectWithValue }) => {
     try {
       const { shops } = getState();
 
-      if (shops.lastFetched && Date.now() - shops.lastFetched < 300000) {
+      // Skip if not forced and data is fresh
+      if (
+        !forceRefresh &&
+        shops.lastFetched &&
+        Date.now() - shops.lastFetched < 300000
+      ) {
         return shops.data || shops.shops.data;
       }
 
@@ -59,10 +93,8 @@ export const fetchShops = createAsyncThunk(
           Authorization: `Bearer ${getToken()}`,
         },
       });
-      console.log("Shops API response:", response.data);
 
       const transformedData = response.data.data.map(transformShopData);
-
       return {
         ...response.data,
         data: transformedData,
@@ -220,16 +252,36 @@ const shopSlice = createSlice({
     setSelectedShop: (state, action) => {
       state.selectedShop = action.payload;
     },
+    syncShops: (state, action) => {
+      state.data = action.payload;
+      state.shops.data = action.payload;
+      state.lastFetched = Date.now();
+    },
   },
   extraReducers: (builder) => {
     builder
+      // .addCase(fetchShops.pending, (state) => {
+      //   state.status = "loading";
+      // })
+      // .addCase(fetchShops.fulfilled, (state, action) => {
+      //   state.status = "succeeded";
+      //   state.data = action.payload.data;
+      //   state.shops.data = action.payload.data;
+      //   state.lastFetched = Date.now();
+      // })
       .addCase(fetchShops.pending, (state) => {
         state.status = "loading";
       })
       .addCase(fetchShops.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data = action.payload.data;
-        state.shops.data = action.payload.data;
+        const shopData = action.payload.data || action.payload;
+        state.data = shopData;
+        state.shops = {
+          data: shopData,
+          status: true,
+          error: null,
+          statusCode: 200,
+        };
         state.lastFetched = Date.now();
       })
       .addCase(fetchShops.rejected, (state, action) => {
@@ -292,5 +344,5 @@ const shopSlice = createSlice({
   },
 });
 
-export const { resetStatus, setSelectedShop } = shopSlice.actions;
+export const { resetStatus, setSelectedShop, syncShops } = shopSlice.actions;
 export default shopSlice.reducer;

@@ -1,7 +1,7 @@
 {
     "title": "Order",
     "sections": {
-      "products": "Products ({count})",
+      "products": "Products",
       "orderDetails": "Order Details",
       "premiumService": "Premium Service",
       "updateStatus": "Update Order Status"

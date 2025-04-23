@@ -139,7 +139,7 @@ function HomeDash() {
         overflowX: "hidden",
         backgroundColor: "#121212",
         color: "white",
-        direction: isRTL ? "rtl" : "ltr", // Set base direction
+        direction: isRTL ? "rtl" : "ltr",
       }}
     >
       <Stack
@@ -279,7 +279,7 @@ function HomeDash() {
             value={topProductName}
             subValue={
               topSalesCount > 0
-                ? t("stats.topProduct.salesCount", { count: topSalesCount })
+                ? `${topSalesCount} sales`
                 : t("stats.topProduct.noData")
             }
           >

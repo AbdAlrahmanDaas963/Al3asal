@@ -13,7 +13,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import ShopCard from "../../components/common/ShopCard";
-import { fetchShops } from "./shopSlice";
+import { fetchShops, syncShops } from "./shopSlice";
 import { useTranslation } from "react-i18next";
 
 const ShopList = () => {
@@ -22,19 +22,12 @@ const ShopList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
 
-  const {
-    data: shops = [],
-    loading,
-    error,
-    lastFetched,
-    status,
-  } = useSelector((state) => ({
-    data: state.shops.data || state.shops.shops.data || [],
-    loading: state.shops.status === "loading",
-    error: state.shops.error,
-    lastFetched: state.shops.lastFetched,
-    status: state.shops.status,
-  }));
+  const shopState = useSelector((state) => state.shops);
+  const shops = shopState.data || shopState.shops?.data || [];
+  const loading = shopState.status === "loading";
+  const error = shopState.error;
+  const lastFetched = shopState.lastFetched;
+  const status = shopState.status;
 
   useEffect(() => {
     const timer = setTimeout(() => setSearchDebounced(searchQuery), 300);
@@ -42,8 +35,19 @@ const ShopList = () => {
   }, [searchQuery]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const result = await dispatch(fetchShops());
+        if (fetchShops.fulfilled.match(result)) {
+          dispatch(syncShops(result.payload.data || result.payload));
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+
     if (!lastFetched || Date.now() - lastFetched > 300000) {
-      dispatch(fetchShops());
+      fetchData();
     }
   }, [dispatch, lastFetched]);
 
@@ -66,7 +70,18 @@ const ShopList = () => {
 
   const loadingSkeletons = Array(6).fill(0);
 
-  if (status === "loading" && (!lastFetched || shops.length === 0)) {
+  const handleRefresh = async () => {
+    try {
+      const result = await dispatch(fetchShops(true));
+      if (fetchShops.fulfilled.match(result)) {
+        dispatch(syncShops(result.payload.data || result.payload));
+      }
+    } catch (err) {
+      console.error("Refresh error:", err);
+    }
+  };
+
+  if (loading && (!lastFetched || shops.length === 0)) {
     return (
       <Box sx={{ p: 3 }}>
         <Skeleton
@@ -103,7 +118,7 @@ const ShopList = () => {
         </Alert>
         <Button
           variant="contained"
-          onClick={() => dispatch(fetchShops())}
+          onClick={handleRefresh}
           startIcon={<RefreshIcon />}
         >
           {t("retry")}

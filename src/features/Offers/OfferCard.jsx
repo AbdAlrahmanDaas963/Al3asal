@@ -111,7 +111,7 @@ const OfferCard = ({ offer }) => {
         </Stack>
       )}
 
-      <Stack direction="row" spacing={1} mt={2}>
+      <Stack direction="row" spacing={1} gap={"10px"} mt={2}>
         <Button variant="contained" size="small" onClick={handleEdit}>
           {t("edit")}
         </Button>
