@@ -6,7 +6,7 @@
         "headers": {
           "id": "المعرف",
           "name": "الاسم",
-          "description": "الوصف (عربي)",
+          "description": "الوصف ",
           "price": "السعر",
           "shop": "المتجر",
           "category": "الفئة",

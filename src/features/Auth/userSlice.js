@@ -1,4 +1,3 @@
-// "https://asool-gifts.com/api/dashboard/login"
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
