@@ -74,7 +74,7 @@ export const fetchCategoryById = createAsyncThunk(
 
 export const createCategory = createAsyncThunk(
   "categories/createCategory",
-  async (categoryData, { getState, rejectWithValue }) => {
+  async (categoryData, { getState, rejectWithValue, dispatch }) => {
     const { auth } = getState();
 
     try {
@@ -108,6 +108,9 @@ export const createCategory = createAsyncThunk(
           "Content-Type": "multipart/form-data",
         },
       });
+
+      // Force refresh categories after creation
+      dispatch(fetchCategories());
 
       return response.data;
     } catch (error) {
@@ -182,9 +185,19 @@ const categorySlice = createSlice({
       state.lastFetched = null;
       state.operation = null;
     },
+    // Add a new reducer to handle optimistic updates
+    addTempCategory: (state, action) => {
+      state.data.unshift({
+        ...action.payload,
+        id: `temp-${Date.now()}`,
+        isTemp: true,
+      });
+    },
+    removeTempCategory: (state, action) => {
+      state.data = state.data.filter((cat) => cat.id !== action.payload);
+    },
   },
   extraReducers: (builder) => {
-    // Specific cases first
     builder
       .addCase(fetchCategories.pending, (state) => {
         state.status = "loading";
@@ -192,7 +205,8 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data = action.payload;
+        // Filter out any temporary categories before adding new data
+        state.data = action.payload.filter((cat) => !cat.isTemp);
         state.lastFetched = Date.now();
         state.operation = null;
       })
@@ -205,25 +219,35 @@ const categorySlice = createSlice({
         state.selectedCategory = action.payload;
         state.operation = null;
       })
-      .addCase(createCategory.pending, (state) => {
+      .addCase(createCategory.pending, (state, action) => {
         state.status = "loading";
         state.operation = "create";
+        // Add temporary category with minimal data
+        state.data.unshift({
+          id: `temp-${Date.now()}`,
+          isTemp: true,
+          name: action.meta.arg.name || { en: "New Category", ar: "فئة جديدة" },
+          image: action.meta.arg.image || null,
+          is_interested: action.meta.arg.is_interested || false,
+        });
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const newCategory = {
-          ...action.payload,
-          name: action.payload.name || { en: "New Category", ar: "فئة جديدة" },
-          image: action.payload.image || null,
-          shops: action.payload.shops || [],
-          is_interested: action.payload.is_interested ?? false,
-        };
-        state.data = [newCategory, ...state.data];
+        // Replace temporary category with server response
+        const tempIndex = state.data.findIndex((cat) => cat.isTemp);
+        if (tempIndex !== -1) {
+          state.data[tempIndex] = action.payload;
+        } else {
+          state.data.unshift(action.payload);
+        }
         state.operation = null;
       })
-      .addCase(updateCategory.pending, (state) => {
-        state.status = "loading";
-        state.operation = "update";
+      .addCase(updateCategory.pending, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+        // Remove temporary category if creation failed
+        state.data = state.data.filter((cat) => !cat.isTemp);
+        state.operation = null;
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
@@ -247,22 +271,36 @@ const categorySlice = createSlice({
           state.selectedCategory = null;
         }
         state.operation = null;
-      });
+      })
+      .addMatcher(
+        (action) =>
+          action.type.startsWith("categories/") &&
+          action.type.endsWith("/rejected"),
+        (state, action) => {
+          state.status = "failed";
+          state.error = action.payload;
+          state.operation = null;
 
-    // Generic matchers last
-    builder.addMatcher(
-      (action) =>
-        action.type.startsWith("categories/") &&
-        action.type.endsWith("/rejected"),
-      (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-        state.operation = null;
-      }
-    );
+          // Remove temporary category if creation failed
+          if (
+            action.type === "categories/createCategory/rejected" &&
+            action.meta.arg.tempId
+          ) {
+            state.data = state.data.filter(
+              (cat) => cat.id !== action.meta.arg.tempId
+            );
+          }
+        }
+      );
   },
 });
 
-export const { resetStatus, clearSelectedCategory, resetCategories } =
-  categorySlice.actions;
+export const {
+  resetStatus,
+  clearSelectedCategory,
+  resetCategories,
+  addTempCategory,
+  removeTempCategory,
+} = categorySlice.actions;
+
 export default categorySlice.reducer;

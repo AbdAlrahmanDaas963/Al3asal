@@ -98,12 +98,12 @@ const AddCategoryForm = () => {
     setErrorMessage("");
     setFormData({ ...formData, image: file });
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setValidationErrors({});
 
+    // Validate form data
     const errors = {};
     if (!formData.shop_id) errors.shop_id = t("shopRequired");
     if (!formData.name.en)
@@ -117,21 +117,58 @@ const AddCategoryForm = () => {
     }
 
     try {
-      // 1. Create category
-      const newCategory = await dispatch(createCategory(formData)).unwrap();
+      // Generate a temporary ID for optimistic update
+      const tempId = `temp-${Date.now()}`;
 
-      // 2. Manually add it to the store (in case fetchCategories is async slow)
-      dispatch({ type: "categories/addOne", payload: newCategory });
+      // Create payload with temporary ID
+      const payload = {
+        ...formData,
+        tempId, // Pass tempId to match with server response later
+      };
 
-      // 3. Navigate
-      navigate("/dashboard/category");
+      // 1. Optimistically add to store
+      dispatch({
+        type: "categories/addTempCategory",
+        payload: {
+          id: tempId,
+          name: formData.name,
+          image: formData.image, // This could be a File object
+          is_interested: formData.is_interested || false,
+          shops: formData.shop_id ? [formData.shop_id] : [],
+          isTemp: true,
+        },
+      });
+
+      // 2. Create category on server
+      const newCategory = await dispatch(createCategory(payload)).unwrap();
+
+      // 3. The Redux slice will handle replacing the temp category with the real one
+      // (This happens in the createCategory.fulfilled case in your slice)
+
+      // 4. Optional: Force refresh to ensure all data is synced
+      dispatch(fetchCategories());
+
+      // 5. Navigate only after everything is complete
+      // navigate("/dashboard/category", {
+      //   state: { successMessage: t("categoryCreatedSuccess") },
+      // });
     } catch (err) {
+      // The Redux slice will automatically remove the temp category on error
+      // (Handled in createCategory.rejected case in your slice)
+
       setErrorMessage(
         err.message || err?.response?.data?.message || t("createError")
       );
+
       if (err?.response?.data?.errors) {
         setValidationErrors(err.response.data.errors);
       }
+
+      // If you need to manually remove the temp category (fallback)
+      dispatch({
+        type: "categories/removeTempCategory",
+        payload: tempId,
+      });
     }
   };
 

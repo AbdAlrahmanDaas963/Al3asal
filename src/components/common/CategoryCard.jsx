@@ -4,23 +4,29 @@ import {
   CircularProgress,
   Stack,
   Typography,
+  Skeleton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteCategory } from "../../features/Categories/categorySlice";
 import { useTranslation } from "react-i18next";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { LanguageContext } from "../../contexts/LanguageContext";
 
-function CategoryCard({ category }) {
+function CategoryCard({ category, isLoading }) {
   const { t } = useTranslation("categories");
   const { language } = useContext(LanguageContext);
-  const { id, name, image, is_featured, is_interested } = category;
+  const { id, name, image, is_featured, is_interested } = category || {};
+  const [imageError, setImageError] = useState(false);
+  const [currentImage, setCurrentImage] = useState(image);
 
   const { status, operation } = useSelector((state) => state.categories);
 
   const isDeleting =
-    status === "loading" && operation === "delete" && category.id === id;
+    status === "loading" &&
+    operation === "delete" &&
+    category &&
+    category.id === id;
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -35,12 +41,53 @@ function CategoryCard({ category }) {
     }
   };
 
-  // Support multilingual names
+  // Support multilingual names with better fallbacks
   const getDisplayName = () => {
+    if (isLoading) return t("loading");
+    if (!name) return t("unnamedCategory");
     if (typeof name === "string") return name;
     if (name && name[language]) return name[language];
-    return t("unnamedCategory");
+    return (name && (name.en || name.ar)) || t("unnamedCategory");
   };
+
+  // Handle image loading and errors
+  const handleImageError = () => {
+    if (!imageError) {
+      setImageError(true);
+      setCurrentImage("/images/default-category.png");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Box dir={language === "ar" ? "rtl" : "ltr"}>
+        <Stack
+          sx={{
+            width: "300px",
+            backgroundColor: "#252525",
+            padding: "10px",
+            borderRadius: "20px",
+            position: "relative",
+          }}
+        >
+          <Skeleton
+            variant="rounded"
+            width="100%"
+            height={150}
+            sx={{ borderRadius: "16px" }}
+          />
+          <Stack mt={1} sx={{ gap: 1 }}>
+            <Skeleton width="60%" height={24} />
+            <Skeleton width="80%" height={20} />
+          </Stack>
+          <Stack direction="row" spacing={1} mt={2}>
+            <Skeleton width="100%" height={36} />
+            <Skeleton width="100%" height={36} />
+          </Stack>
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box dir={language === "ar" ? "rtl" : "ltr"}>
@@ -53,20 +100,34 @@ function CategoryCard({ category }) {
           position: "relative",
         }}
       >
-        <img
-          src={image}
-          style={{
-            width: "100%",
-            height: "150px",
-            objectFit: "cover",
-            borderRadius: "16px",
-            backgroundColor: "grey",
-          }}
-          alt={getDisplayName()}
-          onError={(e) => {
-            e.target.src = "https://via.placeholder.com/150";
-          }}
-        />
+        {currentImage ? (
+          <img
+            src={currentImage}
+            style={{
+              width: "100%",
+              height: "150px",
+              objectFit: "cover",
+              borderRadius: "16px",
+              backgroundColor: "grey",
+            }}
+            alt={getDisplayName()}
+            onError={handleImageError}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: "100%",
+              height: "150px",
+              backgroundColor: "grey",
+              borderRadius: "16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography variant="body2">{t("noImageAvailable")}</Typography>
+          </Box>
+        )}
 
         {is_interested && (
           <Typography
@@ -106,7 +167,7 @@ function CategoryCard({ category }) {
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
-            title={getDisplayName()} // Tooltip
+            title={getDisplayName()}
           >
             {getDisplayName()}
           </Typography>

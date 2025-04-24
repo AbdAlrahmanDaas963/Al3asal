@@ -13,7 +13,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import SearchIcon from "@mui/icons-material/Search";
 import CategoryCard from "../../components/common/CategoryCard";
-import { fetchCategories } from "./categorySlice";
+import { fetchCategories, addTempCategory } from "./categorySlice";
 import { useTranslation } from "react-i18next";
 
 const CategoryList = () => {
@@ -29,7 +29,7 @@ const CategoryList = () => {
     lastFetched,
     status,
   } = useSelector((state) => ({
-    data: state.categories.data || state.categories.categories || [],
+    data: state.categories.data || [],
     loading: state.categories.status === "loading",
     error: state.categories.error,
     lastFetched: state.categories.lastFetched,
@@ -47,11 +47,23 @@ const CategoryList = () => {
     }
   }, [dispatch, lastFetched]);
 
+  // Filter out incomplete temporary categories
+  const validCategories = useMemo(
+    () =>
+      categories.filter((cat) => {
+        const hasName =
+          cat.name &&
+          (typeof cat.name === "string" || cat.name.en || cat.name.ar);
+        return !cat.isTemp || hasName;
+      }),
+    [categories]
+  );
+
   const filteredCategories = useMemo(() => {
-    if (!searchDebounced) return categories;
+    if (!searchDebounced) return validCategories;
 
     const searchLower = searchDebounced.toLowerCase();
-    return categories.filter((category) => {
+    return validCategories.filter((category) => {
       const name =
         typeof category.name === "string"
           ? category.name.toLowerCase()
@@ -60,7 +72,7 @@ const CategoryList = () => {
             "";
       return name.includes(searchLower);
     });
-  }, [categories, searchDebounced]);
+  }, [validCategories, searchDebounced]);
 
   const loadingSkeletons = Array(6).fill(0);
 
@@ -141,8 +153,8 @@ const CategoryList = () => {
       <Grid container spacing={3}>
         {filteredCategories.length > 0 ? (
           filteredCategories.map((category, index) => (
-            <Grid item key={index}>
-              <CategoryCard category={category} />
+            <Grid item key={category.id || `temp-${index}`}>
+              <CategoryCard category={category} isLoading={category.isTemp} />
             </Grid>
           ))
         ) : (
