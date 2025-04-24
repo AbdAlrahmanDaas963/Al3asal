@@ -14,7 +14,7 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { createCategory } from "./categorySlice";
+import { createCategory, fetchCategories } from "./categorySlice";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -99,7 +99,7 @@ const AddCategoryForm = () => {
     setFormData({ ...formData, image: file });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage("");
     setValidationErrors({});
@@ -116,19 +116,23 @@ const AddCategoryForm = () => {
       return;
     }
 
-    dispatch(createCategory(formData))
-      .unwrap()
-      .then(() => {
-        navigate("/dashboard/category");
-      })
-      .catch((err) => {
-        setErrorMessage(
-          err.message || err.response?.data?.message || t("createError")
-        );
-        if (err.response?.data?.errors) {
-          setValidationErrors(err.response.data.errors);
-        }
-      });
+    try {
+      // 1. Create category
+      const newCategory = await dispatch(createCategory(formData)).unwrap();
+
+      // 2. Manually add it to the store (in case fetchCategories is async slow)
+      dispatch({ type: "categories/addOne", payload: newCategory });
+
+      // 3. Navigate
+      navigate("/dashboard/category");
+    } catch (err) {
+      setErrorMessage(
+        err.message || err?.response?.data?.message || t("createError")
+      );
+      if (err?.response?.data?.errors) {
+        setValidationErrors(err.response.data.errors);
+      }
+    }
   };
 
   const getShopName = (shop) => {

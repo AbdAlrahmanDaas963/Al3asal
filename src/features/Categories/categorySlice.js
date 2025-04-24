@@ -211,7 +211,14 @@ const categorySlice = createSlice({
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.data.unshift(action.payload);
+        const newCategory = {
+          ...action.payload,
+          name: action.payload.name || { en: "New Category", ar: "فئة جديدة" },
+          image: action.payload.image || null,
+          shops: action.payload.shops || [],
+          is_interested: action.payload.is_interested ?? false,
+        };
+        state.data = [newCategory, ...state.data];
         state.operation = null;
       })
       .addCase(updateCategory.pending, (state) => {

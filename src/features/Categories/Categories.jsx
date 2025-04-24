@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Stack } from "@mui/material";
 import AddCategoryForm from "./AddCategoryForm";
 import CategoryList from "./CategoryList";
 import { useTranslation } from "react-i18next";
-
 const Categories = ({ categoryId }) => {
   const { t } = useTranslation("categories");
   const navigate = useNavigate();

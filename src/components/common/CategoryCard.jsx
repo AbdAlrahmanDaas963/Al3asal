@@ -1,6 +1,12 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { deleteCategory } from "../../features/Categories/categorySlice";
 import { useTranslation } from "react-i18next";
 import { useContext } from "react";
@@ -11,12 +17,21 @@ function CategoryCard({ category }) {
   const { language } = useContext(LanguageContext);
   const { id, name, image, is_featured, is_interested } = category;
 
+  const { status, operation } = useSelector((state) => state.categories);
+
+  const isDeleting =
+    status === "loading" && operation === "delete" && category.id === id;
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm(t("deleteConfirmation", { id }))) {
-      dispatch(deleteCategory(id));
+      try {
+        await dispatch(deleteCategory(id)).unwrap();
+      } catch (error) {
+        console.error("Delete failed:", error);
+      }
     }
   };
 
@@ -121,8 +136,12 @@ function CategoryCard({ category }) {
             color="error"
             size="small"
             onClick={handleDelete}
+            disabled={isDeleting}
+            startIcon={
+              isDeleting ? <CircularProgress size={16} color="inherit" /> : null
+            }
           >
-            {t("delete")}
+            {isDeleting ? t("deleting") : t("delete")}
           </Button>
         </Stack>
       </Stack>

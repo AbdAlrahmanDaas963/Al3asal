@@ -140,8 +140,8 @@ const CategoryList = () => {
 
       <Grid container spacing={3}>
         {filteredCategories.length > 0 ? (
-          filteredCategories.map((category) => (
-            <Grid item key={category.id}>
+          filteredCategories.map((category, index) => (
+            <Grid item key={index}>
               <CategoryCard category={category} />
             </Grid>
           ))
