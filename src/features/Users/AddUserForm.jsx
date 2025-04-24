@@ -32,7 +32,11 @@ const AddUserForm = () => {
     password: false,
   });
 
-  // Reset form and status when component unmounts
+  useEffect(() => {
+    if (status === "succeeded") {
+      setFormData({ username: "", password: "", is_admin: "1" });
+    }
+  }, [status]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

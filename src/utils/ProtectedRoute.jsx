@@ -1,16 +1,21 @@
-// utils/ProtectedRoute.jsx
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = () => {
-  const { token } = useSelector((state) => state.auth);
+const ProtectedRoute = ({ adminOnly = false }) => {
+  const { token, user, status } = useSelector((state) => state.auth);
+
+  if (status === "loading") {
+    return <div>Loading...</div>; // Or a proper loading component
+  }
 
   if (!token) {
-    // User not logged in, redirect to login
     return <Navigate to="/login" replace />;
   }
 
-  // User is logged in, render the child routes
+  if (adminOnly && user?.type !== "super") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return <Outlet />;
 };
 

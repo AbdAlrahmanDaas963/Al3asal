@@ -1,5 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { loadAuthState, saveAuthState } from "../../utils/authPersistence";
+
+const initialState = loadAuthState() || {
+  user: null,
+  token: null,
+  status: "idle",
+  error: null,
+};
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 // const API_URL = `${BASE_URL}/dashboard/auth`; // For admin endpoint
@@ -88,13 +96,7 @@ export const logOut = createAsyncThunk(
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: {
-    user: null,
-    token: getToken(),
-    status: "idle",
-    error: null,
-    lastFetched: null,
-  },
+  initialState,
   reducers: {
     resetAuthState: (state) => {
       state.user = null;
@@ -116,11 +118,10 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(logIn.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.lastFetched = Date.now();
-        state.error = null;
+        state.status = "succeeded";
+        saveAuthState(state);
       })
       .addCase(logIn.rejected, (state, action) => {
         state.status = "failed";
@@ -130,7 +131,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.status = "idle";
-        state.error = null;
+        localStorage.removeItem("authState");
       })
       .addCase(validateToken.fulfilled, (state) => {
         state.status = "succeeded";

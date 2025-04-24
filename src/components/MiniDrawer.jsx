@@ -33,6 +33,7 @@ import LanguageToggleButton from "./common/LanguageToggleButton";
 import { useTranslation } from "react-i18next";
 import LogOutButton from "./common/LogOutButton";
 import { useMediaQuery } from "@mui/material";
+import { useSelector } from "react-redux";
 
 const drawerWidth = 240;
 
@@ -137,11 +138,23 @@ const Dashboard = () => {
     }
   };
 
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.type === "super";
+
   const menuItems = [
     { path: "Dashboard", text: t("dashboard"), icon: <DashboardIcon /> },
     { path: "orders", text: t("orders"), icon: <ShoppingCartIcon /> },
-    { path: "accounts", text: t("accounts"), icon: <AccountCircleIcon /> },
-    { path: "Statistics", text: t("Statistics"), icon: <PaymentIcon /> },
+    // { path: "accounts", text: t("accounts"), icon: <AccountCircleIcon /> },
+    ...(isAdmin
+      ? [
+          { path: "Statistics", text: t("Statistics"), icon: <PaymentIcon /> },
+          {
+            path: "accounts",
+            text: t("accounts"),
+            icon: <AccountCircleIcon />,
+          },
+        ]
+      : []),
     { path: "products", text: t("products"), icon: <InventoryIcon /> },
     { path: "offers", text: t("offers"), icon: <InventoryIcon /> },
     { path: "category", text: t("category"), icon: <CategoryIcon /> },
