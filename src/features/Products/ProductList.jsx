@@ -168,8 +168,8 @@ const ProductList = () => {
                 ))
               : products
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((product) => (
-                    <TableRow key={product.id}>
+                  .map((product, index) => (
+                    <TableRow key={`${product.id}-${index}`}>
                       <TableCell>{product.id}</TableCell>
                       <TableCell>
                         {product.name?.[language] ||

@@ -25,7 +25,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 // Constants
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB (increased from 100KB)
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -43,7 +43,7 @@ const INITIAL_FORM_STATE = {
   category_id: "",
 };
 
-// Memoized selectors (unchanged)
+// Memoized selectors
 const selectShops = createSelector(
   (state) => state.shops,
   (shops) => {
@@ -83,7 +83,7 @@ const AddProductForm = ({ onSuccess }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Fetch data on mount (unchanged)
+  // Fetch data on mount
   useEffect(() => {
     if (shops.length === 0) {
       dispatch(fetchShops());
@@ -93,12 +93,17 @@ const AddProductForm = ({ onSuccess }) => {
     }
   }, [dispatch, shops.length, categories.length]);
 
-  // Get filtered categories based on selected shop
+  // Filter categories based on selected shop
   const filteredCategories = useMemo(() => {
-    return categories; // Temporarily showing all categories
+    if (!formData.shop_id) return [];
+
+    return categories.filter((category) =>
+      category.shops?.some((shop) => shop.id === Number(formData.shop_id))
+    );
   }, [formData.shop_id, categories]);
 
   const handleChange = (e) => {
+    console.log("Form change:", e.target.name, e.target.value);
     const { name, value, type, checked, files } = e.target;
 
     if (type === "checkbox") {
@@ -126,17 +131,15 @@ const AddProductForm = ({ onSuccess }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: name.endsWith("_id") ? String(value) : value,
-      ...(name === "shop_id" && { category_id: "" }),
+      ...(name === "shop_id" && { category_id: "" }), // Reset category when shop changes
     }));
   };
 
   const handleImageChange = (file) => {
     if (!file) return;
 
-    // Clear previous errors
     setErrors((prev) => ({ ...prev, image: null }));
 
-    // Validate file type
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
@@ -145,7 +148,6 @@ const AddProductForm = ({ onSuccess }) => {
       return;
     }
 
-    // Validate file size
     if (file.size > MAX_IMAGE_SIZE) {
       setErrors((prev) => ({
         ...prev,
@@ -154,7 +156,6 @@ const AddProductForm = ({ onSuccess }) => {
       return;
     }
 
-    // If validation passes
     setFormData((prev) => ({ ...prev, image: file }));
     setImagePreview(URL.createObjectURL(file));
   };
@@ -375,7 +376,7 @@ const AddProductForm = ({ onSuccess }) => {
   );
 };
 
-// Extracted Components with improvements
+// Extracted Components
 const ShopSelect = ({ shops, loading, value, onChange, error, t }) => (
   <FormControl fullWidth required error={!!error}>
     <InputLabel>{t("shop")}</InputLabel>
@@ -407,34 +408,49 @@ const CategorySelect = ({
   onChange,
   error,
   t,
-}) => (
-  <FormControl fullWidth required error={!!error} disabled={disabled}>
-    <InputLabel>{t("category")}</InputLabel>
-    <Select
-      name="category_id"
-      value={value}
-      onChange={onChange}
-      label={t("category")}
-      disabled={disabled || loading}
-    >
-      {disabled ? (
-        <MenuItem value="">{t("selectCategoryFirst")}</MenuItem>
-      ) : categories.length === 0 ? (
-        <MenuItem value="">{t("noCategories")}</MenuItem>
-      ) : (
-        categories.map((category) => (
+}) => {
+  const handleCategoryChange = (e) => {
+    onChange(event); // Only propagate change if not disabled
+    console.log("Category selected:", event.target.value);
+
+    onChange(event);
+  };
+
+  return (
+    <FormControl fullWidth required error={!!error}>
+      <InputLabel>{t("category")}</InputLabel>
+      <Select
+        name="category_id"
+        value={value}
+        onChange={onChange}
+        label={t("category")}
+        disabled={loading || disabled}
+        sx={{
+          pointerEvents: loading || disabled ? "none" : "auto",
+          zIndex: 1300,
+        }}
+        MenuProps={{ disablePortal: true }}
+      >
+        <MenuItem value="" disabled>
+          {!disabled
+            ? t("selectCategory")
+            : loading
+              ? t("loading")
+              : t("selectShopFirst")}
+        </MenuItem>
+        {categories.map((category) => (
           <MenuItem key={category.id} value={String(category.id)}>
             {category.name?.ar ||
               category.name?.en ||
               category.name ||
               `Category ${category.id}`}
           </MenuItem>
-        ))
-      )}
-    </Select>
-    {error && <FormHelperText error>{error}</FormHelperText>}
-  </FormControl>
-);
+        ))}
+      </Select>
+      {error && <FormHelperText error>{error}</FormHelperText>}
+    </FormControl>
+  );
+};
 
 const ImageUpload = ({ onChange, preview, error, maxSize, t }) => (
   <Box>

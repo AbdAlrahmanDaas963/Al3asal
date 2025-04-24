@@ -147,11 +147,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         <TableCell>
           <Skeleton variant="text" width={100} height={20} />
         </TableCell>
-        {!isMobile && (
-          <TableCell>
-            <Skeleton variant="text" width={150} height={20} />
-          </TableCell>
-        )}
         <TableCell>
           <Skeleton variant="text" width={80} height={20} />
         </TableCell>
@@ -213,7 +208,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 6}
+            colSpan={isMobile ? 4 : 5}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -235,7 +230,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 6}
+            colSpan={isMobile ? 4 : 5}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -253,25 +248,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
           </TableCell>
         )}
         {renderStatusCell(order)}
-        {!isMobile && (
-          <TableCell sx={{ color: "white" }}>
-            <Tooltip
-              title={order.card_number || t("table.messages.cardNotProvided")}
-            >
-              <Box display="flex" alignItems="center">
-                <CreditCardIcon
-                  fontSize="small"
-                  sx={{ mr: 1, color: "white" }}
-                />
-                <Typography variant="body2">
-                  {order.card_number
-                    ? `${order.card_number.slice(0, -4).replace(/./g, "•")}${order.card_number.slice(-4)}`
-                    : "•••• •••• •••• ••••"}
-                </Typography>
-              </Box>
-            </Tooltip>
-          </TableCell>
-        )}
         <TableCell sx={{ color: "white" }}>
           ${order.total_price?.toFixed(2) || "0.00"}
         </TableCell>
@@ -371,11 +347,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
               <TableCell sx={{ color: "white" }}>
                 {t("table.headers.status")}
               </TableCell>
-              {!isMobile && (
-                <TableCell sx={{ color: "white" }}>
-                  {t("table.headers.card")}
-                </TableCell>
-              )}
               <TableCell sx={{ color: "white" }}>
                 {t("table.headers.amount")}
               </TableCell>
