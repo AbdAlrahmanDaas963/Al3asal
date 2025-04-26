@@ -30,7 +30,6 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import OrderDetailsModal from "./OrderDetailsModal";
 import { useDispatch } from "react-redux";
 import { fetchOrders, updateOrderStatus } from "./ordersSlice";
-
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../../contexts/LanguageContext";
 
@@ -43,6 +42,23 @@ const statusColors = {
   default: "#9E9E9E",
 };
 
+// Date formatting function
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch (e) {
+    return dateString; // Fallback to raw string if parsing fails
+  }
+};
+
 const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
   const { t } = useTranslation("ordersTable");
 
@@ -52,6 +68,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     pending: t("filters.pending"),
     done: t("filters.done"),
   };
+
   const { direction } = useContext(LanguageContext);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -68,14 +85,12 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
   });
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // Track initial load completion
   useEffect(() => {
     if (!isLoading && orders.length > 0) {
       setInitialLoad(false);
     }
   }, [isLoading, orders]);
 
-  // Filter orders based on selected status
   const filteredOrders =
     statusFilter === "all"
       ? orders
@@ -104,7 +119,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         severity: "success",
       });
 
-      // Refresh orders to get latest data
       dispatch(fetchOrders());
     } catch (error) {
       setSnackbar({
@@ -124,7 +138,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     setPage(0);
   };
 
-  // Reset to first page if current page is out of bounds
   useEffect(() => {
     if (page >= totalPages) setPage(0);
   }, [totalPages, page]);
@@ -141,11 +154,16 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
             </Box>
           </Box>
         </TableCell>
-        <TableCell>
-          <Skeleton variant="text" width={80} height={20} />
-        </TableCell>
+        {!isMobile && (
+          <TableCell>
+            <Skeleton variant="text" width={60} height={20} />
+          </TableCell>
+        )}
         <TableCell>
           <Skeleton variant="text" width={100} height={20} />
+        </TableCell>
+        <TableCell>
+          <Skeleton variant="text" width={80} height={20} />
         </TableCell>
         <TableCell>
           <Skeleton variant="text" width={80} height={20} />
@@ -180,7 +198,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
               variant="caption"
               sx={{ color: "rgba(255,255,255,0.7)" }}
             >
-              #{order.user?.id || order.id}
+              #{order.user?.id || order.id} • {formatDate(order.date)}
             </Typography>
           )}
         </Box>
@@ -208,7 +226,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 4 : 5}
+            colSpan={isMobile ? 5 : 6}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -230,7 +248,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 4 : 5}
+            colSpan={isMobile ? 5 : 6}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -245,6 +263,11 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         {!isMobile && (
           <TableCell sx={{ color: "white" }}>
             #{order.user?.id || order.id}
+          </TableCell>
+        )}
+        {!isMobile && (
+          <TableCell sx={{ color: "white" }}>
+            {formatDate(order.date)}
           </TableCell>
         )}
         {renderStatusCell(order)}
@@ -342,6 +365,12 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
               {!isMobile && (
                 <TableCell sx={{ color: "white" }}>
                   {t("table.headers.accountId")}
+                </TableCell>
+              )}
+              {!isMobile && (
+                <TableCell sx={{ color: "white" }}>
+                  {/* ------------------------------ */}
+                  {t("table.headers.date")}
                 </TableCell>
               )}
               <TableCell sx={{ color: "white" }}>

@@ -13,7 +13,8 @@
         "status": "Status",
         "card": "Card",
         "amount": "Amount",
-        "actions": "Actions"
+        "actions": "Actions",
+        "date": "Date"
       },
       "messages": {
         "loading": "Loading orders...",
