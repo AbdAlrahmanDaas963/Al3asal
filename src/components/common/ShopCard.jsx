@@ -1,15 +1,23 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Stack,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { deleteShop } from "../../features/Shops/shopSlice";
 import { useTranslation } from "react-i18next";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { LanguageContext } from "../../contexts/LanguageContext";
 
 function ShopCard({ shop }) {
   const { t } = useTranslation("shops");
   const { language } = useContext(LanguageContext);
   const { id, name, image, is_interested } = shop;
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -23,9 +31,22 @@ function ShopCard({ shop }) {
     navigate(`/dashboard/shops/edit/${id}`, { state: { shop } });
   };
 
-  const handleDelete = () => {
+  // const handleDelete = () => {
+  //   if (window.confirm(t("deleteConfirmation"))) {
+  //     dispatch(deleteShop(id));
+  //   }
+  // };
+  const handleDelete = async () => {
+    // Made async
     if (window.confirm(t("deleteConfirmation"))) {
-      dispatch(deleteShop(id));
+      setIsDeleting(true); // Start loading
+      try {
+        await dispatch(deleteShop(id)).unwrap();
+      } catch (error) {
+        console.error("Delete failed:", error);
+      } finally {
+        setIsDeleting(false); // Stop loading regardless of outcome
+      }
     }
   };
 
@@ -121,6 +142,8 @@ function ShopCard({ shop }) {
             color="error"
             size="small"
             onClick={handleDelete}
+            disabled={isDeleting} // Disable during delete
+            startIcon={isDeleting ? <CircularProgress size={16} /> : null} // Show spinner
           >
             {t("delete")}
           </Button>

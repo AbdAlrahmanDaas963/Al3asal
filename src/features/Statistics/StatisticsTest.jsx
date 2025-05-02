@@ -44,7 +44,6 @@ const StatisticsTest = () => {
     products: "monthly",
     shops: "monthly",
   });
-
   const { topShops, topProducts, topCategories, earnings, loading, error } =
     useSelector((state) => state.statistics);
 
@@ -257,15 +256,29 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Box>
-          {topCategories.status === false
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <CategorySkeleton key={`category-skeleton-${index}`} />
-              ))
-            : processedCategories.slice(0, 5).map((cat, idx) => (
-                <Typography key={cat.id} sx={{ mb: 1 }}>
-                  #{idx + 1} {cat.name} - Sold: {cat.total_sold}
-                </Typography>
-              ))}
+          {topCategories.status === false ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <CategorySkeleton key={`category-skeleton-${index}`} />
+            ))
+          ) : processedCategories.length > 0 ? (
+            processedCategories.slice(0, 5).map((cat, idx) => (
+              <Typography key={cat.id} sx={{ mb: 1 }}>
+                #{idx + 1} {cat.name} - Sold: {cat.total_sold}
+              </Typography>
+            ))
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100px",
+                color: "gray",
+              }}
+            >
+              No data available
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -286,22 +299,38 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Grid container spacing={2}>
-          {topProducts.status === false
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <Grid item key={`product-skeleton-${index}`}>
-                  <ProductSkeleton />
-                </Grid>
-              ))
-            : processedProducts.map((product, idx) => (
-                <Grid item key={product.id}>
-                  <ProductCard
-                    image={product.image}
-                    name={product.name}
-                    sales={product.sales_count}
-                    rank={idx + 1}
-                  />
-                </Grid>
-              ))}
+          {topProducts.status === false ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <Grid item key={`product-skeleton-${index}`}>
+                <ProductSkeleton />
+              </Grid>
+            ))
+          ) : processedProducts.length > 0 ? (
+            processedProducts.map((product, idx) => (
+              <Grid item key={product.id}>
+                <ProductCard
+                  image={product.image}
+                  name={product.name}
+                  sales={product.sales_count}
+                  rank={idx + 1}
+                />
+              </Grid>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "200px",
+                  color: "gray",
+                }}
+              >
+                No data available
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </Box>
 
@@ -322,22 +351,38 @@ const StatisticsTest = () => {
           </Select>
         </Box>
         <Grid container spacing={2}>
-          {topShops.status === false
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <Grid item key={`store-skeleton-${index}`}>
-                  <StoreSkeleton />
-                </Grid>
-              ))
-            : processedShops.map((shop, idx) => (
-                <Grid item key={shop.id}>
-                  <StoreCard
-                    image={shop.image}
-                    name={shop.name}
-                    revenue={shop.revenue}
-                    rank={idx + 1}
-                  />
-                </Grid>
-              ))}
+          {topShops.status === false ? (
+            Array.from({ length: 5 }).map((_, index) => (
+              <Grid item key={`store-skeleton-${index}`}>
+                <StoreSkeleton />
+              </Grid>
+            ))
+          ) : processedShops.length > 0 ? (
+            processedShops.map((shop, idx) => (
+              <Grid item key={shop.id}>
+                <StoreCard
+                  image={shop.image}
+                  name={shop.name}
+                  revenue={shop.revenue}
+                  rank={idx + 1}
+                />
+              </Grid>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "200px",
+                  color: "gray",
+                }}
+              >
+                No data available
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </Box>
     </Box>

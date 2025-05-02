@@ -22,6 +22,8 @@ import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { updateOrderStatus } from "./ordersSlice";
 
+import { useTheme } from "@mui/material/styles";
+
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CrownIcon from "@mui/icons-material/EmojiEvents";
@@ -92,16 +94,22 @@ const DetailItem = ({ label, value }) => (
   </Box>
 );
 
-const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
+const OrderDetailsModal = ({
+  open,
+  order,
+  onClose,
+  onStatusChange, // Changed from onStatusUpdated
+  isUpdating, // Added this prop
+}) => {
+  const theme = useTheme();
+  const isRTL = theme.direction === "rtl";
   const { t } = useTranslation("orderDetails");
-  const dispatch = useDispatch();
   const [selectedStatus, setSelectedStatus] = useState(
     order?.status || "pending"
   );
   const [anchorEl, setAnchorEl] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
-  const [statusUpdating, setStatusUpdating] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -109,6 +117,7 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
       setSelectedStatus(order.status);
       setRejectReason("");
       setHasChanges(false);
+      setError(null);
     }
   }, [order]);
 
@@ -121,10 +130,29 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
     setSelectedStatus(status);
     setAnchorEl(null);
     setHasChanges(true);
+    setError(null);
     if (status !== "rejected") {
       setRejectReason("");
     }
   };
+
+  // const handleSaveStatus = async () => {
+  //   if (selectedStatus === "rejected" && !rejectReason.trim()) {
+  //     setError(t("errors.rejectionReasonRequired"));
+  //     return;
+  //   }
+
+  //   try {
+  //     await onStatusChange({
+  //       orderId: order.id,
+  //       newStatus: selectedStatus,
+  //       currentStatus: order.status, // Make sure this is passed
+  //       rejectReason: selectedStatus === "rejected" ? rejectReason : null,
+  //     });
+  //   } catch (err) {
+  //     setError(err.message || "Failed to update status");
+  //   }
+  // };
 
   const handleSaveStatus = async () => {
     if (selectedStatus === "rejected" && !rejectReason.trim()) {
@@ -133,36 +161,21 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
     }
 
     try {
-      setStatusUpdating(true);
-      setError(null);
-
-      await dispatch(
-        updateOrderStatus({
-          orderId: order.id,
-          newStatus: selectedStatus,
-          currentStatus: order.status,
-          rejectReason:
-            selectedStatus === "rejected" ? rejectReason.trim() : null,
-        })
-      ).unwrap();
-
-      if (typeof onStatusUpdated === "function") {
-        onStatusUpdated();
-      }
-
-      onClose();
+      await onStatusChange({
+        orderId: order.id,
+        newStatus: selectedStatus,
+        currentStatus: order.status, // This was missing
+        rejectReason: selectedStatus === "rejected" ? rejectReason : null,
+      });
     } catch (err) {
-      setError(err);
-    } finally {
-      setStatusUpdating(false);
+      setError(err.message || "Failed to update status");
     }
   };
 
   const hasValidChanges =
     hasChanges &&
     selectedStatus !== order.status &&
-    (!showRejectReason || (showRejectReason && rejectReason));
-
+    (!showRejectReason || rejectReason.trim());
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle
@@ -421,12 +434,11 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
           </Box>
         </Box>
       </DialogContent>
-      <DialogActions
-        sx={{ backgroundColor: "#121212", p: 2, direction: "ltr" }}
-      >
+      {/* <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
         <Button
           variant="outlined"
           onClick={onClose}
+          disabled={isUpdating}
           sx={{ color: "white", borderColor: "#555", mr: 2 }}
         >
           {t("buttons.cancel")}
@@ -434,18 +446,51 @@ const OrderDetailsModal = ({ open, order, onClose, onStatusUpdated }) => {
         <Button
           variant="contained"
           onClick={handleSaveStatus}
-          startIcon={
-            statusUpdating ? <CircularProgress size={20} /> : <SaveIcon />
-          }
-          disabled={!hasValidChanges || statusUpdating}
+          disabled={!hasValidChanges || isUpdating}
+          startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
           sx={{
             backgroundColor: "#4CAF50",
             color: "white",
             "&:hover": { backgroundColor: "#3e8e41" },
-            direction: "ltr",
           }}
         >
-          {t("buttons.saveChanges")}
+          {isUpdating ? "" : t("buttons.saveChanges")}
+        </Button>
+      </DialogActions> */}
+      <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
+        {/* Cancel Button */}
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          disabled={isUpdating}
+          sx={{
+            color: "white",
+            borderColor: "#555",
+            mr: isRTL ? 0 : 2, // Adjust margin for RTL
+            ml: isRTL ? 2 : 0,
+          }}
+        >
+          {t("buttons.cancel")}
+        </Button>
+
+        {/* Save Button */}
+        <Button
+          variant="contained"
+          onClick={handleSaveStatus}
+          disabled={!hasValidChanges || isUpdating}
+          startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
+          sx={{
+            backgroundColor: "#4CAF50",
+            color: "white",
+            "&:hover": { backgroundColor: "#3e8e41" },
+            // Adjust spacing between icon and text in RTL
+            "& .MuiButton-startIcon": {
+              marginLeft: isRTL ? "8px !important" : "0 !important",
+              marginRight: isRTL ? "0 !important" : "8px !important",
+            },
+          }}
+        >
+          {isUpdating ? "" : t("buttons.saveChanges")}
         </Button>
       </DialogActions>
     </Dialog>

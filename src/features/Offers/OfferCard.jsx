@@ -1,5 +1,11 @@
-import React from "react";
-import { Button, Stack, Typography, Chip } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Button,
+  Stack,
+  Typography,
+  Chip,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { deleteOffer } from "./offersSlice";
@@ -10,15 +16,31 @@ const OfferCard = ({ offer }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const getDisplayText = (text) => {
     if (typeof text === "string") return text;
     if (text && text.en) return text.en;
     return "N/A";
   };
 
-  const handleDelete = () => {
-    if (window.confirm("deleteConfirmation", { id: offer.id })) {
-      dispatch(deleteOffer(offer.id));
+  // const handleDelete = () => {
+  //   if (window.confirm("deleteConfirmation", { id: offer.id })) {
+  //     dispatch(deleteOffer(offer.id));
+  //   }
+  // };
+
+  const handleDelete = async () => {
+    // Made async
+    if (window.confirm(t("deleteConfirmation", { id: offer.id }))) {
+      setIsDeleting(true); // Start loading
+      try {
+        await dispatch(deleteOffer(offer.id)).unwrap();
+      } catch (error) {
+        console.error("Delete failed:", error);
+      } finally {
+        setIsDeleting(false); // Stop loading regardless of outcome
+      }
     }
   };
 
@@ -120,6 +142,8 @@ const OfferCard = ({ offer }) => {
           color="error"
           size="small"
           onClick={handleDelete}
+          disabled={isDeleting} // Disable during delete
+          startIcon={isDeleting ? <CircularProgress size={16} /> : null} // Show spinner
         >
           {t("delete")}
         </Button>

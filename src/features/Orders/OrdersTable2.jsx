@@ -14,21 +14,17 @@ import {
   Tabs,
   Tab,
   Chip,
-  CircularProgress,
   Snackbar,
   Alert,
   Skeleton,
   useMediaQuery,
   useTheme,
-  Tooltip,
   Avatar,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import CrownIcon from "@mui/icons-material/LocalActivity";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import OrderDetailsModal from "./OrderDetailsModal";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders, updateOrderStatus } from "./ordersSlice";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../../contexts/LanguageContext";
@@ -42,7 +38,6 @@ const statusColors = {
   default: "#9E9E9E",
 };
 
-// Date formatting function
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   try {
@@ -55,24 +50,22 @@ const formatDate = (dateString) => {
       minute: "2-digit",
     });
   } catch (e) {
-    return dateString; // Fallback to raw string if parsing fails
+    return dateString;
   }
 };
 
-const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
+const OrdersTable2 = () => {
+  const dispatch = useDispatch();
   const { t } = useTranslation("ordersTable");
-
-  const statusDisplayMap = {
-    preparing: t("filters.preparing"),
-    rejected: t("filters.rejected"),
-    pending: t("filters.pending"),
-    done: t("filters.done"),
-  };
-
   const { direction } = useContext(LanguageContext);
+
+  const orders = useSelector((state) => state.orders.orders);
+  const isLoading = useSelector((state) => state.orders.isLoading);
+  const error = useSelector((state) => state.orders.error);
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const dispatch = useDispatch();
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -83,13 +76,18 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     message: "",
     severity: "success",
   });
-  const [initialLoad, setInitialLoad] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
   useEffect(() => {
-    if (!isLoading && orders.length > 0) {
-      setInitialLoad(false);
-    }
-  }, [isLoading, orders]);
+    dispatch(fetchOrders());
+  }, [dispatch]);
+
+  const statusDisplayMap = {
+    preparing: t("filters.preparing"),
+    rejected: t("filters.rejected"),
+    pending: t("filters.pending"),
+    done: t("filters.done"),
+  };
 
   const filteredOrders =
     statusFilter === "all"
@@ -105,45 +103,46 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
     (page + 1) * rowsPerPage
   );
 
-  const handleStatusChange = async (orderId, status, rejectReason = null) => {
+  const handleStatusChange = async ({
+    orderId,
+    newStatus,
+    currentStatus,
+    rejectReason,
+  }) => {
+    setUpdatingStatus((prev) => ({ ...prev, [orderId]: true }));
+
     try {
-      await dispatch(
-        updateOrderStatus({ orderId, status, rejectReason })
-      ).unwrap();
+      const resultAction = await dispatch(
+        updateOrderStatus({ orderId, newStatus, currentStatus, rejectReason })
+      );
 
-      setSnackbar({
-        open: true,
-        message: t("table.messages.statusUpdated", {
-          status: statusDisplayMap[status] || status,
-        }),
-        severity: "success",
-      });
-
-      dispatch(fetchOrders());
+      if (updateOrderStatus.fulfilled.match(resultAction)) {
+        setSnackbar({
+          open: true,
+          message: `Status updated to ${newStatus}`,
+          severity: "success",
+        });
+        dispatch(fetchOrders()); // Re-fetch to ensure table updates
+      } else {
+        throw new Error("Update failed");
+      }
     } catch (error) {
       setSnackbar({
         open: true,
-        message: t("status.updateFailed", { error: error.message }),
+        message: error.message || "Failed to update status",
         severity: "error",
       });
+    } finally {
+      setUpdatingStatus((prev) => ({ ...prev, [orderId]: false }));
     }
-  };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   };
 
   useEffect(() => {
     if (page >= totalPages) setPage(0);
   }, [totalPages, page]);
 
-  const renderSkeletonRows = () => {
-    return Array.from({ length: rowsPerPage }).map((_, index) => (
+  const renderSkeletonRows = () =>
+    Array.from({ length: rowsPerPage }).map((_, index) => (
       <TableRow key={`skeleton-${index}`}>
         <TableCell>
           <Box display="flex" alignItems="center">
@@ -173,7 +172,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         </TableCell>
       </TableRow>
     ));
-  };
 
   const renderCustomerCell = (order) => (
     <TableCell>
@@ -221,7 +219,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
   );
 
   const renderTableContent = () => {
-    if (isLoading || initialLoad) return renderSkeletonRows();
+    if (isLoading) return renderSkeletonRows();
     if (error)
       return (
         <TableRow>
@@ -301,7 +299,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         justifyContent={isMobile ? "center" : "space-between"}
         alignItems="center"
         mb={2}
-        sx={{ overflowX: "auto" }}
       >
         <Tabs
           value={statusFilters.indexOf(statusFilter)}
@@ -343,18 +340,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
 
       <TableContainer
         component={Paper}
-        sx={{
-          backgroundColor: "#121212",
-          mt: 2,
-          overflowX: "auto",
-          "&::-webkit-scrollbar": {
-            height: "6px",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#E4272B",
-            borderRadius: "3px",
-          },
-        }}
+        sx={{ backgroundColor: "#121212", mt: 2, overflowX: "auto" }}
       >
         <Table>
           <TableHead>
@@ -369,7 +355,6 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
               )}
               {!isMobile && (
                 <TableCell sx={{ color: "white" }}>
-                  {/* ------------------------------ */}
                   {t("table.headers.date")}
                 </TableCell>
               )}
@@ -388,7 +373,7 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         </Table>
       </TableContainer>
 
-      {!isLoading && !initialLoad && filteredOrders.length > 0 && (
+      {!isLoading && filteredOrders.length > 0 && (
         <Box
           display="flex"
           justifyContent="center"
@@ -417,7 +402,8 @@ const OrdersTable2 = ({ orders = [], isLoading = false, error = null }) => {
         open={openModal}
         order={selectedOrder}
         onClose={() => setOpenModal(false)}
-        onStatusChange={handleStatusChange}
+        onStatusChange={(params) => handleStatusChange(params)}
+        isUpdating={selectedOrder ? updatingStatus[selectedOrder.id] : false}
       />
 
       <Snackbar

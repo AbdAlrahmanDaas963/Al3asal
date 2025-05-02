@@ -22,21 +22,26 @@ function CategoryCard({ category, isLoading }) {
 
   const { status, operation } = useSelector((state) => state.categories);
 
-  const isDeleting =
-    status === "loading" &&
-    operation === "delete" &&
-    category &&
-    category.id === id;
+  // const isDeleting =
+  //   status === "loading" &&
+  //   operation === "delete" &&
+  //   category &&
+  //   category.id === id;
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDelete = async () => {
     if (window.confirm(t("deleteConfirmation", { id }))) {
+      setIsDeleting(true); // Show loading only for this button
       try {
         await dispatch(deleteCategory(id)).unwrap();
       } catch (error) {
         console.error("Delete failed:", error);
+      } finally {
+        setIsDeleting(false); // Always stop loading when done
       }
     }
   };

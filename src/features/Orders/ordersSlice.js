@@ -73,6 +73,9 @@ export const updateOrderStatus = createAsyncThunk(
       };
 
       const urlStatus = urlStatusMap[newStatus] || newStatus;
+      console.log("Current Status:", currentStatus);
+      console.log("New Status:", newStatus);
+      console.log("URL Status:", urlStatus);
 
       // Validate status transitions
       const validTransitions = {
@@ -100,6 +103,7 @@ export const updateOrderStatus = createAsyncThunk(
         const response = await axios.post(url, formData, {
           headers: getHeaders("multipart/form-data"),
         });
+        console.log("API Response:", response.data);
 
         return {
           ...response.data,
@@ -179,8 +183,11 @@ const ordersSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.statusUpdating = false;
+
+        // Optimistically update the specific order
+        const updatedOrder = action.payload;
         state.orders = state.orders.map((order) =>
-          order.id === action.payload.id ? action.payload : order
+          order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
         );
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
