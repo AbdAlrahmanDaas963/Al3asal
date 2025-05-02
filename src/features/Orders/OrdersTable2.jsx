@@ -21,6 +21,8 @@ import {
   useTheme,
   Avatar,
 } from "@mui/material";
+import { CircularProgress } from "@mui/material";
+
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -219,7 +221,7 @@ const OrdersTable2 = () => {
   );
 
   const renderTableContent = () => {
-    if (isLoading) return renderSkeletonRows();
+    if (isLoading || orders.length === 0) return renderSkeletonRows();
     if (error)
       return (
         <TableRow>
@@ -250,7 +252,14 @@ const OrdersTable2 = () => {
             align="center"
             sx={{ py: 4, color: "white" }}
           >
-            <Typography>{t("table.messages.empty")}</Typography>
+            {/* <Typography>{t("table.messages.empty")}</Typography> */}
+            {/* <CircularProgress color="primary" /> */}
+            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" />
           </TableCell>
         </TableRow>
       );
