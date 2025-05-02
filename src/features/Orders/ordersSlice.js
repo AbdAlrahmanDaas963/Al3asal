@@ -32,16 +32,25 @@ export const fetchOrders = createAsyncThunk(
   async (filters = {}, { rejectWithValue }) => {
     try {
       // Clean filters - remove empty values
-      const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(
-          ([_, value]) => value !== "" && value !== null
-        )
-      );
+      const cleanFilters = {
+        ...Object.fromEntries(
+          Object.entries(filters).filter(
+            ([_, value]) => value !== "" && value !== null
+          )
+        ),
+        per_page: 1000, // Fetch all orders at once
+      };
+
+      // ✅ LOG: show the filters being sent
+      console.log("🟡 Sending filters to /orders/filter:", cleanFilters);
 
       const response = await axios.get(`${API_BASE_URL}/filter`, {
         params: cleanFilters,
         headers: getHeaders(),
       });
+
+      // ✅ LOG: show the raw response from the API
+      console.log("🟢 Received orders from API:", response.data?.data);
 
       // Normalize statuses in response
       return (response.data?.data || []).map((order) => ({
@@ -49,6 +58,7 @@ export const fetchOrders = createAsyncThunk(
         status: normalizeStatus(order.status),
       }));
     } catch (error) {
+      console.log("🔴 Error fetching orders:", error.response?.data);
       return rejectWithValue(
         error.response?.data?.message || "Error fetching orders"
       );
@@ -61,23 +71,18 @@ export const updateOrderStatus = createAsyncThunk(
   "orders/updateStatus",
   async (
     { orderId, newStatus, currentStatus, rejectReason = null },
-    { getState, rejectWithValue }
+    { dispatch, getState, rejectWithValue }
   ) => {
     try {
-      // Frontend and backend now use same status names in URLs
       const urlStatusMap = {
         preparing: "preparing",
-        rejected: "rejected", // Now using 'rejected' in URL
+        rejected: "rejected",
         pending: "preparing",
         done: "done",
       };
 
       const urlStatus = urlStatusMap[newStatus] || newStatus;
-      console.log("Current Status:", currentStatus);
-      console.log("New Status:", newStatus);
-      console.log("URL Status:", urlStatus);
 
-      // Validate status transitions
       const validTransitions = {
         pending: ["preparing", "rejected"],
         preparing: ["done"],
@@ -90,35 +95,29 @@ export const updateOrderStatus = createAsyncThunk(
         );
       }
 
-      // Handle rejection specifically
       if (newStatus === "rejected") {
         if (!rejectReason || rejectReason.trim() === "") {
           return rejectWithValue("Rejection reason is required");
         }
 
-        const url = `${API_BASE_URL}/${orderId}/status/rejected`; // Now using 'rejected'
+        const url = `${API_BASE_URL}/${orderId}/status/rejected`;
         const formData = new FormData();
         formData.append("reject_reason", rejectReason);
 
-        const response = await axios.post(url, formData, {
+        await axios.post(url, formData, {
           headers: getHeaders("multipart/form-data"),
         });
-        console.log("API Response:", response.data);
-
-        return {
-          ...response.data,
-          status: "rejected", // Keep as 'rejected' in frontend
-        };
+      } else {
+        const url = `${API_BASE_URL}/${orderId}/status/${urlStatus}`;
+        await axios.post(url, {}, { headers: getHeaders() });
       }
 
-      // Handle other status changes
-      const url = `${API_BASE_URL}/${orderId}/status/${urlStatus}`;
-      const response = await axios.post(url, {}, { headers: getHeaders() });
+      // Re-fetch updated list after status update
+      const { orders } = getState();
+      await dispatch(fetchOrders({}));
 
-      return {
-        ...response.data,
-        status: newStatus === "pending" ? "preparing" : newStatus,
-      };
+      // No need to return data; just indicate success
+      return { id: orderId, status: newStatus };
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error ||

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -70,7 +70,7 @@ const OrdersTable2 = () => {
   const [openModal, setOpenModal] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(isMobile ? 3 : 5);
+  const [rowsPerPage, setRowsPerPage] = useState(isMobile ? 3 : 10);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -79,7 +79,11 @@ const OrdersTable2 = () => {
   const [updatingStatus, setUpdatingStatus] = useState({});
 
   useEffect(() => {
-    dispatch(fetchOrders());
+    setPage(0);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    dispatch(fetchOrders({ per_page: 1000 }));
   }, [dispatch]);
 
   const statusDisplayMap = {
@@ -94,21 +98,14 @@ const OrdersTable2 = () => {
       ? orders
       : orders.filter((order) => order.status === statusFilter);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredOrders.length / rowsPerPage)
-  );
-  const currentItems = filteredOrders.slice(
-    page * rowsPerPage,
-    (page + 1) * rowsPerPage
-  );
+  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
+  const currentItems = useMemo(() => {
+    return filteredOrders.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+  }, [filteredOrders, page, rowsPerPage]);
 
-  const handleStatusChange = async ({
-    orderId,
-    newStatus,
-    currentStatus,
-    rejectReason,
-  }) => {
+  const handleStatusChange = async (params) => {
+    const { orderId, newStatus, currentStatus, rejectReason } = params;
+
     setUpdatingStatus((prev) => ({ ...prev, [orderId]: true }));
 
     try {
@@ -122,9 +119,12 @@ const OrdersTable2 = () => {
           message: `Status updated to ${newStatus}`,
           severity: "success",
         });
-        dispatch(fetchOrders()); // Re-fetch to ensure table updates
+
+        // ✅ This will re-fetch the updated orders list
+        dispatch(fetchOrders());
+        console.log("🔄 Refetched orders after status update");
       } else {
-        throw new Error("Update failed");
+        throw new Error("Status update failed.");
       }
     } catch (error) {
       setSnackbar({
