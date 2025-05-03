@@ -41,16 +41,10 @@ export const fetchOrders = createAsyncThunk(
         per_page: 1000, // Fetch all orders at once
       };
 
-      // ✅ LOG: show the filters being sent
-      console.log("🟡 Sending filters to /orders/filter:", cleanFilters);
-
       const response = await axios.get(`${API_BASE_URL}/filter`, {
         params: cleanFilters,
         headers: getHeaders(),
       });
-
-      // ✅ LOG: show the raw response from the API
-      console.log("🟢 Received orders from API:", response.data?.data);
 
       // Normalize statuses in response
       return (response.data?.data || []).map((order) => ({
@@ -58,7 +52,6 @@ export const fetchOrders = createAsyncThunk(
         status: normalizeStatus(order.status),
       }));
     } catch (error) {
-      console.log("🔴 Error fetching orders:", error.response?.data);
       return rejectWithValue(
         error.response?.data?.message || "Error fetching orders"
       );
@@ -66,12 +59,12 @@ export const fetchOrders = createAsyncThunk(
   }
 );
 
-// Update the updateOrderStatus thunk
+// Update order status
 export const updateOrderStatus = createAsyncThunk(
   "orders/updateStatus",
   async (
     { orderId, newStatus, currentStatus, rejectReason = null },
-    { dispatch, getState, rejectWithValue }
+    { dispatch, rejectWithValue }
   ) => {
     try {
       const urlStatusMap = {
@@ -112,11 +105,7 @@ export const updateOrderStatus = createAsyncThunk(
         await axios.post(url, {}, { headers: getHeaders() });
       }
 
-      // Re-fetch updated list after status update
-      const { orders } = getState();
-      await dispatch(fetchOrders({}));
-
-      // No need to return data; just indicate success
+      // Return the updated order data
       return { id: orderId, status: newStatus };
     } catch (error) {
       return rejectWithValue(
@@ -132,10 +121,8 @@ const ordersSlice = createSlice({
   name: "orders",
   initialState: {
     orders: [],
-    loading: false,
+    isLoading: false, // Unified loading state
     error: null,
-    statusUpdating: false,
-    statusError: null,
     filters: {
       min_price: "",
       max_price: "",
@@ -148,54 +135,51 @@ const ordersSlice = createSlice({
     },
   },
   reducers: {
-    resetStatusUpdate: (state) => {
-      state.statusUpdating = false;
-      state.statusError = null;
-    },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
     },
     resetFilters: (state) => {
       state.filters = ordersSlice.getInitialState().filters;
     },
+    resetError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
       // Fetch orders cases
       .addCase(fetchOrders.pending, (state) => {
-        state.loading = true;
+        state.isLoading = true;
         state.error = null;
       })
       .addCase(fetchOrders.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isLoading = false;
         state.orders = action.payload;
       })
       .addCase(fetchOrders.rejected, (state, action) => {
-        state.loading = false;
+        state.isLoading = false;
         state.error = action.payload;
       })
 
       // Update status cases
       .addCase(updateOrderStatus.pending, (state) => {
-        state.statusUpdating = true;
-        state.statusError = null;
+        state.isLoading = true;
+        state.error = null;
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
-        state.statusUpdating = false;
-
-        // Optimistically update the specific order
+        state.isLoading = false;
+        // Optimistically update the order
         const updatedOrder = action.payload;
         state.orders = state.orders.map((order) =>
           order.id === updatedOrder.id ? { ...order, ...updatedOrder } : order
         );
       })
       .addCase(updateOrderStatus.rejected, (state, action) => {
-        state.statusUpdating = false;
-        state.statusError = action.payload;
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { resetStatusUpdate, setFilters, resetFilters } =
-  ordersSlice.actions;
+export const { setFilters, resetFilters, resetError } = ordersSlice.actions;
 export default ordersSlice.reducer;

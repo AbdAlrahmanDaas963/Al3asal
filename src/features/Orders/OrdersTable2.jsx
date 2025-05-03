@@ -252,14 +252,14 @@ const OrdersTable2 = () => {
             align="center"
             sx={{ py: 4, color: "white" }}
           >
-            {/* <Typography>{t("table.messages.empty")}</Typography> */}
+            <Typography>{t("table.messages.empty")}</Typography>
             {/* <CircularProgress color="primary" /> */}
+            {/* <Skeleton variant="text" animation="wave" />
             <Skeleton variant="text" animation="wave" />
             <Skeleton variant="text" animation="wave" />
             <Skeleton variant="text" animation="wave" />
             <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
+            <Skeleton variant="text" animation="wave" /> */}
           </TableCell>
         </TableRow>
       );

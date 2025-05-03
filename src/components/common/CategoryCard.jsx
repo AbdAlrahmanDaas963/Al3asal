@@ -63,6 +63,37 @@ function CategoryCard({ category, isLoading }) {
     }
   };
 
+  if (!category || category.isTemp) {
+    return (
+      <Box dir={language === "ar" ? "rtl" : "ltr"}>
+        <Stack
+          sx={{
+            width: "300px",
+            backgroundColor: "#252525",
+            padding: "10px",
+            borderRadius: "20px",
+            position: "relative",
+          }}
+        >
+          <Skeleton
+            variant="rounded"
+            width="100%"
+            height={150}
+            sx={{ borderRadius: "16px" }}
+          />
+          <Stack mt={1} sx={{ gap: 1 }}>
+            <Skeleton width="60%" height={24} />
+            <Skeleton width="80%" height={20} />
+          </Stack>
+          <Stack direction="row" spacing={1} mt={2}>
+            <Skeleton width="100%" height={36} />
+            <Skeleton width="100%" height={36} />
+          </Stack>
+        </Stack>
+      </Box>
+    );
+  }
+
   if (isLoading) {
     return (
       <Box dir={language === "ar" ? "rtl" : "ltr"}>

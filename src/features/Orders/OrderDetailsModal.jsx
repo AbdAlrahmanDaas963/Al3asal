@@ -17,13 +17,12 @@ import {
   Chip,
   TextField,
   Tooltip,
+  Alert,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { updateOrderStatus } from "./ordersSlice";
-
 import { useTheme } from "@mui/material/styles";
-
 import CloseIcon from "@mui/icons-material/Close";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CrownIcon from "@mui/icons-material/EmojiEvents";
@@ -41,7 +40,7 @@ const statusColors = {
 
 const getAvailableStatuses = (currentStatus) => {
   const transitions = {
-    pending: ["preparing"],
+    pending: ["preparing", "rejected"], // Added 'rejected' as an option
     preparing: ["done"],
     rejected: [],
   };
@@ -98,8 +97,8 @@ const OrderDetailsModal = ({
   open,
   order,
   onClose,
-  onStatusChange, // Changed from onStatusUpdated
-  isUpdating, // Added this prop
+  onStatusChange,
+  isUpdating,
 }) => {
   const theme = useTheme();
   const isRTL = theme.direction === "rtl";
@@ -111,13 +110,17 @@ const OrderDetailsModal = ({
   const [rejectReason, setRejectReason] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [error, setError] = useState(null);
+  const [showRejectionInfo, setShowRejectionInfo] = useState(false);
 
   useEffect(() => {
     if (order) {
       setSelectedStatus(order.status);
-      setRejectReason("");
+      setRejectReason(order.reject_reason || "");
       setHasChanges(false);
       setError(null);
+      setShowRejectionInfo(
+        order.status === "rejected" && !!order.reject_reason
+      );
     }
   }, [order]);
 
@@ -136,24 +139,6 @@ const OrderDetailsModal = ({
     }
   };
 
-  // const handleSaveStatus = async () => {
-  //   if (selectedStatus === "rejected" && !rejectReason.trim()) {
-  //     setError(t("errors.rejectionReasonRequired"));
-  //     return;
-  //   }
-
-  //   try {
-  //     await onStatusChange({
-  //       orderId: order.id,
-  //       newStatus: selectedStatus,
-  //       currentStatus: order.status, // Make sure this is passed
-  //       rejectReason: selectedStatus === "rejected" ? rejectReason : null,
-  //     });
-  //   } catch (err) {
-  //     setError(err.message || "Failed to update status");
-  //   }
-  // };
-
   const handleSaveStatus = async () => {
     if (selectedStatus === "rejected" && !rejectReason.trim()) {
       setError(t("errors.rejectionReasonRequired"));
@@ -161,14 +146,15 @@ const OrderDetailsModal = ({
     }
 
     try {
+      setError(null);
       await onStatusChange({
         orderId: order.id,
         newStatus: selectedStatus,
-        currentStatus: order.status, // This was missing
+        currentStatus: order.status,
         rejectReason: selectedStatus === "rejected" ? rejectReason : null,
       });
     } catch (err) {
-      setError(err.message || "Failed to update status");
+      setError(err.message || t("errors.statusUpdateFailed"));
     }
   };
 
@@ -176,6 +162,7 @@ const OrderDetailsModal = ({
     hasChanges &&
     selectedStatus !== order.status &&
     (!showRejectReason || rejectReason.trim());
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle
@@ -206,11 +193,27 @@ const OrderDetailsModal = ({
         dividers
         sx={{ backgroundColor: "#121212", color: "white" }}
       >
+        {/* Error Alert */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Rejection Info (if order is rejected) */}
+        {showRejectionInfo && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            <Typography variant="body1" fontWeight="bold">
+              {t("rejection.reason")}
+            </Typography>
+            <Typography>{order.reject_reason}</Typography>
+          </Alert>
+        )}
+
+        {/* Products Section */}
         <Box>
           <Typography variant="h6" gutterBottom>
-            {t("sections.products")}
-            {"  "}
-            {order.items.length}
+            {t("sections.products")} {order.items.length}
           </Typography>
           <Grid container spacing={2}>
             {order.items.map((item, index) => (
@@ -242,6 +245,8 @@ const OrderDetailsModal = ({
             ))}
           </Grid>
         </Box>
+
+        {/* Order Details Section */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             {t("sections.orderDetails")}
@@ -305,6 +310,8 @@ const OrderDetailsModal = ({
             </Grid>
           </Box>
         </Box>
+
+        {/* Premium Service Section */}
         {order.user?.is_premium && (
           <Box mt={4}>
             <Typography variant="h6" gutterBottom>
@@ -346,6 +353,8 @@ const OrderDetailsModal = ({
             </Box>
           </Box>
         )}
+
+        {/* Status Update Section */}
         <Box mt={4}>
           <Typography variant="h6" gutterBottom>
             {t("sections.updateStatus")}
@@ -412,18 +421,20 @@ const OrderDetailsModal = ({
                   <TextField
                     fullWidth
                     label={t("fields.rejectionReason")}
-                    helperText={error || ""}
                     value={rejectReason}
                     onChange={(e) => {
                       setRejectReason(e.target.value);
                       setHasChanges(true);
+                      setError(null);
                     }}
                     required
+                    error={!!error}
                     sx={{
                       "& .MuiInputBase-root": { color: "white" },
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "#555" },
                         "&:hover fieldset": { borderColor: "#777" },
+                        "&.Mui-focused fieldset": { borderColor: "#E4272B" },
                       },
                       "& .MuiInputLabel-root": { color: "#aaa" },
                     }}
@@ -434,31 +445,8 @@ const OrderDetailsModal = ({
           </Box>
         </Box>
       </DialogContent>
-      {/* <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={onClose}
-          disabled={isUpdating}
-          sx={{ color: "white", borderColor: "#555", mr: 2 }}
-        >
-          {t("buttons.cancel")}
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSaveStatus}
-          disabled={!hasValidChanges || isUpdating}
-          startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
-          sx={{
-            backgroundColor: "#4CAF50",
-            color: "white",
-            "&:hover": { backgroundColor: "#3e8e41" },
-          }}
-        >
-          {isUpdating ? "" : t("buttons.saveChanges")}
-        </Button>
-      </DialogActions> */}
+
       <DialogActions sx={{ backgroundColor: "#121212", p: 2 }}>
-        {/* Cancel Button */}
         <Button
           variant="outlined"
           onClick={onClose}
@@ -466,14 +454,12 @@ const OrderDetailsModal = ({
           sx={{
             color: "white",
             borderColor: "#555",
-            mr: isRTL ? 0 : 2, // Adjust margin for RTL
+            mr: isRTL ? 0 : 2,
             ml: isRTL ? 2 : 0,
           }}
         >
           {t("buttons.cancel")}
         </Button>
-
-        {/* Save Button */}
         <Button
           variant="contained"
           onClick={handleSaveStatus}
@@ -483,7 +469,6 @@ const OrderDetailsModal = ({
             backgroundColor: "#4CAF50",
             color: "white",
             "&:hover": { backgroundColor: "#3e8e41" },
-            // Adjust spacing between icon and text in RTL
             "& .MuiButton-startIcon": {
               marginLeft: isRTL ? "8px !important" : "0 !important",
               marginRight: isRTL ? "0 !important" : "8px !important",

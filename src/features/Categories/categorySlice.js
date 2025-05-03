@@ -219,28 +219,19 @@ const categorySlice = createSlice({
         state.selectedCategory = action.payload;
         state.operation = null;
       })
-      .addCase(createCategory.pending, (state, action) => {
+      .addCase(createCategory.pending, (state) => {
         state.status = "loading";
         state.operation = "create";
-        // Add temporary category with minimal data
-        state.data.unshift({
-          id: `temp-${Date.now()}`,
-          isTemp: true,
-          name: action.meta.arg.name || { en: "New Category", ar: "فئة جديدة" },
-          image: action.meta.arg.image || null,
-          is_interested: action.meta.arg.is_interested || false,
-        });
       })
       .addCase(createCategory.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Replace temporary category with server response
-        const tempIndex = state.data.findIndex((cat) => cat.isTemp);
-        if (tempIndex !== -1) {
-          state.data[tempIndex] = action.payload;
-        } else {
-          state.data.unshift(action.payload);
-        }
-        state.operation = null;
+
+        // ✅ Fix: Handle both API response formats
+        const newCategory = action.payload.data || action.payload;
+
+        // Add to state IMMEDIATELY
+        state.data.unshift(newCategory);
+        state.lastFetched = Date.now();
       })
       .addCase(updateCategory.pending, (state, action) => {
         state.status = "failed";

@@ -148,29 +148,33 @@ const EditCategory = () => {
     }));
   };
 
+  const formDataToSend = new FormData();
+  formDataToSend.append("name[en]", formData.name.en);
+  formDataToSend.append("name[ar]", formData.name.ar);
+  formDataToSend.append("is_interested", formData.is_interested);
+
+  formData.shop_ids.forEach((id) => {
+    formDataToSend.append("shop_ids[]", id);
+  });
+
+  if (formData.image instanceof File) {
+    formDataToSend.append("image", formData.image);
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
 
-    const newErrors = {};
-    if (!formData.name.en?.trim()) newErrors["name.en"] = t("nameEnRequired");
-    if (!formData.name.ar?.trim()) newErrors["name.ar"] = t("nameArRequired");
-    if (!Array.isArray(formData.shop_ids) || formData.shop_ids.length === 0) {
-      newErrors.shop_ids = t("shopsRequired");
-    }
+    // Validation logic...
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    // Create FormData INSIDE the submit handler
     const formDataToSend = new FormData();
     formDataToSend.append("name[en]", formData.name.en);
     formDataToSend.append("name[ar]", formData.name.ar);
     formDataToSend.append("is_interested", formData.is_interested);
 
     formData.shop_ids.forEach((id) => {
-      if (id) formDataToSend.append("shop_ids[]", id);
+      if (id) formDataToSend.append("shop_ids[]", id); // Only append valid IDs
     });
 
     if (formData.image instanceof File) {
@@ -182,16 +186,19 @@ const EditCategory = () => {
         updateCategory({
           id: categoryId,
           formData: formDataToSend,
+          updates: {
+            // Optimistic update data
+            name: formData.name,
+            is_interested: formData.is_interested,
+            shop_ids: formData.shop_ids,
+          },
+          originalData: selectedCategory.data,
         })
       ).unwrap();
 
       navigate("/dashboard/category");
     } catch (error) {
-      console.error("Update error:", error);
-      setErrors({
-        form:
-          error.message || error.response?.data?.message || t("updateError"),
-      });
+      console.error("Update failed:", error);
     }
   };
 

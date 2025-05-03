@@ -48,16 +48,18 @@ const CategoryList = () => {
   }, [dispatch, lastFetched]);
 
   // Filter out incomplete temporary categories
-  const validCategories = useMemo(
-    () =>
-      categories.filter((cat) => {
-        const hasName =
-          cat.name &&
-          (typeof cat.name === "string" || cat.name.en || cat.name.ar);
-        return !cat.isTemp || hasName;
-      }),
-    [categories]
-  );
+  // const validCategories = useMemo(
+  //   () =>
+  //     categories.filter((cat) => {
+  //       const hasName =
+  //         cat.name &&
+  //         (typeof cat.name === "string" || cat.name.en || cat.name.ar);
+  //       return !cat.isTemp || hasName;
+  //     }),
+  //   [categories]
+  // );
+
+  const validCategories = categories;
 
   const filteredCategories = useMemo(() => {
     if (!searchDebounced) return validCategories;
@@ -106,10 +108,13 @@ const CategoryList = () => {
   }
 
   if (error) {
+    // Extract the error message from the error object
+    const errorMessage = error.message || t("errorOccurred");
+
     return (
       <Box sx={{ p: 3, textAlign: "center" }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {errorMessage}
         </Alert>
         <Button
           variant="contained"
@@ -153,7 +158,7 @@ const CategoryList = () => {
       <Grid container spacing={3}>
         {filteredCategories.length > 0 ? (
           filteredCategories.map((category, index) => (
-            <Grid item key={category.id || `temp-${index}`}>
+            <Grid item key={`temp-${index}`}>
               <CategoryCard category={category} isLoading={category.isTemp} />
             </Grid>
           ))
