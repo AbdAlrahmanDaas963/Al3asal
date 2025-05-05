@@ -1,6 +1,9 @@
 {
     "products": {
       "title": "المنتجات",
+      "searchPlaceholder": "ابحث عن المنتجات...",
+      "noMatchingProducts": "لا توجد منتجات تطابق بحثك",
+      "clearSearch": "مسح البحث",
       "addButton": "إضافة منتج",
       "table": {
         "headers": {

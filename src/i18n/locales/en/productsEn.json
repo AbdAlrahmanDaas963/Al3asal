@@ -1,6 +1,9 @@
 {
     "products": {
       "title": "Products",
+      "searchPlaceholder": "Search products...",
+      "noMatchingProducts": "No products match your search",
+      "clearSearch": "Clear search",
       "addButton": "Add Product",
       "table": {
         "headers": {
@@ -32,5 +35,6 @@
         "loadFailed": "Failed to load products",
         "retry": "Retry"
       }
+      
     }
   }

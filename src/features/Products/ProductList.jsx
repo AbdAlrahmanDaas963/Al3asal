@@ -19,10 +19,38 @@ import {
   DialogContentText,
   TablePagination,
   Skeleton,
+  TextField,
+  InputAdornment,
+  Box,
+  Typography,
+  Tooltip,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../../contexts/LanguageContext";
+import SearchIcon from "@mui/icons-material/Search";
+
+const DescriptionCell = ({ description, language }) => {
+  const desc =
+    description?.[language] ||
+    description?.en ||
+    t("products.table.notAvailable");
+  return (
+    <Tooltip title={desc} enterDelay={500} arrow>
+      <Typography
+        sx={{
+          maxWidth: "200px",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {desc}
+      </Typography>
+    </Tooltip>
+  );
+};
 
 const ProductList = () => {
   const { t } = useTranslation("products");
@@ -32,6 +60,29 @@ const ProductList = () => {
   const products = useSelector((state) => state.products.data || []);
   const status = useSelector((state) => state.products.status);
   const error = useSelector((state) => state.products.error);
+
+  const NameCell = ({ name, language }) => {
+    const productName =
+      name?.[language] || name?.en || name || t("products.table.notAvailable");
+    return (
+      <Tooltip title={productName} enterDelay={500} arrow>
+        <Typography
+          sx={{
+            maxWidth: "150px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {productName}
+        </Typography>
+      </Tooltip>
+    );
+  };
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchDebounced, setSearchDebounced] = useState("");
 
   // Delete confirmation state
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -46,6 +97,16 @@ const ProductList = () => {
       dispatch(fetchProducts());
     }
   }, [status, dispatch]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounced(searchQuery);
+      setPage(0); // Reset to first page when search changes
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleDeleteClick = (id) => {
     setProductToDelete(id);
@@ -64,6 +125,38 @@ const ProductList = () => {
   const handleEditClick = (product) => {
     navigate(`/dashboard/products/edit/${product.id}`, { state: { product } });
   };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter((product) => {
+    if (!searchDebounced) return true;
+
+    const searchLower = searchDebounced.toLowerCase();
+
+    // Search in name (all languages)
+    const nameMatch = Object.values(product.name || {}).some(
+      (name) => name && name.toLowerCase().includes(searchLower)
+    );
+
+    // Search in description (all languages)
+    const descMatch = Object.values(product.description || {}).some(
+      (desc) => desc && desc.toLowerCase().includes(searchLower)
+    );
+
+    // Search in price
+    const priceMatch = product.price?.toString().includes(searchLower);
+
+    // Search in shop name (all languages)
+    const shopMatch = Object.values(product.shop?.name || {}).some(
+      (name) => name && name.toLowerCase().includes(searchLower)
+    );
+
+    // Search in category name (all languages)
+    const categoryMatch = Object.values(product.category?.name || {}).some(
+      (name) => name && name.toLowerCase().includes(searchLower)
+    );
+
+    return nameMatch || descMatch || priceMatch || shopMatch || categoryMatch;
+  });
 
   // Improved Skeleton Loader
   const SkeletonRow = () => (
@@ -148,17 +241,58 @@ const ProductList = () => {
         </DialogActions>
       </Dialog>
 
+      <Box mb={3}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder={t("products.searchPlaceholder") || "Search products..."}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            backgroundColor: "#333",
+            borderRadius: "25px",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "25px",
+              "& fieldset": { borderColor: "#555" },
+              "&:hover fieldset": { borderColor: "#888" },
+            },
+            input: { color: "#fff", padding: "12px" },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" sx={{ color: "gray" }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
       <TableContainer component={Paper}>
-        <Table>
+        <Table sx={{ minWidth: 650 }} aria-label="products table">
           <TableHead>
             <TableRow>
-              <TableCell>{t("products.table.headers.id")}</TableCell>
-              <TableCell>{t("products.table.headers.name")}</TableCell>
-              <TableCell>{t("products.table.headers.description")}</TableCell>
-              <TableCell>{t("products.table.headers.price")}</TableCell>
-              <TableCell>{t("products.table.headers.shop")}</TableCell>
-              <TableCell>{t("products.table.headers.category")}</TableCell>
-              <TableCell>{t("products.table.headers.actions")}</TableCell>
+              <TableCell sx={{ width: "80px" }}>
+                {t("products.table.headers.id")}
+              </TableCell>
+              <TableCell sx={{ width: "180px" }}>
+                {t("products.table.headers.name")}
+              </TableCell>
+              <TableCell sx={{ width: "220px" }}>
+                {t("products.table.headers.description")}
+              </TableCell>
+              <TableCell sx={{ width: "100px" }}>
+                {t("products.table.headers.price")}
+              </TableCell>
+              <TableCell sx={{ width: "120px" }}>
+                {t("products.table.headers.shop")}
+              </TableCell>
+              <TableCell sx={{ width: "120px" }}>
+                {t("products.table.headers.category")}
+              </TableCell>
+              <TableCell sx={{ width: "180px" }}>
+                {t("products.table.headers.actions")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -166,38 +300,36 @@ const ProductList = () => {
               ? Array.from({ length: rowsPerPage }).map((_, index) => (
                   <SkeletonRow key={`skeleton-${index}`} />
                 ))
-              : products
+              : filteredProducts
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((product, index) => (
                     <TableRow key={`${product.id}-${index}`}>
-                      <TableCell>{product.id}</TableCell>
-                      <TableCell>
-                        {product.name?.[language] ||
-                          product.name?.en ||
-                          product.name ||
-                          t("products.table.notAvailable")}
+                      <TableCell sx={{ width: "80px" }}>{product.id}</TableCell>
+                      <TableCell sx={{ width: "180px" }}>
+                        <NameCell name={product.name} language={language} />
                       </TableCell>
-                      <TableCell>
-                        {product.description?.[language] ||
-                          product.description?.en ||
-                          t("products.table.notAvailable")}
+                      <TableCell sx={{ width: "220px" }}>
+                        <DescriptionCell
+                          description={product.description}
+                          language={language}
+                        />
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ width: "100px" }}>
                         {product.price || t("products.table.notAvailable")}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ width: "120px" }}>
                         {product.shop?.name?.[language] ||
                           product.shop?.name?.en ||
                           product.shop?.name ||
                           t("products.table.notAvailable")}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ width: "120px" }}>
                         {product.category?.name?.[language] ||
                           product.category?.name?.en ||
                           product.category?.name ||
                           t("products.table.notAvailable")}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ width: "180px" }}>
                         <Stack direction="row" spacing={1}>
                           <Button
                             variant="contained"
@@ -224,7 +356,7 @@ const ProductList = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={products.length}
+          count={filteredProducts.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(_, newPage) => setPage(newPage)}
@@ -234,6 +366,28 @@ const ProductList = () => {
           }}
         />
       </TableContainer>
+
+      {filteredProducts.length === 0 && searchDebounced && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          minHeight="200px"
+        >
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            {t("products.noMatchingProducts") ||
+              "No products match your search"}
+          </Typography>
+          <Button
+            variant="outlined"
+            onClick={() => setSearchQuery("")}
+            sx={{ mt: 2 }}
+          >
+            {t("products.clearSearch") || "Clear search"}
+          </Button>
+        </Box>
+      )}
     </>
   );
 };

@@ -95,10 +95,19 @@ const OrdersTable2 = () => {
     done: t("filters.done"),
   };
 
-  const filteredOrders =
-    statusFilter === "all"
-      ? orders
-      : orders.filter((order) => order.status === statusFilter);
+  const filteredOrders = useMemo(() => {
+    const filtered =
+      statusFilter === "all"
+        ? [...orders]
+        : orders.filter((order) => order.status === statusFilter);
+
+    // Sort by date in descending order (newest first)
+    return filtered.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date).getTime() : 0;
+      const dateB = b.date ? new Date(b.date).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [orders, statusFilter]);
 
   const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
   const currentItems = useMemo(() => {
@@ -213,8 +222,9 @@ const OrdersTable2 = () => {
         size="small"
         sx={{
           backgroundColor: statusColors[order.status] || statusColors.default,
-          color: "black",
+          color: "#000000 !important",
           minWidth: 80,
+          fontWeight: 600,
         }}
       />
     </TableCell>
@@ -253,13 +263,6 @@ const OrdersTable2 = () => {
             sx={{ py: 4, color: "white" }}
           >
             <Typography>{t("table.messages.empty")}</Typography>
-            {/* <CircularProgress color="primary" /> */}
-            {/* <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" />
-            <Skeleton variant="text" animation="wave" /> */}
           </TableCell>
         </TableRow>
       );
