@@ -40,7 +40,7 @@ const statusColors = {
 
 const getAvailableStatuses = (currentStatus) => {
   const transitions = {
-    pending: ["preparing", "rejected"], // Added 'rejected' as an option
+    pending: ["preparing", "rejected"],
     preparing: ["done"],
     rejected: [],
   };
@@ -59,7 +59,6 @@ const CopyableLocation = ({ location, copyText, copiedText }) => {
   return (
     <Box display="flex" alignItems="center">
       {location}
-      <LocationOnIcon sx={{ fontSize: 16, ml: 0.5, color: "#E4272B" }} />
       <Tooltip title={copied ? copiedText : copyText} arrow>
         <IconButton onClick={handleCopy} size="small" sx={{ ml: 0.5 }}>
           <FileCopyIcon fontSize="small" />
@@ -200,7 +199,7 @@ const OrderDetailsModal = ({
           </Alert>
         )}
 
-        {/* Rejection Info (if order is rejected) */}
+        {/* Rejection Info */}
         {showRejectionInfo && (
           <Alert severity="error" sx={{ mb: 3 }}>
             <Typography variant="body1" fontWeight="bold">
@@ -277,11 +276,29 @@ const OrderDetailsModal = ({
                 <DetailItem
                   label={t("fields.location")}
                   value={
-                    <CopyableLocation
-                      location="54.5461, 71.5149"
-                      copyText={t("buttons.copyLocation")}
-                      copiedText={t("buttons.copied")}
-                    />
+                    order.lat && order.lon ? (
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Tooltip title={t("tooltips.viewOnMap")}>
+                          <IconButton
+                            size="small"
+                            href={`https://maps.google.com/?q=${order.lat},${order.lon}`}
+                            target="_blank"
+                            sx={{ color: "#E4272B" }}
+                          >
+                            <LocationOnIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <CopyableLocation
+                          location={`${parseFloat(order.lat).toFixed(6)}, ${parseFloat(order.lon).toFixed(6)}`}
+                          copyText={t("buttons.copyCoordinates")}
+                          copiedText={t("buttons.copied")}
+                        />
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="textSecondary">
+                        {t("messages.locationNotAvailable")}
+                      </Typography>
+                    )
                   }
                 />
               </Grid>

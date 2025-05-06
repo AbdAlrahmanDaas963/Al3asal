@@ -27,18 +27,49 @@ const getHeaders = (contentType = "application/json") => ({
 });
 
 // Fetch orders with filters
+// export const fetchOrders = createAsyncThunk(
+//   "orders/fetchOrders",
+//   async (filters = {}, { rejectWithValue }) => {
+//     try {
+//       // Clean filters - remove empty values
+//       const cleanFilters = {
+//         ...Object.fromEntries(
+//           Object.entries(filters).filter(
+//             ([_, value]) => value !== "" && value !== null
+//           )
+//         ),
+//         per_page: 1000, // Fetch all orders at once
+//       };
+
+//       const response = await axios.get(`${API_BASE_URL}/filter`, {
+//         params: cleanFilters,
+//         headers: getHeaders(),
+//       });
+
+//       // Normalize statuses in response
+//       return (response.data?.data || []).map((order) => ({
+//         ...order,
+//         status: normalizeStatus(order.status),
+//       }));
+//     } catch (error) {
+//       return rejectWithValue(
+//         error.response?.data?.message || "Error fetching orders"
+//       );
+//     }
+//   }
+// );
 export const fetchOrders = createAsyncThunk(
   "orders/fetchOrders",
   async (filters = {}, { rejectWithValue }) => {
     try {
-      // Clean filters - remove empty values
+      // Fixed syntax with proper parentheses
       const cleanFilters = {
         ...Object.fromEntries(
           Object.entries(filters).filter(
             ([_, value]) => value !== "" && value !== null
           )
         ),
-        per_page: 1000, // Fetch all orders at once
+        per_page: 1000,
       };
 
       const response = await axios.get(`${API_BASE_URL}/filter`, {
@@ -46,12 +77,27 @@ export const fetchOrders = createAsyncThunk(
         headers: getHeaders(),
       });
 
-      // Normalize statuses in response
+      /* SAFE PRODUCTION LOGGING (development only) */
+      if (process.env.NODE_ENV === "development") {
+        console.debug("[ORDERS DEBUG] Response structure:", {
+          requestParams: cleanFilters,
+          responseData: response.data,
+          firstOrderFields: response.data?.data?.[0]
+            ? Object.keys(response.data.data[0])
+            : "No orders in response",
+        });
+      }
+
       return (response.data?.data || []).map((order) => ({
         ...order,
         status: normalizeStatus(order.status),
       }));
     } catch (error) {
+      console.error("[ORDERS ERROR]", {
+        config: error.config,
+        response: error.response?.data,
+        message: error.message,
+      });
       return rejectWithValue(
         error.response?.data?.message || "Error fetching orders"
       );
