@@ -10,6 +10,8 @@ import productSlice from "../features/Products/productsSlice";
 import statisticsReducer from "../features/Statistics/statisticsSlice";
 import offersReducer from "../features/Offers/offersSlice"; // Import the offers slice
 
+import premiumPercentageReducer from "../features/PremiumSettings/premiumPercentageSlice";
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -20,6 +22,7 @@ const store = configureStore({
     products: productSlice,
     statistics: statisticsReducer,
     offers: offersReducer,
+    premiumPercentage: premiumPercentageReducer,
   },
 });
 

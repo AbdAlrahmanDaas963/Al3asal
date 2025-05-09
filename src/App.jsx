@@ -41,6 +41,8 @@ import LanguageProvider, { LanguageContext } from "./contexts/LanguageContext";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import AddOfferForm from "./features/Offers/AddOfferForm";
 
+import PremiumSettings from "./features/PremiumSettings/PremiumSettings";
+
 // Create a JSS instance with RTL support
 const jss = create({
   plugins: [...jssPreset().plugins, rtl()],
@@ -100,6 +102,10 @@ function App() {
                       <Route
                         path="shops/edit/:shopId"
                         element={<EditShopForm />}
+                      />
+                      <Route
+                        path="premium-settings"
+                        element={<PremiumSettings />}
                       />
                     </Route>
                   </Route>

@@ -153,6 +153,11 @@ const Dashboard = () => {
             text: t("accounts"),
             icon: <AccountCircleIcon />,
           },
+          {
+            path: "premium-settings",
+            text: t("premiumSettings"),
+            icon: <AccountCircleIcon />,
+          },
         ]
       : []),
     { path: "products", text: t("products"), icon: <InventoryIcon /> },

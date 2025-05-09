@@ -48,6 +48,9 @@ import categoriesAr from "./locales/ar/categoriesAr.json";
 import shopsEn from "./locales/en/shopsEn.json";
 import shopsAr from "./locales/ar/shopsAr.json";
 
+import premiumSettingsEn from "./locales/en/premiumSettingsEn.json";
+import premiumSettingsAr from "./locales/ar/premiumSettingsAr.json";
+
 // Initialize with all namespaces
 i18n.use(initReactI18next).init({
   resources: {
@@ -68,6 +71,7 @@ i18n.use(initReactI18next).init({
       offers: offersEn,
       categories: categoriesEn,
       shops: shopsEn,
+      premiumSettings: premiumSettingsEn,
     },
     ar: {
       common: commonAr,
@@ -86,6 +90,7 @@ i18n.use(initReactI18next).init({
       offers: offersAr,
       categories: categoriesAr,
       shops: shopsAr,
+      premiumSettings: premiumSettingsAr,
     },
   },
   lng: localStorage.getItem("language") || "en",
@@ -107,6 +112,7 @@ i18n.use(initReactI18next).init({
     "offers",
     "categories",
     "shops",
+    "premiumSettings",
   ],
   defaultNS: "common",
   interpolation: {

@@ -12,11 +12,13 @@ import { deleteOffer } from "./offersSlice";
 import { useTranslation } from "react-i18next";
 
 const OfferCard = ({ offer }) => {
-  const { t } = useTranslation("offers");
+  const { t, i18n } = useTranslation("offers");
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isArabic = i18n.language === "ar";
 
   const getDisplayText = (text) => {
     if (typeof text === "string") return text;
@@ -24,22 +26,15 @@ const OfferCard = ({ offer }) => {
     return "N/A";
   };
 
-  // const handleDelete = () => {
-  //   if (window.confirm("deleteConfirmation", { id: offer.id })) {
-  //     dispatch(deleteOffer(offer.id));
-  //   }
-  // };
-
   const handleDelete = async () => {
-    // Made async
     if (window.confirm(t("deleteConfirmation", { id: offer.id }))) {
-      setIsDeleting(true); // Start loading
+      setIsDeleting(true);
       try {
         await dispatch(deleteOffer(offer.id)).unwrap();
       } catch (error) {
         console.error("Delete failed:", error);
       } finally {
-        setIsDeleting(false); // Stop loading regardless of outcome
+        setIsDeleting(false);
       }
     }
   };
@@ -61,13 +56,14 @@ const OfferCard = ({ offer }) => {
   return (
     <Stack
       sx={{
-        width: "250px",
+        width: "280px",
         backgroundColor: "#252525",
         padding: "10px",
         borderRadius: "20px",
         color: "#fff",
         position: "relative",
       }}
+      dir={isArabic ? "rtl" : "ltr"}
     >
       <img
         src={offer.product?.image || "https://via.placeholder.com/150"}
@@ -93,15 +89,30 @@ const OfferCard = ({ offer }) => {
         />
       )}
 
+      {/* PRODUCT NAME */}
       <Stack direction="row" justifyContent="space-between" mt={1}>
         <Typography variant="body2" color="textSecondary">
           {t("product")}:
         </Typography>
-        <Typography variant="body1" fontWeight="bold">
+        <Typography
+          variant="body1"
+          fontWeight="bold"
+          sx={{
+            maxWidth: "160px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "normal",
+            textAlign: isArabic ? "left" : "right",
+          }}
+        >
           {getDisplayText(offer.product?.name)}
         </Typography>
       </Stack>
 
+      {/* PRICE */}
       <Stack direction="row" justifyContent="space-between">
         <Typography variant="body2" color="textSecondary">
           {t("price")}:
@@ -111,6 +122,7 @@ const OfferCard = ({ offer }) => {
         </Typography>
       </Stack>
 
+      {/* DISCOUNT */}
       {offer.percentage && (
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="textSecondary">
@@ -122,6 +134,7 @@ const OfferCard = ({ offer }) => {
         </Stack>
       )}
 
+      {/* CATEGORY */}
       {offer.product?.category && (
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="textSecondary">
@@ -133,6 +146,7 @@ const OfferCard = ({ offer }) => {
         </Stack>
       )}
 
+      {/* ACTION BUTTONS */}
       <Stack direction="row" spacing={1} gap={"10px"} mt={2}>
         <Button variant="contained" size="small" onClick={handleEdit}>
           {t("edit")}
@@ -142,8 +156,8 @@ const OfferCard = ({ offer }) => {
           color="error"
           size="small"
           onClick={handleDelete}
-          disabled={isDeleting} // Disable during delete
-          startIcon={isDeleting ? <CircularProgress size={16} /> : null} // Show spinner
+          disabled={isDeleting}
+          startIcon={isDeleting ? <CircularProgress size={16} /> : null}
         >
           {t("delete")}
         </Button>
