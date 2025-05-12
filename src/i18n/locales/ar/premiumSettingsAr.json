@@ -1,19 +1,22 @@
 {
-    "title": "إعدادات نسبة البريميوم",
-    "currentStatus": "الحالة الحالية:",
-    "httpStatus": "حالة HTTP:",
-    "lastUpdated": "آخر تحديث:",
-    "neverUpdated": "لم يتم التحديث",
-    "active": "نشط",
-    "inactive": "غير نشط",
-    "percentageLabel": "نسبة البريميوم",
-    "updateButton": "تحديث النسبة",
-    "updating": "جار التحديث...",
-    "languageCode": "ar-SA",
-    "updateSuccess": "تم تحديث نسبة البريميوم بنجاح!",
-    "validation": {
-      "required": "النسبة مطلوبة",
-      "min": "يجب أن تكون النسبة على الأقل 0",
-      "max": "لا يمكن أن تتجاوز النسبة 100"
-    }
+  "title": "إعدادات نسبة البريميوم",
+  "currentStatus": "الحالة الحالية:",
+  "httpStatus": "حالة HTTP:",
+  "lastUpdated": "آخر تحديث:",
+  "neverUpdated": "لم يتم التحديث",
+  "active": "نشط",
+  "inactive": "غير نشط",
+  "percentageLabel": "نسبة البريميوم",
+  "updateButton": "تحديث النسبة",
+  "updating": "جار التحديث...",
+  "languageCode": "ar-SA",
+  "updateSuccess": "تم تحديث نسبة البريميوم بنجاح!",
+  "pointsSectionTitle": "إعدادات نقاط الولاء",
+  "pointsLabel": "النقاط لكل دولار",
+  "pointsUpdateSuccess": "تم تحديث سعر النقاط بنجاح!",
+  "validation": {
+    "required": "النسبة مطلوبة",
+    "min": "يجب أن تكون النسبة على الأقل 0",
+    "max": "لا يمكن أن تتجاوز النسبة 100"
   }
+}

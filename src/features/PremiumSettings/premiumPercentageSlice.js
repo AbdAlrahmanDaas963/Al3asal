@@ -2,7 +2,9 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const API_URL = `${BASE_URL}/order-settings/premium-percentage`;
+const PREMIUM_API = `${BASE_URL}/order-settings/premium-percentage`;
+const LOYALTY_API = `${BASE_URL}/loyalty-settings`;
+
 const getToken = () => localStorage.getItem("token");
 
 const getHeaders = () => ({
@@ -10,56 +12,85 @@ const getHeaders = () => ({
   Accept: "application/json",
 });
 
+// --- Premium Percentage Thunks ---
 export const fetchPremiumPercentage = createAsyncThunk(
-  "premiumPercentage/fetch",
+  "settings/fetchPremiumPercentage",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(API_URL, { headers: getHeaders() });
-      return {
-        value: response.data.data.premium_percentage,
-        status: response.data.status,
-        statusCode: response.data.statusCode,
-      };
+      const response = await axios.get(PREMIUM_API, { headers: getHeaders() });
+      return response.data.data.premium_percentage;
     } catch (error) {
-      return rejectWithValue({
-        message:
-          error.response?.data?.error || "Failed to fetch premium percentage",
-        statusCode: error.response?.status,
-      });
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to fetch premium percentage"
+      );
     }
   }
 );
 
 export const updatePremiumPercentage = createAsyncThunk(
-  "premiumPercentage/update",
+  "settings/updatePremiumPercentage",
   async (newPercentage, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/update`,
+        `${PREMIUM_API}/update`,
         { premium_percentage: newPercentage },
         { headers: getHeaders() }
       );
-      return {
-        value: response.data.data.premium_percentage,
-        status: response.data.status,
-        statusCode: response.data.statusCode,
-      };
+      return response.data.data.premium_percentage;
     } catch (error) {
-      return rejectWithValue({
-        message:
-          error.response?.data?.error || "Failed to update premium percentage",
-        statusCode: error.response?.status,
-      });
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to update premium percentage"
+      );
     }
   }
 );
 
-const premiumPercentageSlice = createSlice({
+// --- Points Per Dollar Thunks ---
+export const fetchPointsPerDollar = createAsyncThunk(
+  "settings/fetchPointsPerDollar",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`${LOYALTY_API}/show`, {
+        headers: getHeaders(),
+      });
+      return response.data.points_per_dollar;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to fetch points per dollar"
+      );
+    }
+  }
+);
+
+export const updatePointsPerDollar = createAsyncThunk(
+  "settings/updatePointsPerDollar",
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${LOYALTY_API}/update-rate`,
+        formData,
+        {
+          headers: {
+            ...getHeaders(),
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data.points_per_dollar;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to update points per dollar"
+      );
+    }
+  }
+);
+
+// --- Slice ---
+const settingsSlice = createSlice({
   name: "premiumPercentage",
   initialState: {
-    value: null,
-    status: null,
-    statusCode: null,
+    premiumPercentage: null,
+    pointsPerDollar: null,
     isLoading: false,
     error: null,
     lastUpdated: null,
@@ -71,21 +102,14 @@ const premiumPercentageSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Premium
       .addCase(fetchPremiumPercentage.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(fetchPremiumPercentage.fulfilled, (state, action) => {
         state.isLoading = false;
-        const valueChanged = state.value !== action.payload.value;
-
-        if (!state.lastUpdated || valueChanged) {
-          state.lastUpdated = new Date().toISOString();
-        }
-
-        state.value = action.payload.value;
-        state.status = action.payload.status;
-        state.statusCode = action.payload.statusCode;
+        state.premiumPercentage = action.payload;
+        state.lastUpdated = new Date().toISOString();
       })
       .addCase(fetchPremiumPercentage.rejected, (state, action) => {
         state.isLoading = false;
@@ -93,21 +117,44 @@ const premiumPercentageSlice = createSlice({
       })
       .addCase(updatePremiumPercentage.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
       })
       .addCase(updatePremiumPercentage.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.value = action.payload.value;
-        state.status = action.payload.status;
-        state.statusCode = action.payload.statusCode;
+        state.premiumPercentage = action.payload;
         state.lastUpdated = new Date().toISOString();
       })
       .addCase(updatePremiumPercentage.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      // Points Per Dollar
+      .addCase(fetchPointsPerDollar.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(fetchPointsPerDollar.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.pointsPerDollar = action.payload;
+        state.lastUpdated = new Date().toISOString();
+      })
+      .addCase(fetchPointsPerDollar.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(updatePointsPerDollar.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updatePointsPerDollar.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.pointsPerDollar = action.payload;
+        state.lastUpdated = new Date().toISOString();
+      })
+      .addCase(updatePointsPerDollar.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });
   },
 });
 
-export const { resetError } = premiumPercentageSlice.actions;
-export default premiumPercentageSlice.reducer;
+export const { resetError } = settingsSlice.actions;
+export default settingsSlice.reducer;

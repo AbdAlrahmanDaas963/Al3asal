@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import {
   fetchPremiumPercentage,
   updatePremiumPercentage,
+  fetchPointsPerDollar,
+  updatePointsPerDollar,
   resetError,
 } from "./premiumPercentageSlice";
 import {
@@ -13,129 +15,89 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Paper,
-  Grid,
-  Chip,
+  Skeleton,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
-
-const StatusChip = styled(Chip, {
-  shouldForwardProp: (prop) => prop !== "activeStatus",
-})(({ theme, activeStatus }) => ({
-  backgroundColor: activeStatus
-    ? theme.palette.success.light
-    : theme.palette.error.light,
-  color: theme.palette.common.white,
-  fontWeight: "bold",
-}));
 
 const PremiumSettings = () => {
   const { t, i18n } = useTranslation("premiumSettings");
   const dispatch = useDispatch();
-  const { value, status, statusCode, isLoading, error, lastUpdated } =
-    useSelector((state) => state.premiumPercentage);
 
-  const [percentage, setPercentage] = useState(value || 0);
+  const {
+    premiumPercentage,
+    pointsPerDollar,
+    error,
+    isLoading: isInitialLoading,
+  } = useSelector((state) => state.premiumPercentage);
+
+  const [percentage, setPercentage] = useState(premiumPercentage || 0);
+  const [pointsValue, setPointsValue] = useState(pointsPerDollar || "");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPointsSuccess, setShowPointsSuccess] = useState(false);
+  const [isPremiumLoading, setIsPremiumLoading] = useState(false);
+  const [isPointsLoading, setIsPointsLoading] = useState(false);
 
-  // Initialize and sync with Redux state
   useEffect(() => {
     dispatch(fetchPremiumPercentage());
+    dispatch(fetchPointsPerDollar());
   }, [dispatch]);
 
-  // Update local state when Redux state changes
   useEffect(() => {
-    if (value !== null && value !== undefined) {
-      setPercentage(value);
+    if (premiumPercentage !== null && premiumPercentage !== undefined) {
+      setPercentage(premiumPercentage);
     }
-  }, [value]);
+  }, [premiumPercentage]);
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (pointsPerDollar !== null && pointsPerDollar !== undefined) {
+      setPointsValue(pointsPerDollar);
+    }
+  }, [pointsPerDollar]);
+
+  const handlePremiumSubmit = async (e) => {
     e.preventDefault();
-
+    setIsPremiumLoading(true);
     try {
-      const resultAction = await dispatch(updatePremiumPercentage(percentage));
-
-      if (updatePremiumPercentage.fulfilled.match(resultAction)) {
+      const result = await dispatch(updatePremiumPercentage(percentage));
+      if (updatePremiumPercentage.fulfilled.match(result)) {
         setShowSuccess(true);
         setTimeout(() => setShowSuccess(false), 3000);
-
-        // No need to manually setPercentage here because:
-        // 1. The update API should return the new value
-        // 2. Our useEffect will sync it automatically
       }
-    } catch (err) {
-      // Error handling is already done by Redux
+    } catch {
+      // handled in slice
+    } finally {
+      setIsPremiumLoading(false);
     }
   };
 
-  const handleErrorClose = () => {
-    dispatch(resetError());
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return t("neverUpdated");
-    const date = new Date(dateString);
-
-    // Use this robust formatting approach:
+  const handlePointsSubmit = async (e) => {
+    e.preventDefault();
+    setIsPointsLoading(true);
     try {
-      // First try the current i18n language
-      return date.toLocaleString(i18n.language);
-    } catch (e) {
-      try {
-        // Fallback to the translated languageCode
-        return date.toLocaleString(t("languageCode"));
-      } catch (e) {
-        // Final fallback to English
-        return date.toLocaleString("en-US");
+      const formData = new FormData();
+      formData.append("points_per_dollar", pointsValue);
+      const result = await dispatch(updatePointsPerDollar(formData));
+      if (updatePointsPerDollar.fulfilled.match(result)) {
+        setShowPointsSuccess(true);
+        setTimeout(() => setShowPointsSuccess(false), 3000);
       }
+    } catch {
+      // handled in slice
+    } finally {
+      setIsPointsLoading(false);
     }
   };
+
+  const handleErrorClose = () => dispatch(resetError());
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h5" gutterBottom>
         {t("title")}
       </Typography>
 
-      {/* <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle1">{t("currentStatus")}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <StatusChip
-              icon={status ? <CheckCircleIcon /> : <ErrorIcon />}
-              label={status ? t("active") : t("inactive")}
-              activeStatus={status}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle1">{t("httpStatus")}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Chip
-              label={`${statusCode || "--"}`}
-              color={statusCode === 200 ? "success" : "default"}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <Typography variant="subtitle1">{t("lastUpdated")}</Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Typography variant="body1">{formatDate(lastUpdated)}</Typography>
-          </Grid>
-        </Grid>
-      </Paper> */}
-
       {error && (
         <Alert severity="error" onClose={handleErrorClose} sx={{ mb: 3 }}>
-          {error.message}{" "}
-          {error.statusCode && `(${t("status")}: ${error.statusCode})`}
+          {error}
         </Alert>
       )}
 
@@ -145,37 +107,108 @@ const PremiumSettings = () => {
         </Alert>
       )}
 
-      <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 400 }}>
-        <TextField
-          fullWidth
-          label={t("percentageLabel")}
-          type="number"
-          value={percentage}
-          onChange={(e) => {
-            const val = e.target.value;
-            setPercentage(val === "" ? 0 : parseFloat(val) || 0);
-          }}
-          inputProps={{
-            min: 0,
-            max: 100,
-            step: 0.1,
-          }}
-          margin="normal"
-          variant="outlined"
-          required
-          disabled={isLoading}
-        />
+      {/* Premium Percentage Form */}
+      <Box
+        component="form"
+        onSubmit={handlePremiumSubmit}
+        sx={{ maxWidth: 400 }}
+      >
+        {isInitialLoading ? (
+          <>
+            <Skeleton
+              variant="rectangular"
+              width="100%"
+              height={56}
+              sx={{ mb: 2 }}
+            />
+            <Skeleton variant="rectangular" width={160} height={36} />
+          </>
+        ) : (
+          <>
+            <TextField
+              fullWidth
+              label={t("percentageLabel")}
+              type="number"
+              value={percentage}
+              onChange={(e) => setPercentage(parseFloat(e.target.value) || 0)}
+              inputProps={{ min: 0, max: 100, step: 0.1 }}
+              margin="normal"
+              variant="outlined"
+              required
+              disabled={isPremiumLoading}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              sx={{ mt: 2 }}
+              disabled={isPremiumLoading || percentage === premiumPercentage}
+              startIcon={
+                isPremiumLoading ? <CircularProgress size={20} /> : null
+              }
+            >
+              {isPremiumLoading ? t("updating") : t("updateButton")}
+            </Button>
+          </>
+        )}
+      </Box>
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-          disabled={isLoading || percentage === value}
-          startIcon={isLoading ? <CircularProgress size={20} /> : null}
+      {/* Points Per Dollar Form */}
+      <Box mt={6}>
+        <Typography variant="h5" gutterBottom>
+          {t("pointsSectionTitle", "Loyalty Points Settings")}
+        </Typography>
+
+        {showPointsSuccess && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {t("pointsUpdateSuccess", "Points rate updated successfully!")}
+          </Alert>
+        )}
+
+        <Box
+          component="form"
+          onSubmit={handlePointsSubmit}
+          sx={{ maxWidth: 400 }}
         >
-          {isLoading ? t("updating") : t("updateButton")}
-        </Button>
+          {isInitialLoading ? (
+            <>
+              <Skeleton
+                variant="rectangular"
+                width="100%"
+                height={56}
+                sx={{ mb: 2 }}
+              />
+              <Skeleton variant="rectangular" width={160} height={36} />
+            </>
+          ) : (
+            <>
+              <TextField
+                fullWidth
+                label={t("pointsLabel", "Points per Dollar")}
+                type="number"
+                value={pointsValue}
+                onChange={(e) => setPointsValue(e.target.value)}
+                inputProps={{ min: 0, step: 0.01 }}
+                margin="normal"
+                variant="outlined"
+                required
+                disabled={isPointsLoading}
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                disabled={isPointsLoading || pointsValue === pointsPerDollar}
+                startIcon={
+                  isPointsLoading ? <CircularProgress size={20} /> : null
+                }
+              >
+                {isPointsLoading ? t("updating") : t("updateButton")}
+              </Button>
+            </>
+          )}
+        </Box>
       </Box>
     </Box>
   );

@@ -1,20 +1,22 @@
 {
-    "title": "Premium Percentage Settings",
-    "currentStatus": "Current Status:",
-    "httpStatus": "HTTP Status:",
-    "lastUpdated": "Last Updated:",
-    "neverUpdated": "Never updated",
-    "active": "Active",
-    "inactive": "Inactive",
-    "percentageLabel": "Premium Percentage",
-    "updateButton": "Update Percentage",
-    "updating": "Updating...",
-    "languageCode": "en-US",
-  
-    "updateSuccess": "Premium percentage updated successfully!",
-    "validation": {
-      "required": "Percentage is required",
-      "min": "Percentage must be at least 0",
-      "max": "Percentage cannot exceed 100"
-    }
+  "title": "Premium Percentage Settings",
+  "currentStatus": "Current Status:",
+  "httpStatus": "HTTP Status:",
+  "lastUpdated": "Last Updated:",
+  "neverUpdated": "Never updated",
+  "active": "Active",
+  "inactive": "Inactive",
+  "percentageLabel": "Premium Percentage",
+  "updateButton": "Update Percentage",
+  "updating": "Updating...",
+  "languageCode": "en-US",
+  "updateSuccess": "Premium percentage updated successfully!",
+  "pointsSectionTitle": "Loyalty Points Settings",
+  "pointsLabel": "Points per Dollar",
+  "pointsUpdateSuccess": "Points rate updated successfully!",
+  "validation": {
+    "required": "Percentage is required",
+    "min": "Percentage must be at least 0",
+    "max": "Percentage cannot exceed 100"
   }
+}
