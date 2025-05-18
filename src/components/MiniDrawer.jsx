@@ -27,6 +27,10 @@ import StoreIcon from "@mui/icons-material/Store";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import Stack from "@mui/material/Stack";
 
+import StarIcon from "@mui/icons-material/Star";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import AnalyticsIcon from "@mui/icons-material/Analytics";
+
 // ? toggle
 import LanguageToggleButton from "./common/LanguageToggleButton";
 
@@ -141,13 +145,42 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const isAdmin = user?.type === "super";
 
+  // const menuItems = [
+  //   { path: "Dashboard", text: t("dashboard"), icon: <DashboardIcon /> },
+  //   { path: "orders", text: t("orders"), icon: <ShoppingCartIcon /> },
+  //   // { path: "accounts", text: t("accounts"), icon: <AccountCircleIcon /> },
+  //   ...(isAdmin
+  //     ? [
+  //         { path: "Statistics", text: t("Statistics"), icon: <PaymentIcon /> },
+  //         {
+  //           path: "accounts",
+  //           text: t("accounts"),
+  //           icon: <AccountCircleIcon />,
+  //         },
+  //         {
+  //           path: "premium-settings",
+  //           text: t("premiumSettings"),
+  //           icon: <AccountCircleIcon />,
+  //         },
+  //       ]
+  //     : []),
+  //   { path: "products", text: t("products"), icon: <InventoryIcon /> },
+  //   { path: "offers", text: t("offers"), icon: <InventoryIcon /> },
+  //   { path: "category", text: t("category"), icon: <CategoryIcon /> },
+  //   { path: "shops", text: t("shops"), icon: <StoreIcon /> },
+  // ];
+
   const menuItems = [
     { path: "Dashboard", text: t("dashboard"), icon: <DashboardIcon /> },
     { path: "orders", text: t("orders"), icon: <ShoppingCartIcon /> },
     // { path: "accounts", text: t("accounts"), icon: <AccountCircleIcon /> },
     ...(isAdmin
       ? [
-          { path: "Statistics", text: t("Statistics"), icon: <PaymentIcon /> },
+          {
+            path: "Statistics",
+            text: t("Statistics"),
+            icon: <AnalyticsIcon />,
+          },
           {
             path: "accounts",
             text: t("accounts"),
@@ -156,12 +189,12 @@ const Dashboard = () => {
           {
             path: "premium-settings",
             text: t("premiumSettings"),
-            icon: <AccountCircleIcon />,
+            icon: <StarIcon />,
           },
         ]
       : []),
     { path: "products", text: t("products"), icon: <InventoryIcon /> },
-    { path: "offers", text: t("offers"), icon: <InventoryIcon /> },
+    { path: "offers", text: t("offers"), icon: <LocalOfferIcon /> },
     { path: "category", text: t("category"), icon: <CategoryIcon /> },
     { path: "shops", text: t("shops"), icon: <StoreIcon /> },
   ];

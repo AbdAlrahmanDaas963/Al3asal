@@ -20,9 +20,9 @@ import {
   useMediaQuery,
   useTheme,
   Avatar,
+  Tooltip,
 } from "@mui/material";
 import { CircularProgress } from "@mui/material";
-
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -30,6 +30,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOrders, updateOrderStatus } from "./ordersSlice";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../../contexts/LanguageContext";
+import StarIcon from "@mui/icons-material/Star";
+import StarOutlineIcon from "@mui/icons-material/StarOutline";
+import NotesIcon from "@mui/icons-material/Notes";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { FaCrown } from "react-icons/fa";
 
 const statusFilters = ["all", "pending", "preparing", "done", "rejected"];
 const statusColors = {
@@ -179,6 +185,9 @@ const OrdersTable2 = () => {
           <Skeleton variant="text" width={80} height={20} />
         </TableCell>
         <TableCell>
+          <Skeleton variant="text" width={80} height={20} />
+        </TableCell>
+        <TableCell>
           <Skeleton variant="rectangular" width={100} height={36} />
         </TableCell>
       </TableRow>
@@ -230,13 +239,48 @@ const OrdersTable2 = () => {
     </TableCell>
   );
 
+  const renderPremiumCell = (order) => (
+    <TableCell align="center">
+      {order.is_premium ? (
+        <Tooltip title="Premium Order">
+          <FaCrown
+            style={{
+              color: "#FFD700",
+              fontSize: "1.2rem",
+            }}
+          />
+        </Tooltip>
+      ) : (
+        <Tooltip title="Standard Order">
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+            -
+          </Typography>
+        </Tooltip>
+      )}
+    </TableCell>
+  );
+
+  const renderNoteCell = (order) => (
+    <TableCell>
+      {order.note ? (
+        <Tooltip title={order.note}>
+          <NotesIcon color="primary" />
+        </Tooltip>
+      ) : (
+        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.5)" }}>
+          -
+        </Typography>
+      )}
+    </TableCell>
+  );
+
   const renderTableContent = () => {
     if (isLoading || orders.length === 0) return renderSkeletonRows();
     if (error)
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 6}
+            colSpan={isMobile ? 5 : 7}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -258,7 +302,7 @@ const OrdersTable2 = () => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 6}
+            colSpan={isMobile ? 5 : 7}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -284,6 +328,8 @@ const OrdersTable2 = () => {
         <TableCell sx={{ color: "white" }}>
           ${order.total_price?.toFixed(2) || "0.00"}
         </TableCell>
+        {!isMobile && renderPremiumCell(order)}
+        {!isMobile && renderNoteCell(order)}
         <TableCell>
           <Button
             variant="contained"
@@ -376,6 +422,16 @@ const OrdersTable2 = () => {
               <TableCell sx={{ color: "white" }}>
                 {t("table.headers.amount")}
               </TableCell>
+              {!isMobile && (
+                <TableCell sx={{ color: "white" }} align="center">
+                  {t("table.headers.premium")}
+                </TableCell>
+              )}
+              {!isMobile && (
+                <TableCell sx={{ color: "white" }}>
+                  {t("table.headers.note")}
+                </TableCell>
+              )}
               <TableCell sx={{ color: "white" }}>
                 {t("table.headers.actions")}
               </TableCell>

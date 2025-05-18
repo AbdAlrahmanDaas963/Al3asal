@@ -14,7 +14,9 @@
         "card": "Card",
         "amount": "Amount",
         "actions": "Actions",
-        "date": "Date"
+        "date": "Date",
+        "premium": "Premium",
+        "note": "Note"
       },
       "messages": {
         "loading": "Loading orders...",
