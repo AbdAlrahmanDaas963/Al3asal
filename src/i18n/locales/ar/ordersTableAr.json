@@ -1,38 +1,38 @@
 {
-    "filters": {
-      "all": "الكل",
-      "pending": "قيد الانتظار",
-      "preparing": "قيد التحضير",
-      "done": "مكتمل",
-      "rejected": "مرفوض"
+  "filters": {
+    "all": "الكل",
+    "pending": "قيد الانتظار",
+    "preparing": "قيد التحضير",
+    "done": "مكتمل",
+    "rejected": "مرفوض"
+  },
+  "table": {
+    "headers": {
+      "customer": "المستخدم",  
+      "accountId": "رقم الحساب",
+      "status": "الحالة",
+      "card": "البطاقة",
+      "amount": "المبلغ",
+      "actions": "إجراءات",
+      "date": "التاريخ",
+      "premium": "مميز",
+      "note": "ملاحظة"
     },
-    "table": {
-      "headers": {
-        "customer": "العميل",
-        "accountId": "رقم الحساب",
-        "status": "الحالة",
-        "card": "البطاقة",
-        "amount": "المبلغ",
-        "actions": "إجراءات",
-        "date": "التاريخ",
-        "premium": "مميز",
-        "note": "ملاحظة"
-      },
-      "messages": {
-        "loading": "جاري تحميل الطلبات...",
-        "error": "خطأ في تحميل الطلبات: {error}",
-        "empty": "لا توجد طلبات",
-        "retry": "إعادة المحاولة",
-        "pageInfo": "الصفحة {current} من {total}",
-        "cardNotProvided": "لم يتم تقديم بطاقة",
-        "statusUpdated": "تم تحديث الحالة إلى {status}"
-      },
-      "buttons": {
-        "details": "التفاصيل"
-      }
+    "messages": {
+      "loading": "جاري تحميل الطلبات...",
+      "error": "خطأ في تحميل الطلبات: {error}",
+      "empty": "لا توجد طلبات",
+      "retry": "إعادة المحاولة",
+      "pageInfo": "الصفحة {current} من {total}",
+      "cardNotProvided": "لم يتم تقديم بطاقة",
+      "statusUpdated": "تم تحديث الحالة إلى {status}"
     },
-    "status": {
-      "updated": "تم تحديث الحالة بنجاح",
-      "updateFailed": "فشل تحديث الحالة: {error}"
+    "buttons": {
+      "details": "التفاصيل"
     }
+  },
+  "status": {
+    "updated": "تم تحديث الحالة بنجاح",
+    "updateFailed": "فشل تحديث الحالة: {error}"
   }
+}

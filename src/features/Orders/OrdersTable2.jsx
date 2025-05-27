@@ -107,7 +107,6 @@ const OrdersTable2 = () => {
         ? [...orders]
         : orders.filter((order) => order.status === statusFilter);
 
-    // Sort by date in descending order (newest first)
     return filtered.sort((a, b) => {
       const dateA = a.date ? new Date(a.date).getTime() : 0;
       const dateB = b.date ? new Date(b.date).getTime() : 0;
@@ -137,7 +136,6 @@ const OrdersTable2 = () => {
           severity: "success",
         });
 
-        // ✅ This will re-fetch the updated orders list
         dispatch(fetchOrders());
         console.log("🔄 Refetched orders after status update");
       } else {
@@ -173,6 +171,11 @@ const OrdersTable2 = () => {
         {!isMobile && (
           <TableCell>
             <Skeleton variant="text" width={60} height={20} />
+          </TableCell>
+        )}
+        {!isMobile && (
+          <TableCell>
+            <Skeleton variant="text" width={100} height={20} />
           </TableCell>
         )}
         <TableCell>
@@ -280,7 +283,7 @@ const OrdersTable2 = () => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 7}
+            colSpan={isMobile ? 5 : 8}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
@@ -302,7 +305,7 @@ const OrdersTable2 = () => {
       return (
         <TableRow>
           <TableCell
-            colSpan={isMobile ? 5 : 7}
+            colSpan={isMobile ? 5 : 8}
             align="center"
             sx={{ py: 4, color: "white" }}
           >
